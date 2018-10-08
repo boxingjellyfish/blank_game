@@ -7,24 +7,37 @@
     <title>Blank Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        #canvas {
-            padding: 0;
-            margin: auto;
-            display: block;
-            width: 960px;
-            height: 540px;
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
+        * {
+            font-family: monospace;
+        }
+        body {            
+            background-color: black;
+            color: darkgray;
+        }
+        canvas {
             border: 1px solid darkgray;
+        }
+        #title {
+            padding-bottom: 10px;
+            font-size: 18px;
+        }
+        #buttons {
+            padding-top: 10px;
         }
     </style>
 </head>
 
-<body style="background-color: black;">
-    <canvas id="canvas" width="960" height="540"></canvas>
+<body>
+    <div id="title">
+        <span>Blank Game</span>
+    </div>
+    <div>
+        <canvas id="canvas" width="1536" height="864"></canvas>
+    </div>
+    <div id="buttons">
+        <button onclick="toggle()">Pause/Resume</button>
+    </div>
+    <script src="engine.js"></script>
     <script src="code.js"></script>
 </body>
 
