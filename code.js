@@ -4,32 +4,34 @@ var ctx = canvas.getContext("2d");
 var world = {
     width: canvas.width,
     height: canvas.height,
-    physicObjects: []
+    physicObjects: [],
+    particleEmmiters: []
 };
 
 for (var i = 0; i < 100; i++) {
     world.physicObjects.push({
         id: i,
-        position: {
-            x: Math.random() * world.width,
-            y: Math.random() * world.height
-        },
-        velocity: {
-            x: Math.random() * Math.random(),
-            y: Math.random() * Math.random()
-        },
+        position: new Vector(Math.random() * world.width, Math.random() * world.height),
+        velocity: new Vector(Math.random() * Math.random(), Math.random() * Math.random()),
         width: Math.round(Math.random() * 10) + 10,
         height: Math.round(Math.random() * 10) + 10,
-        color: {
-            h: Math.round(Math.random() * 360),
-            s: 80,
-            l: 50,
-            a: 0.8
-        },
+        color: new Color(Math.round(Math.random() * 360), 80, 50, 0.8),
         visible: true,
         deleted: false
     });
 }
+
+var emmiter = new Emitter();
+emmiter.position = new Vector(world.width / 2, world.height / 2);
+emmiter.velocity = new Vector(1, 1);
+emmiter.spread = Math.PI / 2;
+emmiter.size = 10;
+emmiter.color = new Color(1, 100);
+emmiter.particleSize = 2;
+emmiter.emissionRate = 0.1;
+emmiter.maxParticles = 1000;
+emmiter.lifespan = 5000;
+world.particleEmmiters.push(emmiter);
 
 function update(delta) {
     for (var i = 0; i < world.physicObjects.length; i++) {
@@ -70,6 +72,9 @@ function update(delta) {
             world.physicObjects.splice(i, 1);
         }
     }
+    for(var i = 0; i < world.particleEmmiters.length; i++) {
+        world.particleEmmiters[i].update(delta);
+    }
 }
 
 function draw(interp) {
@@ -78,16 +83,21 @@ function draw(interp) {
 
     for (var i = 0; i < world.physicObjects.length; i++) {
         var box = world.physicObjects[i];
-        if (box.visible) {
-            ctx.fillStyle = "hsla(" + box.color.h + ", " + box.color.s + "%, " + box.color.l + "%, " + box.color.a + ")";
+        if (box.visible && !box.deleted) {
+            ctx.fillStyle = box.color.toFillStyle();
             ctx.fillRect(box.position.x, box.position.y, box.width, box.height);
         }
+    }
+
+    for(var i = 0; i < world.particleEmmiters.length; i++) {
+        world.particleEmmiters[i].draw(ctx, interp);
     }
 
     ctx.fillStyle = "darkgrey";
     ctx.font = "12px monospace";
     ctx.fillText(Math.round(loop.getFPS()) + " FPS", 1, 10);
     ctx.fillText(world.physicObjects.length + " objects", 1, 22);
+    ctx.fillText(world.particleEmmiters[0].particles.length + " particles", 1, 32);
 
     ctx.restore();
 }
