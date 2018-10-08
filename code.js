@@ -1,59 +1,41 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
-var world = {
-    width: canvas.width,
-    height: canvas.height,
-    physicObjects: [],
-    particleSystem: new ParticleSystem()
-};
-
-for (var i = 0; i < 100; i++) {
-    world.physicObjects.push({
-        id: i,
-        position: new Vector(Math.random() * world.width, Math.random() * world.height),
-        velocity: new Vector(Math.random() * Math.random(), Math.random() * Math.random()),
-        width: Math.round(Math.random() * 10) + 10,
-        height: Math.round(Math.random() * 10) + 10,
-        color: new Color(Math.round(Math.random() * 360), 80, 50, 0.8),
-        visible: true,
-        deleted: false
-    });
+class GameWorld {
+    constructor() {
+        this.width = canvas.width;
+        this.height = canvas.height;
+        this.physicObjects = [];
+        this.particleSystem = new ParticleSystem();
+    }
 }
 
-var sampleEmmiter = new Emitter();
-sampleEmmiter.position = new Vector(world.width / 2, world.height / 2);
-sampleEmmiter.velocity = new Vector(0, -1);
-sampleEmmiter.spread = Math.PI / 2;
-sampleEmmiter.size = 10;
-sampleEmmiter.color = new Color(1, 100);
-sampleEmmiter.lifespan = 5000;
-sampleEmmiter.particleSize = 2;
-sampleEmmiter.emissionRate = 0.1;
-sampleEmmiter.maxParticles = 100;
-sampleEmmiter.particleLifespan = 5000;
-world.particleSystem.emmiters.push(sampleEmmiter);
+class PhysicBox {
+    constructor() {
+        this.id = UUID.new();
+        this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
+        this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
+        this.width = Random.int(10, 20);
+        this.height = Random.int(10, 20);
+        this.color = new Color(Random.int(0, 360), 80, 50, 0.8);
+        this.visible = true;
+        this.deleted = false;
+    }
+}
 
 function update(delta) {
-    for (var i = 0; i < world.physicObjects.length; i++) {
+    if(Random.int(0, 3) == 0) {
+        world.physicObjects.push(new PhysicBox());
+    }
+    for (var i = world.physicObjects.length - 1; i >= 0; i--) {
         var box = world.physicObjects[i];
         if ((box.position.x + box.width > world.width && box.velocity.x > 0) || (box.position.x < 0 && box.velocity.x < 0)) {
             box.velocity.x *= -1;
-            var collisionEmmiter = new Emitter();
-            collisionEmmiter.position = box.position.copy();
-            collisionEmmiter.velocity = box.velocity.copy();
-            collisionEmmiter.spread = Math.PI / 2;
-            collisionEmmiter.size = box.height;
-            collisionEmmiter.color = box.color;
-            collisionEmmiter.lifespan = 500;
-            collisionEmmiter.particleSize = 2;
-            collisionEmmiter.emissionRate = 0.1;
-            collisionEmmiter.maxParticles = 100;
-            collisionEmmiter.particleLifespan = 500;
-            world.particleSystem.emmiters.push(collisionEmmiter);
+            createBoxWallCollisionParticles(box);
         }
         if ((box.position.y + box.height > world.height && box.velocity.y > 0) || (box.position.y < 0 && box.velocity.y < 0)) {
             box.velocity.y *= -1;
+            createBoxWallCollisionParticles(box);
         }
         for (var j = 0; j < world.physicObjects.length; j++) {
             var other_box = world.physicObjects[j];
@@ -65,15 +47,18 @@ function update(delta) {
                     if (box.width * box.height >= other_box.width * other_box.height) {
                         other_box.visible = false;
                         other_box.deleted = true;
-                        box.width += 5;
-                        box.height += 5;
+                        box.width += 2;
+                        box.height += 2;
+                        box.velocity.mult(new Vector(0.95, 0.95));
+                        if(box.width >= world.width || box.height >= world.height) {
+                            box.visible = false;
+                            box.deleted = true;
+                        }
                     }
                 }
             }
         }
-    }
-    for (var i = world.physicObjects.length - 1; i >= 0; i--) {
-        var box = world.physicObjects[i];
+        
         if (!box.deleted) {
             box.position.x += box.velocity.x * delta;
             box.position.y += box.velocity.y * delta;
@@ -101,11 +86,28 @@ function draw(interp) {
 
     ctx.fillStyle = "darkgrey";
     ctx.font = "12px monospace";
-    ctx.fillText(Math.round(loop.getFPS()) + " FPS", 1, 10);
-    ctx.fillText(world.physicObjects.length + " objects", 1, 22);
-    ctx.fillText(world.particleSystem.countParticles() + " particles", 1, 32);
+    ctx.fillText("FPS: " + Math.round(loop.getFPS()), 1, 10);
+    ctx.fillText("Boxes: " + world.physicObjects.length, 1, 22);
+    ctx.fillText("Emmiters: " + world.particleSystem.emmiters.length, 1, 34);
+    ctx.fillText("Particles: " + world.particleSystem.countParticles(), 1, 46);
 
     ctx.restore();
+}
+
+function createBoxWallCollisionParticles(box) {
+    var emmiter = new Emitter();
+    emmiter.position = box.position.copy();
+    emmiter.velocity = box.velocity.copy();
+    emmiter.spread = Math.PI / 2;
+    emmiter.size = box.height;
+    emmiter.color = box.color.copy();
+    emmiter.color.l *= 1.6;
+    emmiter.lifespan = 500;
+    emmiter.particleSize = 2;
+    emmiter.emissionRate = 0.1;
+    emmiter.maxParticles = 100;
+    emmiter.particleLifespan = 500;
+    world.particleSystem.emmiters.push(emmiter);
 }
 
 function toggle() {
@@ -117,4 +119,5 @@ function toggle() {
     }
 }
 
+var world = new GameWorld();
 var loop = new MainLoop().setUpdate(update).setDraw(draw).start();

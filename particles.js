@@ -1,5 +1,4 @@
 class ParticleSystem {
-
     constructor() {
         this.emmiters = [];
     }
@@ -13,19 +12,17 @@ class ParticleSystem {
     }
 
     update(step) {
-        //var updatedEmmiters = [];
-        for(var i = 0; i < this.emmiters.length; i++) {
+        for(var i = this.emmiters.length - 1; i >= 0; i--){
             var emmiter = this.emmiters[i];
             emmiter.update(step);
             emmiter.lifespan -= step;
-            if (emmiter.lifespan > 0) {
-                //updatedEmmiters.push(emmiter);
-            }
-            else {                
+            if (emmiter.lifespan <= 0) {
                 emmiter.enabled = false;
             }
+            if(!emmiter.enabled && emmiter.particles.length == 0) {
+                this.emmiters.splice(i, 1);
+            }
         }
-        //this.emmiters = updatedEmmiters;
     }
 
     draw(ctx, interp) {
@@ -36,7 +33,6 @@ class ParticleSystem {
 }
 
 class Emitter {
-
     constructor(position, velocity, spread, size, color, lifespan, particleSize, emissionRate, maxParticles, particleLifespan) {
         this.position = position;
         this.velocity = velocity;
@@ -90,15 +86,9 @@ class Emitter {
     }
 
     moveParticles(step) {
-        // var boundsX = canvas.width;
-        // var boundsY = canvas.height;
         var updatedParticles = [];
         for (var i = 0; i < this.particles.length; i++) {
             var particle = this.particles[i];
-            // var pos = particle.position;
-            // if (pos.x < 0 || pos.x > boundsX || pos.y < 0 || pos.y > boundsY) {
-            //     particle.lifespan = 0;
-            // }
             particle.update(step);
             particle.lifespan -= step;
             if (particle.lifespan > 0) {
@@ -118,11 +108,9 @@ class Emitter {
             this.fields[i].position.y += deltaY;
         }
     }
-
 }
 
 class Particle {
-
     constructor(position, velocity, acceleration, color, size, lifespan) {
         this.position = position;
         this.velocity = velocity;
@@ -141,5 +129,4 @@ class Particle {
         ctx.fillStyle = this.color.toFillStyle();
         ctx.fillRect(this.position.x, this.position.y, this.size, this.size);
     }
-
 }

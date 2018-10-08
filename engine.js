@@ -1,7 +1,6 @@
 // https://github.com/IceCreamYou/MainLoop.js/blob/gh-pages/src/mainloop.js
 
 class MainLoop {
-
     constructor() {
         this.simulationTimestep = 1000 / 60;
         this.frameDelta = 0;
@@ -108,9 +107,7 @@ class MainLoop {
 
     animate(timestamp) {
         this.frameHandle = requestAnimationFrame(this.animate.bind(this));
-        if (timestamp < this.lastFrameTimeMs + this.minFrameDelay) {
-            return;
-        }
+        if (timestamp < this.lastFrameTimeMs + this.minFrameDelay) { return; }
         this.frameDelta += timestamp - this.lastFrameTimeMs;
         this.lastFrameTimeMs = timestamp;
         this.begin(timestamp, this.frameDelta);
