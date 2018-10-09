@@ -67,6 +67,26 @@ class Color {
     copy() {
         return new Color(this.h, this.s, this.l, this.a);
     }
+
+    hue(h) {
+        this.h = h;
+        return this;
+    }
+
+    saturation(s) {
+        this.s = s;
+        return this;
+    }
+
+    lightness(l) {
+        this.l = l;
+        return this;
+    }
+
+    alpha(a) {
+        this.a = a;
+        return this;
+    }
 }
 
 class Random {

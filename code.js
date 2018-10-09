@@ -15,16 +15,16 @@ class PhysicBox {
         this.id = UUID.new();
         this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
         this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
-        this.width = Random.int(10, 20);
-        this.height = Random.int(10, 20);
-        this.color = new Color(Random.int(0, 360), 80, 50, 0.8);
+        this.width = Random.int(20, 50);
+        this.height = Random.int(20, 50);
+        this.color = new Color(Random.int(0, 360), 100, 50, 0.8);
         this.visible = true;
         this.deleted = false;
     }
 }
 
 function update(delta) {
-    if(Random.int(0, 3) == 0) {
+    if (Random.int(0, 3) == 0) {
         world.physicObjects.push(new PhysicBox());
     }
     for (var i = world.physicObjects.length - 1; i >= 0; i--) {
@@ -45,12 +45,14 @@ function update(delta) {
                     box.position.y < other_box.position.y + other_box.height &&
                     box.height + box.position.y > other_box.position.y) {
                     if (box.width * box.height >= other_box.width * other_box.height) {
+                        createBoxWithBoxCollisionParticles(other_box);
                         other_box.visible = false;
                         other_box.deleted = true;
                         box.width += 2;
                         box.height += 2;
                         box.velocity.mult(new Vector(0.95, 0.95));
-                        if(box.width >= world.width || box.height >= world.height) {
+                        if (box.width >= 100 || box.height >= 100) {
+                            createBoxDestructionParticles(box);
                             box.visible = false;
                             box.deleted = true;
                         }
@@ -58,7 +60,7 @@ function update(delta) {
                 }
             }
         }
-        
+
         if (!box.deleted) {
             box.position.x += box.velocity.x * delta;
             box.position.y += box.velocity.y * delta;
@@ -77,7 +79,10 @@ function draw(interp) {
     for (var i = 0; i < world.physicObjects.length; i++) {
         var box = world.physicObjects[i];
         if (box.visible && !box.deleted) {
-            ctx.fillStyle = box.color.toFillStyle();
+            var gradient = ctx.createLinearGradient(box.position.x, box.position.y, box.position.x + box.width, box.position.y + box.height);
+            gradient.addColorStop(0, box.color.copy().lightness(80).toFillStyle());
+            gradient.addColorStop(1, box.color.copy().lightness(30).toFillStyle());
+            ctx.fillStyle = gradient;
             ctx.fillRect(box.position.x, box.position.y, box.width, box.height);
         }
     }
@@ -94,16 +99,45 @@ function draw(interp) {
     ctx.restore();
 }
 
-function createBoxWallCollisionParticles(box) {
+function createBoxWallCollisionParticles(box, direction) {
     var emmiter = new Emitter();
     emmiter.position = box.position.copy();
     emmiter.velocity = box.velocity.copy();
     emmiter.spread = Math.PI / 2;
-    emmiter.size = box.height;
-    emmiter.color = box.color.copy();
-    emmiter.color.l *= 1.6;
-    emmiter.lifespan = 500;
+    emmiter.size = box.height / 2;
+    emmiter.color = box.color.copy().lightness(80);
+    emmiter.lifespan = 100;
     emmiter.particleSize = 2;
+    emmiter.emissionRate = 0.1;
+    emmiter.maxParticles = 100;
+    emmiter.particleLifespan = 300;
+    world.particleSystem.emmiters.push(emmiter);
+}
+
+function createBoxWithBoxCollisionParticles(box) {
+    var emmiter = new Emitter();
+    emmiter.position = box.position;
+    emmiter.velocity = box.velocity;
+    emmiter.spread = Math.PI;
+    emmiter.size = 2;
+    emmiter.color = box.color.copy().lightness(80);
+    emmiter.lifespan = 100;
+    emmiter.particleSize = 2;
+    emmiter.emissionRate = 0.1;
+    emmiter.maxParticles = 100;
+    emmiter.particleLifespan = 500;
+    world.particleSystem.emmiters.push(emmiter);
+}
+
+function createBoxDestructionParticles(box) {
+    var emmiter = new Emitter();
+    emmiter.position = box.position;
+    emmiter.velocity = new Vector(2, 2);
+    emmiter.spread = Math.PI;
+    emmiter.size = 2;
+    emmiter.color = box.color.copy().lightness(80);
+    emmiter.lifespan = 500;
+    emmiter.particleSize = 8;
     emmiter.emissionRate = 0.1;
     emmiter.maxParticles = 100;
     emmiter.particleLifespan = 500;
