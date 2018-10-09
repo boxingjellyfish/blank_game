@@ -72,10 +72,10 @@ class Emitter {
             this.emissionTimer = this.emissionTimer % emissionRateInv;
         }
         for (var j = 0; j < particlesToEmmit; j++) {
-            var angle = this.velocity.angle() + this.spread - (Math.random() * this.spread * 2);
+            var angle = this.velocity.angle() + this.spread - Random.float(0, this.spread * 2);
             var magnitude = this.velocity.mag();
             var segment = Vector.fromAngle(this.velocity.angle() + Math.PI / 2, this.size);
-            var randomSegment = Vector.fromAngle(this.velocity.angle() - Math.PI / 2, Math.random() * this.size * 2);
+            var randomSegment = Vector.fromAngle(this.velocity.angle() - Math.PI / 2, Random.float(0, this.size * 2));
             segment.add(randomSegment);
             segment.add(this.position);
             var position = segment;

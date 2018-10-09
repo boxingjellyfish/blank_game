@@ -17,40 +17,85 @@ class PhysicBox {
         this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
         this.width = Random.int(20, 50);
         this.height = Random.int(20, 50);
-        this.color = new Color(Random.int(0, 360), 100, 50, 0.8);
+        this.color = new Color(Random.int(0, 360), 0, 50, 0.8);
         this.visible = true;
         this.deleted = false;
+    }
+
+    get minX() {
+        return this.position.x - (this.width / 2);
+    }
+
+    get maxX() {
+        return this.position.x + (this.width / 2);
+    }
+
+    get minY() {
+        return this.position.y - (this.height / 2);
+    }
+
+    get maxY() {
+        return this.position.y + (this.height / 2);
+    }
+
+    get area() {
+        return this.width * this.height;
     }
 }
 
 function update(delta) {
-    if (Random.int(0, 3) == 0) {
-        world.physicObjects.push(new PhysicBox());
+    if (Random.int(0, 5) == 0) {
+        var box = new PhysicBox();
+        var canPlace = true;
+        for (var i = 0; i < world.physicObjects.length; i++) {
+            var other_box = world.physicObjects[i];
+            if (other_box.visible && !other_box.deleted) {
+                if (box.minX < other_box.maxX &&
+                    box.maxX > other_box.minX &&
+                    box.minY < other_box.maxY &&
+                    box.maxY > other_box.minY) {
+                    canPlace = false;
+                }
+            }
+        }
+        if (canPlace) {
+            world.physicObjects.push(box);
+        }
     }
     for (var i = world.physicObjects.length - 1; i >= 0; i--) {
         var box = world.physicObjects[i];
-        if ((box.position.x + box.width > world.width && box.velocity.x > 0) || (box.position.x < 0 && box.velocity.x < 0)) {
+        if ((box.maxX > world.width && box.velocity.x > 0) || (box.minX < 0 && box.velocity.x < 0)) {
             box.velocity.x *= -1;
-            createBoxWallCollisionParticles(box);
+            box.velocity.mult(new Vector(1.1, 1.1));
+            if (box.maxX > world.width)
+                createBoxWallCollisionParticles(box, new Vector(box.maxX, box.position.y), new Vector(-1, 0));
+            else
+                createBoxWallCollisionParticles(box, new Vector(box.minX, box.position.y), new Vector(1, 0));
+
         }
-        if ((box.position.y + box.height > world.height && box.velocity.y > 0) || (box.position.y < 0 && box.velocity.y < 0)) {
+        if ((box.maxY > world.height && box.velocity.y > 0) || (box.minY < 0 && box.velocity.y < 0)) {
             box.velocity.y *= -1;
-            createBoxWallCollisionParticles(box);
+            box.velocity.mult(new Vector(1.1, 1.1));
+            if (box.maxY > world.height)
+                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.maxY), new Vector(0, -1));
+            else
+                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.minY), new Vector(0, 1));
         }
         for (var j = 0; j < world.physicObjects.length; j++) {
             var other_box = world.physicObjects[j];
-            if (box.id != other_box.id && box.visible && other_box.visible) {
-                if (box.position.x < other_box.position.x + other_box.width &&
-                    box.position.x + box.width > other_box.position.x &&
-                    box.position.y < other_box.position.y + other_box.height &&
-                    box.height + box.position.y > other_box.position.y) {
-                    if (box.width * box.height >= other_box.width * other_box.height) {
+            if (box.id != other_box.id && box.visible && !box.deleted && other_box.visible && !other_box.deleted) {
+                if (box.minX < other_box.maxX &&
+                    box.maxX > other_box.minX &&
+                    box.minY < other_box.maxY &&
+                    box.maxY > other_box.minY) {
+                    if (box.area >= other_box.area) {
                         createBoxWithBoxCollisionParticles(other_box);
                         other_box.visible = false;
                         other_box.deleted = true;
                         box.width += 2;
                         box.height += 2;
-                        box.velocity.mult(new Vector(0.95, 0.95));
+                        box.velocity.mult(new Vector(0.9, 0.9));
+                        box.color.saturation(box.color.s + 10);
                         if (box.width >= 100 || box.height >= 100) {
                             createBoxDestructionParticles(box);
                             box.visible = false;
@@ -79,11 +124,14 @@ function draw(interp) {
     for (var i = 0; i < world.physicObjects.length; i++) {
         var box = world.physicObjects[i];
         if (box.visible && !box.deleted) {
-            var gradient = ctx.createLinearGradient(box.position.x, box.position.y, box.position.x + box.width, box.position.y + box.height);
+            var gradient = ctx.createLinearGradient(box.minX, box.minY, box.maxX, box.maxY);
             gradient.addColorStop(0, box.color.copy().lightness(80).toFillStyle());
             gradient.addColorStop(1, box.color.copy().lightness(30).toFillStyle());
             ctx.fillStyle = gradient;
-            ctx.fillRect(box.position.x, box.position.y, box.width, box.height);
+            ctx.fillRect(box.minX, box.minY, box.width, box.height);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = box.color.toFillStyle();
+            ctx.strokeRect(box.minX, box.minY, box.width, box.height);
         }
     }
 
@@ -99,12 +147,12 @@ function draw(interp) {
     ctx.restore();
 }
 
-function createBoxWallCollisionParticles(box, direction) {
+function createBoxWallCollisionParticles(box, position, velocity) {
     var emmiter = new Emitter();
-    emmiter.position = box.position.copy();
-    emmiter.velocity = box.velocity.copy();
+    emmiter.position = position;
+    emmiter.velocity = velocity;
     emmiter.spread = Math.PI / 2;
-    emmiter.size = box.height / 2;
+    emmiter.size = 10;
     emmiter.color = box.color.copy().lightness(80);
     emmiter.lifespan = 100;
     emmiter.particleSize = 2;
@@ -123,8 +171,8 @@ function createBoxWithBoxCollisionParticles(box) {
     emmiter.color = box.color.copy().lightness(80);
     emmiter.lifespan = 100;
     emmiter.particleSize = 2;
-    emmiter.emissionRate = 0.1;
-    emmiter.maxParticles = 100;
+    emmiter.emissionRate = 0.7;
+    emmiter.maxParticles = 50;
     emmiter.particleLifespan = 500;
     world.particleSystem.emmiters.push(emmiter);
 }
@@ -152,6 +200,10 @@ function toggle() {
         loop.start();
     }
 }
+
+document.addEventListener("visibilitychange", function () {
+    toggle();
+});
 
 var world = new GameWorld();
 var loop = new MainLoop().setUpdate(update).setDraw(draw).start();

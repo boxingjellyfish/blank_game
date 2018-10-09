@@ -54,10 +54,10 @@ class Vector {
 
 class Color {
     constructor(h, s, l, a) {
-        this.h = h || 0;
-        this.s = s || 50;
-        this.l = l || 50;
-        this.a = a || 1;
+        this.h = h;
+        this.s = s;
+        this.l = l;
+        this.a = a;
     }
 
     toFillStyle() {
@@ -69,21 +69,37 @@ class Color {
     }
 
     hue(h) {
+        if (h < 0)
+            h = 0;
+        if (h > 360)
+            h = 360;
         this.h = h;
         return this;
     }
 
     saturation(s) {
+        if (s < 0)
+            s = 0;
+        if (s > 100)
+            s = 100;
         this.s = s;
         return this;
     }
 
     lightness(l) {
+        if (l < 0)
+            l = 0;
+        if (l > 100)
+            l = 100;
         this.l = l;
         return this;
     }
 
     alpha(a) {
+        if (a < 0)
+            a = 0;
+        if (a > 1)
+            a = 1;
         this.a = a;
         return this;
     }
