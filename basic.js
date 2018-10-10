@@ -123,3 +123,42 @@ class UUID {
         });
     }
 }
+
+class Entity {
+    constructor() {
+        this.id = UUID.new();
+        this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
+        this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
+        this.visible = true;
+        this.deleted = false;
+    }
+}
+
+class Box extends Entity {
+    constructor() {
+        super();
+        this.width = Random.int(20, 50);
+        this.height = Random.int(20, 50);
+        this.color = new Color(Random.int(0, 360), 0, 50, 0.8);
+    }
+
+    get minX() {
+        return this.position.x - (this.width / 2);
+    }
+
+    get maxX() {
+        return this.position.x + (this.width / 2);
+    }
+
+    get minY() {
+        return this.position.y - (this.height / 2);
+    }
+
+    get maxY() {
+        return this.position.y + (this.height / 2);
+    }
+
+    get area() {
+        return this.width * this.height;
+    }
+}

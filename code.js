@@ -10,42 +10,9 @@ class GameWorld {
     }
 }
 
-class PhysicBox {
-    constructor() {
-        this.id = UUID.new();
-        this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
-        this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
-        this.width = Random.int(20, 50);
-        this.height = Random.int(20, 50);
-        this.color = new Color(Random.int(0, 360), 0, 50, 0.8);
-        this.visible = true;
-        this.deleted = false;
-    }
-
-    get minX() {
-        return this.position.x - (this.width / 2);
-    }
-
-    get maxX() {
-        return this.position.x + (this.width / 2);
-    }
-
-    get minY() {
-        return this.position.y - (this.height / 2);
-    }
-
-    get maxY() {
-        return this.position.y + (this.height / 2);
-    }
-
-    get area() {
-        return this.width * this.height;
-    }
-}
-
 function update(delta) {
     if (Random.int(0, 5) == 0) {
-        var box = new PhysicBox();
+        var box = new Box();
         var canPlace = true;
         for (var i = 0; i < world.physicObjects.length; i++) {
             var other_box = world.physicObjects[i];
@@ -129,7 +96,7 @@ function draw(interp) {
             gradient.addColorStop(1, box.color.copy().lightness(30).toFillStyle());
             ctx.fillStyle = gradient;
             ctx.fillRect(box.minX, box.minY, box.width, box.height);
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 2;
             ctx.strokeStyle = box.color.toFillStyle();
             ctx.strokeRect(box.minX, box.minY, box.width, box.height);
         }
