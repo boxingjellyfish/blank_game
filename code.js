@@ -62,8 +62,8 @@ function update(delta) {
                         box.width += 2;
                         box.height += 2;
                         box.velocity.mult(new Vector(0.9, 0.9));
-                        box.color.saturation(box.color.s + 10);
-                        if (box.width >= 100 || box.height >= 100) {
+                        box.color.saturation(box.color.s + 3);
+                        if (box.width >= 200 || box.height >= 200) {
                             createBoxDestructionParticles(box);
                             box.visible = false;
                             box.deleted = true;
@@ -76,6 +76,7 @@ function update(delta) {
         if (!box.deleted) {
             box.position.x += box.velocity.x * delta;
             box.position.y += box.velocity.y * delta;
+            box.angle += Math.PI / 300;
         }
         else {
             world.physicObjects.splice(i, 1);
@@ -95,10 +96,22 @@ function draw(interp) {
             gradient.addColorStop(0, box.color.copy().lightness(80).toFillStyle());
             gradient.addColorStop(1, box.color.copy().lightness(30).toFillStyle());
             ctx.fillStyle = gradient;
-            ctx.fillRect(box.minX, box.minY, box.width, box.height);
+
+            ctx.beginPath();
+            ctx.moveTo(box.points[0].x, box.points[0].y);
+            for (var j = 1; j < box.points.length; j++)
+                ctx.lineTo(box.points[j].x, box.points[j].y);
+            ctx.closePath();
+            ctx.fill();
+
             ctx.lineWidth = 2;
             ctx.strokeStyle = box.color.toFillStyle();
-            ctx.strokeRect(box.minX, box.minY, box.width, box.height);
+            ctx.beginPath();
+            ctx.moveTo(box.points[0].x, box.points[0].y);
+            for (var j = 1; j < box.points.length; j++)
+                ctx.lineTo(box.points[j].x, box.points[j].y);
+            ctx.closePath();
+            ctx.stroke();
         }
     }
 
@@ -173,4 +186,5 @@ document.addEventListener("visibilitychange", function () {
 });
 
 var world = new GameWorld();
+
 var loop = new MainLoop().setUpdate(update).setDraw(draw).start();

@@ -2,28 +2,32 @@
 
 class Vector {
     constructor(x, y) {
-        this.x = x || 0;
-        this.y = y || 0;
+        this.x = x ;
+        this.y = y;
     }
 
     add(vector) {
         this.x += vector.x;
         this.y += vector.y;
+        return this;
     }
 
     sub(vector) {
         this.x -= vector.x;
         this.y -= vector.y;
+        return this;
     }
 
     mult(vector) {
         this.x *= vector.x;
         this.y *= vector.y;
+        return this;
     }
 
     div(vector) {
         this.x /= vector.x;
         this.y /= vector.y;
+        return this;
     }
 
     mag() {
@@ -35,6 +39,15 @@ class Vector {
         if (m > 0) {
             this.div(m);
         }
+        return this;
+    }
+
+    rotate(angle) {
+        var newX = this.x * Math.cos(angle) - this.y * Math.sin(angle);
+        var newY = this.y * Math.cos(angle) + this.x * Math.sin(angle);
+        this.x = newX;
+        this.y = newY;
+        return this;
     }
 
     angle() {
@@ -129,6 +142,7 @@ class Entity {
         this.id = UUID.new();
         this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
         this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
+        this.angle = Random.int(0, Math.PI * 2);
         this.visible = true;
         this.deleted = false;
     }
@@ -160,5 +174,15 @@ class Box extends Entity {
 
     get area() {
         return this.width * this.height;
+    }
+
+    get points() {
+        var points = [
+            new Vector(this.width / 2, this.height / 2).rotate(this.angle).add(this.position),
+            new Vector(this.width / 2 * -1, this.height / 2).rotate(this.angle).add(this.position),
+            new Vector(this.width / 2 * -1, this.height / 2 * -1).rotate(this.angle).add(this.position),
+            new Vector(this.width / 2, this.height / 2 * -1).rotate(this.angle).add(this.position)
+        ];
+        return points;
     }
 }
