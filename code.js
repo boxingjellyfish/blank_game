@@ -132,10 +132,21 @@ function draw(interp) {
 
     ctx.fillStyle = "darkgrey";
     ctx.font = "12px monospace";
-    ctx.fillText("FPS: " + Math.round(loop.getFPS()), 1, 10);
-    ctx.fillText("Boxes: " + world.physicObjects.length, 1, 22);
-    ctx.fillText("Emitters: " + world.particleSystem.emitters.length, 1, 34);
-    ctx.fillText("Particles: " + world.particleSystem.countParticles(), 1, 46);
+    ctx.fillText("Boxes: " + world.physicObjects.length, 1, 10);
+    ctx.fillText("Emitters: " + world.particleSystem.emitters.length, 1, 22);
+    ctx.fillText("Particles: " + world.particleSystem.countParticles(), 1, 34);
+
+    fpsHistogram.push(Math.round(loop.getFPS()));
+    if(fpsHistogram.length >= 100) {
+        fpsHistogram.splice(0, 1);
+    }    
+    ctx.fillStyle = new Color(0, 0, 50, 0.5).toFillStyle();
+    for(var i = 0; i < fpsHistogram.length; i = i + 2) {
+        ctx.fillRect(world.width - 105 + i, 65 - fpsHistogram[i], 1, 1 + fpsHistogram[i]);
+    }
+    ctx.fillStyle = "darkgrey";
+    ctx.font = "14px monospace";
+    ctx.fillText(Math.round(loop.getFPS()) + " FPS", world.width - 55, 40);
 
     ctx.restore();
 }
@@ -228,5 +239,7 @@ canvas.addEventListener("mouseup", function (evt) {
 });
 
 var world = new GameWorld();
+
+var fpsHistogram = [];
 
 var loop = new MainLoop().setUpdate(update).setDraw(draw).start();
