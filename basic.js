@@ -2,7 +2,7 @@
 
 class Vector {
     constructor(x, y) {
-        this.x = x ;
+        this.x = x;
         this.y = y;
     }
 
@@ -37,7 +37,7 @@ class Vector {
     norm() {
         var m = this.mag();
         if (m > 0) {
-            this.div(m);
+            this.div(new Vector(m, m));
         }
         return this;
     }
@@ -60,6 +60,17 @@ class Vector {
 
     static fromAngle(angle, magnitude) {
         return new Vector(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
+    }
+
+    static intersection(v0, v1, v2, v3) {
+        var s1 = v1.copy().sub(v0);
+        var s2 = v3.copy().sub(v2);
+        var s = (-s1.y * (v0.x - v2.x) + s1.x * (v0.y - v2.y)) / (-s2.x * s1.y + s1.x * s2.y);
+        var t = (s2.x * (v0.y - v2.y) - s2.y * (v0.x - v2.x)) / (-s2.x * s1.y + s1.x * s2.y);
+        if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+            return new Vector(v0.x + (t * s1.x), v0.y + (t * s1.y));
+        }
+        return null;
     }
 }
 
@@ -143,6 +154,7 @@ class Entity {
         this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
         this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
         this.angle = Random.int(0, Math.PI * 2);
+        this.angularVelocity = Random.float(-Math.PI / 500, Math.PI / 500);
         this.visible = true;
         this.deleted = false;
     }
@@ -153,23 +165,8 @@ class Box extends Entity {
         super();
         this.width = Random.int(20, 50);
         this.height = Random.int(20, 50);
-        this.color = new Color(Random.int(0, 360), 0, 50, 0.8);
-    }
-
-    get minX() {
-        return this.position.x - (this.width / 2);
-    }
-
-    get maxX() {
-        return this.position.x + (this.width / 2);
-    }
-
-    get minY() {
-        return this.position.y - (this.height / 2);
-    }
-
-    get maxY() {
-        return this.position.y + (this.height / 2);
+        this.color = new Color(Random.int(0, 360), 0, 50, 1);
+        this.trailEmitter = null;
     }
 
     get area() {
@@ -184,5 +181,63 @@ class Box extends Entity {
             new Vector(this.width / 2, this.height / 2 * -1).rotate(this.angle).add(this.position)
         ];
         return points;
+    }
+
+    get lines() {
+        var points = this.points;
+        var lines = [
+            { v0: points[0], v1: points[1] },
+            { v0: points[1], v1: points[2] },
+            { v0: points[2], v1: points[3] },
+            { v0: points[3], v1: points[0] },
+        ];
+        return lines;
+    }
+
+    get minMax() {
+        var points = this.points;
+        var minX = Math.min(points[0].x, points[1].x, points[2].x, points[3].x);
+        var maxX = Math.max(points[0].x, points[1].x, points[2].x, points[3].x);
+        var minY = Math.min(points[0].y, points[1].y, points[2].y, points[3].y);
+        var maxY = Math.max(points[0].y, points[1].y, points[2].y, points[3].y);
+        return [
+            new Vector(minX, minY),
+            new Vector(maxX, maxY),
+        ];
+    }
+
+    get boundingBox() {
+        var minMax = this.minMax;
+        return [
+            new Vector(minMax[0].x, minMax[0].y),
+            new Vector(minMax[1].x, minMax[0].y),
+            new Vector(minMax[1].x, minMax[1].y),
+            new Vector(minMax[0].x, minMax[1].y)
+        ];
+    }
+
+    intersects(box) {
+        if (this.intersectsFast(box)) {
+            return this.intersectsSlow(box) != null;
+        }
+        return false;
+    }
+
+    intersectsSlow(box) {
+        for (var i = 0; i < this.lines.length; i++) {
+            for (var j = 0; j < box.lines.length; j++) {
+                var point = Vector.intersection(this.lines[i].v0, this.lines[i].v1, box.lines[j].v0, box.lines[j].v1);
+                if (point != null) {
+                    return point;
+                }
+            }
+        }
+        return null;
+    }
+
+    intersectsFast(box) {
+        var thisMinMax = this.minMax;
+        var otherMinMax = box.minMax;
+        return thisMinMax[0].x < otherMinMax[1].x && thisMinMax[1].x > otherMinMax[0].x && thisMinMax[0].y < otherMinMax[1].y && thisMinMax[1].y > otherMinMax[0].y;
     }
 }
