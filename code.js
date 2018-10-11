@@ -15,7 +15,7 @@ class GameWorld {
 }
 
 function update(delta) {
-    var rate = world.input.mouseDown ? 0 : 5;
+    var rate = world.input.mouseDown ? 0 : 10000000;
     if (Random.int(0, rate) == 0) {
         var box = new Box();
         if (world.input.mouseDown) {
@@ -62,7 +62,7 @@ function update(delta) {
             if (box.id != other_box.id && box.visible && !box.deleted && other_box.visible && !other_box.deleted) {
                 if (box.intersects(other_box)) {
                     if (box.area >= other_box.area) {
-                        var collisionPoint = box.intersectsSlow(other_box);
+                        var collisionPoint = box.intersectsEdges(other_box);
                         createBoxWithBoxCollisionParticles(other_box, collisionPoint);
                         other_box.visible = false;
                         other_box.deleted = true;                        
@@ -125,6 +125,15 @@ function draw(interp) {
                 ctx.lineTo(box.points[j].x, box.points[j].y);
             ctx.closePath();
             ctx.stroke();
+
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = box.color.toFillStyle();
+            ctx.beginPath();
+            ctx.moveTo(box.boundingBox[0].x, box.boundingBox[0].y);
+            for (var j = 1; j < box.boundingBox.length; j++)
+                ctx.lineTo(box.boundingBox[j].x, box.boundingBox[j].y);
+            ctx.closePath();
+            ctx.stroke();
         }
     }
 
@@ -136,13 +145,9 @@ function draw(interp) {
     ctx.fillText("Emitters: " + world.particleSystem.emitters.length, 1, 22);
     ctx.fillText("Particles: " + world.particleSystem.countParticles(), 1, 34);
 
-    fpsHistogram.push(Math.round(loop.getFPS()));
-    if(fpsHistogram.length >= 100) {
-        fpsHistogram.splice(0, 1);
-    }    
     ctx.fillStyle = new Color(0, 0, 50, 0.5).toFillStyle();
-    for(var i = 0; i < fpsHistogram.length; i = i + 2) {
-        ctx.fillRect(world.width - 105 + i, 65 - fpsHistogram[i], 1, 1 + fpsHistogram[i]);
+    for(var i = 0; i < loop.getFPSHistogram().length; i = i + 2) {
+        ctx.fillRect(world.width - 105 + i, 65 - loop.getFPSHistogram()[i], 1, 1 + loop.getFPSHistogram()[i]);
     }
     ctx.fillStyle = "darkgrey";
     ctx.font = "14px monospace";
@@ -239,7 +244,5 @@ canvas.addEventListener("mouseup", function (evt) {
 });
 
 var world = new GameWorld();
-
-var fpsHistogram = [];
 
 var loop = new MainLoop().setUpdate(update).setDraw(draw).start();

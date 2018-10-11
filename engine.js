@@ -19,6 +19,7 @@ class MainLoop {
         this.update = function () { };
         this.draw = function () { };
         this.end = function () { };
+        this.fpsHistogram = [];
         this.frameHandle = null;
     }
 
@@ -33,6 +34,10 @@ class MainLoop {
 
     getFPS() {
         return this.fps;
+    }
+
+    getFPSHistogram() {
+        return this.fpsHistogram;
     }
 
     getMaxAllowedFPS() {
@@ -129,5 +134,9 @@ class MainLoop {
         this.draw(this.frameDelta / this.simulationTimestep);
         this.end(this.fps, this.panic);
         this.panic = false;
+        this.fpsHistogram.push(Math.round(this.fps));
+        if (this.fpsHistogram.length >= 100) {
+            this.fpsHistogram.splice(0, 1);
+        }
     }
 }
