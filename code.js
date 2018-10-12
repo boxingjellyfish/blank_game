@@ -129,6 +129,7 @@ function draw(interp) {
             ctx.closePath();
             ctx.stroke();
 
+            /*
             ctx.lineWidth = 1;
             ctx.strokeStyle = box.color.toFillStyle();
             ctx.beginPath();
@@ -137,6 +138,7 @@ function draw(interp) {
                 ctx.lineTo(box.boundingBox[j].x, box.boundingBox[j].y);
             ctx.closePath();
             ctx.stroke();
+            */
         }
     }
 
