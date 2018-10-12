@@ -11,6 +11,7 @@ class GameWorld {
             mousePosition: new Vector(0, 0),
             mouseDown: false
         };
+        this.soundManager = new SoundManager();
     }
 }
 
@@ -48,6 +49,7 @@ function update(delta) {
                 box.angularVelocity *= 1.1;
                 createBoxWallCollisionParticles(box, new Vector(box.points[j].x, box.position.y), new Vector(box.velocity.copy().norm().x, 0));
                 collision = true;
+                world.soundManager.playSampleSound();
             }
             if (!collision && ((box.points[j].y > world.height && box.velocity.y > 0) || (box.points[j].y < 0 && box.velocity.y < 0))) {
                 box.velocity.y *= -1;
@@ -55,6 +57,7 @@ function update(delta) {
                 box.angularVelocity *= 1.1;
                 createBoxWallCollisionParticles(box, new Vector(box.position.x, box.points[j].y), new Vector(0, box.velocity.copy().norm().y));
                 collision = true;
+                world.soundManager.playSampleSound();
             }
         }
         for (var j = 0; j < world.physicObjects.length; j++) {
