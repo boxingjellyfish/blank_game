@@ -137,6 +137,10 @@ class Random {
     static float(min, max) {
         return (Math.random() * (max - min)) + min;
     }
+
+    static value(array) {
+        return array[Random.int(0, array.length)];
+    }
 }
 
 class UUID {
@@ -165,7 +169,7 @@ class Box extends Entity {
         super();
         this.width = Random.int(20, 50);
         this.height = Random.int(20, 50);
-        this.color = new Color(Random.int(0, 360), 0, 50, 1);
+        this.color = new Color(Random.int(0, 360), 100, 50, 1);
         this.trailEmitter = null;
     }
 

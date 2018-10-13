@@ -22,17 +22,14 @@ function update(delta) {
         if (world.input.mouseDown) {
             box.position = world.input.mousePosition.copy();
         }
-        var canPlace = true;
-        for (var i = 0; i < world.physicObjects.length; i++) {
+        canPlace = true;
+        for (var i = 0; canPlace && i < box.points.length; i++) {
+            canPlace = !(box.points[i].x > world.width || box.points[i].x < 0 || box.points[i].y > world.height || box.points[i].y < 0);
+        }
+        for (var i = 0; canPlace && i < world.physicObjects.length; i++) {
             var other_box = world.physicObjects[i];
-            if (other_box.visible && !other_box.deleted) {
-                if (box.minX < other_box.maxX &&
-                    box.maxX > other_box.minX &&
-                    box.minY < other_box.maxY &&
-                    box.maxY > other_box.minY) {
-                    canPlace = false;
-                }
-            }
+            if (other_box.visible && !other_box.deleted && box.intersects(other_box))
+                canPlace = false;
         }
         if (canPlace) {
             world.physicObjects.push(box);
@@ -44,20 +41,21 @@ function update(delta) {
         for (var j = 0; j < box.points.length; j++) {
             var collision = false;
             if (!collision && ((box.points[j].x > world.width && box.velocity.x > 0) || (box.points[j].x < 0 && box.velocity.x < 0))) {
-                box.velocity.x *= -1;
-                box.velocity.mult(new Vector(1.1, 1.1));
-                box.angularVelocity *= 1.1;
-                createBoxWallCollisionParticles(box, new Vector(box.points[j].x, box.position.y), new Vector(box.velocity.copy().norm().x, 0));
                 collision = true;
-                world.soundManager.playSampleSound();
+                box.velocity.x *= -1;
+                createBoxWallCollisionParticles(box, new Vector(box.points[j].x, box.position.y), new Vector(box.velocity.copy().norm().x, 0));
             }
             if (!collision && ((box.points[j].y > world.height && box.velocity.y > 0) || (box.points[j].y < 0 && box.velocity.y < 0))) {
-                box.velocity.y *= -1;
-                box.velocity.mult(new Vector(1.1, 1.1));
-                box.angularVelocity *= 1.1;
-                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.points[j].y), new Vector(0, box.velocity.copy().norm().y));
                 collision = true;
-                world.soundManager.playSampleSound();
+                box.velocity.y *= -1;
+                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.points[j].y), new Vector(0, box.velocity.copy().norm().y));
+            }
+            if (collision) {
+                if (box.velocity.mag() < 1.5)
+                    box.velocity.mult(new Vector(1.1, 1.1));
+                if (Math.abs(box.angularVelocity) < 0.02)
+                    box.angularVelocity *= 1.1;
+                world.soundManager.wallCollission();
             }
         }
         for (var j = 0; j < world.physicObjects.length; j++) {
@@ -68,13 +66,15 @@ function update(delta) {
                         var collisionPoint = box.intersectsEdges(other_box);
                         createBoxWithBoxCollisionParticles(other_box, collisionPoint);
                         other_box.visible = false;
-                        other_box.deleted = true;                        
+                        other_box.deleted = true;
                         other_box.trailEmitter.lifespan = 0;
                         box.width += 2;
                         box.height += 2;
                         box.velocity.mult(new Vector(0.9, 0.9));
                         box.angularVelocity *= 0.9;
-                        box.color.saturation(box.color.s + 3);
+                        box.color.saturation(box.color.s - 3);
+                        if (!world.input.mouseDown)
+                            world.soundManager.boxCollission();
                         if (box.width >= 200 || box.height >= 200) {
                             createBoxDestructionParticles(box);
                             box.visible = false;
@@ -101,7 +101,7 @@ function update(delta) {
 function draw(interp) {
     ctx.clearRect(0, 0, world.width, world.height);
     ctx.save();
-    
+
     world.particleSystem.drawBackground(ctx, interp);
 
     for (var i = 0; i < world.physicObjects.length; i++) {
@@ -151,7 +151,7 @@ function draw(interp) {
     ctx.fillText("Particles: " + world.particleSystem.countParticles(), 1, 34);
 
     ctx.fillStyle = new Color(0, 0, 50, 0.5).toFillStyle();
-    for(var i = 0; i < loop.getFPSHistogram().length; i = i + 2) {
+    for (var i = 0; i < loop.getFPSHistogram().length; i = i + 2) {
         ctx.fillRect(world.width - 105 + i, 65 - loop.getFPSHistogram()[i], 1, 1 + loop.getFPSHistogram()[i]);
     }
     ctx.fillStyle = "darkgrey";
