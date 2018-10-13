@@ -184,7 +184,7 @@ class Particle {
     }
 
     draw(ctx, interp) {
-        ctx.fillStyle = this.color.toFillStyle();
+        ctx.fillStyle = this.color.style;
         ctx.fillRect(this.position.x, this.position.y, this.size, this.size);
     }
 }

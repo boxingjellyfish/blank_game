@@ -107,10 +107,12 @@ function draw(interp) {
     for (var i = 0; i < world.physicObjects.length; i++) {
         var box = world.physicObjects[i];
         if (box.visible && !box.deleted) {
-            var minMax = box.minMax;
-            var gradient = ctx.createLinearGradient(minMax[0].x, minMax[0].y, minMax[1].x, minMax[1].y);
-            gradient.addColorStop(0, box.color.copy().lightness(90).toFillStyle());
-            gradient.addColorStop(1, box.color.copy().lightness(20).toFillStyle());
+            //var minMax = box.minMax;
+            //var gradient = ctx.createLinearGradient(minMax[0].x, minMax[0].y, minMax[1].x, minMax[1].y);
+            var points = box.points;
+            gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
+            gradient.addColorStop(0, box.color.copy().lightness(90).style);
+            gradient.addColorStop(1, box.color.copy().lightness(20).style);
             ctx.fillStyle = gradient;
 
             ctx.beginPath();
@@ -121,7 +123,7 @@ function draw(interp) {
             ctx.fill();
 
             ctx.lineWidth = 2;
-            ctx.strokeStyle = box.color.toFillStyle();
+            ctx.strokeStyle = box.color.style;
             ctx.beginPath();
             ctx.moveTo(box.points[0].x, box.points[0].y);
             for (var j = 1; j < box.points.length; j++)
@@ -131,7 +133,7 @@ function draw(interp) {
 
             /*
             ctx.lineWidth = 1;
-            ctx.strokeStyle = box.color.toFillStyle();
+            ctx.strokeStyle = box.color.style;
             ctx.beginPath();
             ctx.moveTo(box.boundingBox[0].x, box.boundingBox[0].y);
             for (var j = 1; j < box.boundingBox.length; j++)
@@ -144,19 +146,26 @@ function draw(interp) {
 
     world.particleSystem.drawForeground(ctx, interp);
 
-    ctx.fillStyle = "darkgrey";
+    ctx.fillStyle = new Color(0, 0, 100, 0.5).style;
     ctx.font = "12px monospace";
-    ctx.fillText("Boxes: " + world.physicObjects.length, 1, 10);
-    ctx.fillText("Emitters: " + world.particleSystem.emitters.length, 1, 22);
-    ctx.fillText("Particles: " + world.particleSystem.countParticles(), 1, 34);
+    ctx.textBaseline = "top";
+    ctx.fillText("Boxes: " + world.physicObjects.length, 5, 5);
+    ctx.fillText("Emitters: " + world.particleSystem.emitters.length, 5, 5 + 12 + 2);
+    ctx.fillText("Particles: " + world.particleSystem.countParticles(), 5, 5 + 12 + 2 + 12 + 2);
 
-    ctx.fillStyle = new Color(0, 0, 50, 0.5).toFillStyle();
+    ctx.fillStyle = new Color(0, 0, 50, 0.5).style;
     for (var i = 0; i < loop.getFPSHistogram().length; i = i + 2) {
         ctx.fillRect(world.width - 105 + i, 65 - loop.getFPSHistogram()[i], 1, 1 + loop.getFPSHistogram()[i]);
     }
-    ctx.fillStyle = "darkgrey";
-    ctx.font = "14px monospace";
-    ctx.fillText(Math.round(loop.getFPS()) + " FPS", world.width - 55, 40);
+
+    ctx.fillStyle = new Color(0, 0, 0, 1).style;
+    ctx.fillRect(world.width - 80, 25, 50, 20);
+
+    ctx.fillStyle = new Color(0, 0, 100, 0.5).style;
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(Math.round(loop.getFPS()) + " FPS", world.width - 55, 35);
 
     ctx.restore();
 }
@@ -234,7 +243,7 @@ emitter.velocity = new Vector(1, 1);
 emitter.velocityRandomness = 1.5;
 emitter.spread = Math.PI / 12;
 emitter.size = 1;
-emitter.color = new Color(0, 100, 100, 1);
+emitter.color = new Color(0, 100, 90, 1);
 emitter.colorEnd = new Color(0, 100, 0, 0);
 emitter.lifespan = null;
 emitter.particleSize = 2;
@@ -251,7 +260,7 @@ field.destructive = true;
 field.radius = 100;
 emitter.fields.push(field);
 
-// world.particleSystem.emitters.push(emitter);
+world.particleSystem.emitters.push(emitter);
 
 var loop = new Loop().setUpdate(update).setDraw(draw).start();
 

@@ -88,7 +88,7 @@ class Color {
         this.a = a;
     }
 
-    toFillStyle() {
+    get style() {
         return "hsla(" + this.h + ", " + this.s + "%, " + this.l + "%, " + this.a + ")";
     }
 
