@@ -1,6 +1,6 @@
 // https://github.com/IceCreamYou/MainLoop.js/blob/gh-pages/src/mainloop.js
 
-class MainLoop {
+class Loop {
     constructor() {
         this.simulationTimestep = 1000 / 60;
         this.frameDelta = 0;

@@ -47,6 +47,7 @@ class SoundManager {
     wallCollission() {
         this.oscillator = this.context.createOscillator();
         this.gain = this.context.createGain();
+        this.gain.gain.value = 0.5;
         this.oscillator.connect(this.gain);
         this.oscillator.type = this.randomFrequencyType;
         this.oscillator.frequency.value = this.randomPentatonic(2).frequency;
@@ -58,6 +59,7 @@ class SoundManager {
     boxCollission() {
         this.oscillator = this.context.createOscillator();
         this.gain = this.context.createGain();
+        this.gain.gain.value = 0.5;
         this.oscillator.connect(this.gain);
         this.oscillator.type = this.randomFrequencyType;
         this.oscillator.frequency.value = this.randomPentatonic(4).frequency;

@@ -8,7 +8,7 @@ class GameWorld {
         this.physicObjects = [];
         this.particleSystem = new ParticleSystem();
         this.input = {
-            mousePosition: new Vector(0, 0),
+            mousePosition: Vector.Zero,
             mouseDown: false
         };
         this.soundManager = new SoundManager();
@@ -16,7 +16,7 @@ class GameWorld {
 }
 
 function update(delta) {
-    var rate = world.input.mouseDown ? 0 : 10000000;
+    var rate = world.input.mouseDown ? 0 : Number.MAX_SAFE_INTEGER;
     if (Random.int(0, rate) == 0) {
         var box = new Box();
         if (world.input.mouseDown) {
@@ -43,16 +43,16 @@ function update(delta) {
             if (!collision && ((box.points[j].x > world.width && box.velocity.x > 0) || (box.points[j].x < 0 && box.velocity.x < 0))) {
                 collision = true;
                 box.velocity.x *= -1;
-                createBoxWallCollisionParticles(box, new Vector(box.points[j].x, box.position.y), new Vector(box.velocity.copy().norm().x, 0));
+                createBoxWallCollisionParticles(box, new Vector(box.points[j].x, box.position.y), new Vector(box.velocity.copy().normalize().x, 0));
             }
             if (!collision && ((box.points[j].y > world.height && box.velocity.y > 0) || (box.points[j].y < 0 && box.velocity.y < 0))) {
                 collision = true;
                 box.velocity.y *= -1;
-                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.points[j].y), new Vector(0, box.velocity.copy().norm().y));
+                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.points[j].y), new Vector(0, box.velocity.copy().normalize().y));
             }
             if (collision) {
-                if (box.velocity.mag() < 1.5)
-                    box.velocity.mult(new Vector(1.1, 1.1));
+                if (box.velocity.magnitude < 1.5)
+                    box.velocity.multiply(new Vector(1.1, 1.1));
                 if (Math.abs(box.angularVelocity) < 0.02)
                     box.angularVelocity *= 1.1;
                 world.soundManager.wallCollission();
@@ -70,7 +70,7 @@ function update(delta) {
                         other_box.trailEmitter.lifespan = 0;
                         box.width += 2;
                         box.height += 2;
-                        box.velocity.mult(new Vector(0.9, 0.9));
+                        box.velocity.multiply(new Vector(0.9, 0.9));
                         box.angularVelocity *= 0.9;
                         box.color.saturation(box.color.s - 3);
                         if (!world.input.mouseDown)
@@ -165,14 +165,17 @@ function createBoxWallCollisionParticles(box, position, velocity) {
     var emitter = new Emitter();
     emitter.position = position;
     emitter.velocity = velocity;
+    emitter.velocityRandomness = 1.5;
     emitter.spread = Math.PI / 2;
     emitter.size = 10;
-    emitter.color = box.color.copy().lightness(80);
+    emitter.color = box.color.copy();
+    emitter.colorEnd = box.color.copy().alpha(0);
     emitter.lifespan = 100;
     emitter.particleSize = 2;
     emitter.emissionRate = 0.1;
     emitter.maxParticles = 100;
     emitter.particleLifespan = 300;
+    emitter.particleLifespanRandomness = 1.5;
     world.particleSystem.emitters.push(emitter);
 }
 
@@ -180,14 +183,17 @@ function createBoxWithBoxCollisionParticles(box, collisionPoint) {
     var emitter = new Emitter();
     emitter.position = collisionPoint != null ? collisionPoint : box.position;
     emitter.velocity = box.velocity;
+    emitter.velocityRandomness = 1.5;
     emitter.spread = Math.PI;
     emitter.size = 2;
-    emitter.color = box.color.copy().lightness(80);
+    emitter.color = box.color.copy();
+    emitter.colorEnd = box.color.copy().alpha(0);
     emitter.lifespan = 100;
     emitter.particleSize = 2;
     emitter.emissionRate = 0.7;
     emitter.maxParticles = 50;
     emitter.particleLifespan = 500;
+    emitter.particleLifespanRandomness = 1.5;
     world.particleSystem.emitters.push(emitter);
 }
 
@@ -195,29 +201,35 @@ function createBoxDestructionParticles(box) {
     var emitter = new Emitter();
     emitter.position = box.position;
     emitter.velocity = new Vector(2, 2);
+    emitter.velocityRandomness = 1.5;
     emitter.spread = Math.PI;
     emitter.size = 2;
-    emitter.color = box.color.copy().lightness(80);
+    emitter.color = box.color.copy();
+    emitter.colorEnd = box.color.copy().alpha(0);
     emitter.lifespan = 500;
     emitter.particleSize = 8;
     emitter.emissionRate = 0.1;
     emitter.maxParticles = 100;
     emitter.particleLifespan = 500;
+    emitter.particleLifespanRandomness = 1.5;
     world.particleSystem.emitters.push(emitter);
 }
 
 function createBoxTrailParticles(box) {
     var emitter = new Emitter();
     emitter.position = box.position;
-    emitter.velocity = box.velocity; //new Vector(0.1, 0.1);
+    emitter.velocity = box.velocity;
+    emitter.velocityRandomness = 1.5;
     emitter.spread = Math.PI / 8;
     emitter.size = box.width;
-    emitter.color = box.color.copy().lightness(20);
+    emitter.color = box.color.copy();
+    emitter.colorEnd = box.color.copy().alpha(0);
     emitter.lifespan = null;
     emitter.particleSize = 3;
     emitter.emissionRate = 0.04;
     emitter.maxParticles = 100;
     emitter.particleLifespan = 600;
+    emitter.particleLifespanRandomness = 1.5;
     emitter.foreground = false;
     world.particleSystem.emitters.push(emitter);
     box.trailEmitter = emitter;
@@ -250,4 +262,49 @@ canvas.addEventListener("mouseup", function (evt) {
 
 var world = new GameWorld();
 
-var loop = new MainLoop().setUpdate(update).setDraw(draw).start();
+var backgroundParticles = Emitter.fromObject(Data.backgroundParticles);
+world.particleSystem.emitters.push(backgroundParticles);
+
+var emitter = new Emitter();
+emitter.position = new Vector(100, 100);
+emitter.velocity = new Vector(1, 1);
+emitter.velocityRandomness = 1.5;
+emitter.spread = Math.PI / 12;
+emitter.size = 1;
+emitter.color = new Color(0, 100, 100, 1);
+emitter.colorEnd = new Color(0, 100, 0, 0);
+emitter.lifespan = Number.MAX_SAFE_INTEGER;
+emitter.particleSize = 2;
+emitter.emissionRate = 0.2;
+emitter.maxParticles = 1000;
+emitter.particleLifespan = 1000;
+emitter.particleLifespanRandomness = 1.5;
+emitter.foreground = false;
+
+var field = new Field();
+field.position = new Vector(300, 300);
+field.mass = 1000;
+field.destructive = true;
+field.radius = 100;
+emitter.fields.push(field);
+
+// world.particleSystem.emitters.push(emitter);
+
+var loop = new Loop().setUpdate(update).setDraw(draw).start();
+
+var emitterJson;
+
+function saveTest() {
+    emitterJson = JSON.stringify(world.particleSystem.emitters[0]);
+    world.particleSystem.emitters = [];
+}
+
+function loadTest() {
+    var emitter = Emitter.fromJson(emitterJson);
+    world.particleSystem.emitters = [emitter];
+}
+
+function loadFromData() {
+    var emitter = Emitter.fromObject(Data.emitter);
+    world.particleSystem.emitters = [emitter];
+}

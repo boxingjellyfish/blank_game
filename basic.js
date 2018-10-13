@@ -12,32 +12,28 @@ class Vector {
         return this;
     }
 
-    sub(vector) {
+    substract(vector) {
         this.x -= vector.x;
         this.y -= vector.y;
         return this;
     }
 
-    mult(vector) {
+    multiply(vector) {
         this.x *= vector.x;
         this.y *= vector.y;
         return this;
     }
 
-    div(vector) {
+    divide(vector) {
         this.x /= vector.x;
         this.y /= vector.y;
         return this;
     }
 
-    mag() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    }
-
-    norm() {
-        var m = this.mag();
+    normalize() {
+        var m = this.magnitude;
         if (m > 0) {
-            this.div(new Vector(m, m));
+            this.divide(new Vector(m, m));
         }
         return this;
     }
@@ -50,8 +46,12 @@ class Vector {
         return this;
     }
 
-    angle() {
+    get angle() {
         return Math.atan2(this.y, this.x);
+    }
+
+    get magnitude() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
     copy() {
@@ -63,14 +63,18 @@ class Vector {
     }
 
     static intersection(a0, a1, b0, b1) {
-        var s1 = a1.copy().sub(a0);
-        var s2 = b1.copy().sub(b0);
+        var s1 = a1.copy().substract(a0);
+        var s2 = b1.copy().substract(b0);
         var s = (-s1.y * (a0.x - b0.x) + s1.x * (a0.y - b0.y)) / (-s2.x * s1.y + s1.x * s2.y);
         var t = (s2.x * (a0.y - b0.y) - s2.y * (a0.x - b0.x)) / (-s2.x * s1.y + s1.x * s2.y);
         if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
             return new Vector(a0.x + (t * s1.x), a0.y + (t * s1.y));
         }
         return null;
+    }
+
+    static get Zero() {
+        return new Vector(0, 0);
     }
 }
 
@@ -127,7 +131,17 @@ class Color {
         this.a = a;
         return this;
     }
+
+    blend(startColor, endColor, total, step) {
+        this.hue(endColor.h + ((startColor.h - endColor.h) / total) * step);
+        this.saturation(endColor.s + ((startColor.s - endColor.s) / total) * step);
+        this.lightness(endColor.l + ((startColor.l - endColor.l) / total) * step);
+        this.alpha(endColor.a + ((startColor.a - endColor.a) / total) * step);
+        return this;
+    }
 }
+
+// https://www.redblobgames.com/articles/probability/damage-rolls.html
 
 class Random {
     static int(min, max) {
@@ -167,8 +181,8 @@ class Entity {
 class Box extends Entity {
     constructor() {
         super();
-        this.width = Random.int(20, 50);
-        this.height = Random.int(20, 50);
+        this.width = Random.int(10, 100);
+        this.height = Random.int(10, 100);
         this.color = new Color(Random.int(0, 360), 100, 50, 1);
         this.trailEmitter = null;
     }
