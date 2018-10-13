@@ -44,7 +44,7 @@ class ParticleSystem {
 
 class Emitter {
     constructor() {
-        this.id = UUID.new();
+        this.id = UUID.new;
         this.position = Vector.Zero;
         this.velocity = Vector.Zero;
         this.spread = Math.PI * 2;
@@ -58,11 +58,11 @@ class Emitter {
         this.maxParticles = 1;
         this.particleLifespan = 1;
         this.particleLifespanRandomness = 1;
-        this.particles = [];
-        this.fields = [];
         this.enabled = true;
         this.emissionTimer = 0;
         this.foreground = true;
+        this.particles = [];
+        this.fields = [];
     }
 
     update(step) {

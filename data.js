@@ -3,9 +3,169 @@ class Data {
 
     }
 
+    static get boxWithWallCollisionParticles() {
+        return {
+            "id": UUID.new,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "velocity": {
+              "x": 0,
+              "y": 0
+            },
+            "spread": Math.PI / 2,
+            "velocityRandomness": 1.5,
+            "size": 10,
+            "color": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "colorEnd": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "lifespan": 100,
+            "emissionRate": 0.1,
+            "particleSize": 2,
+            "maxParticles": 100,
+            "particleLifespan": 300,
+            "particleLifespanRandomness": 1.5,
+            "enabled": true,
+            "emissionTimer": 0,
+            "foreground": true,
+            "particles": [],
+            "fields": []
+        };
+    }
+
+    static get boxWithBoxCollisionParticles() {
+        return {
+            "id": UUID.new,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "velocity": {
+              "x": 0,
+              "y": 0
+            },
+            "spread": Math.PI,
+            "velocityRandomness": 1.5,
+            "size": 2,
+            "color": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "colorEnd": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "lifespan": 100,
+            "emissionRate": 0.7,
+            "particleSize": 2,
+            "maxParticles": 50,
+            "particleLifespan": 500,
+            "particleLifespanRandomness": 1.5,
+            "enabled": true,
+            "emissionTimer": 0,
+            "foreground": true,
+            "particles": [],
+            "fields": []
+        };
+    }
+
+    static get boxDestructionParticles() {
+        return {
+            "id": UUID.new,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "velocity": {
+              "x": 2,
+              "y": 2
+            },
+            "spread": Math.PI,
+            "velocityRandomness": 1.5,
+            "size": 2,
+            "color": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "colorEnd": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "lifespan": 500,
+            "emissionRate": 0.1,
+            "particleSize": 8,
+            "maxParticles": 100,
+            "particleLifespan": 500,
+            "particleLifespanRandomness": 1.5,
+            "enabled": true,
+            "emissionTimer": 0,
+            "foreground": true,
+            "particles": [],
+            "fields": []
+        };
+    }
+
+    static get boxTrailParticles() {
+        return {
+            "id": UUID.new,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "velocity": {
+              "x": 0,
+              "y": 0
+            },
+            "spread": Math.PI / 8,
+            "velocityRandomness": 1.5,
+            "size": 0,
+            "color": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "colorEnd": {
+              "h": 0,
+              "s": 0,
+              "l": 0,
+              "a": 0
+            },
+            "lifespan": null,
+            "emissionRate": 0.04,
+            "particleSize": 3,
+            "maxParticles": 100,
+            "particleLifespan": 600,
+            "particleLifespanRandomness": 1.5,
+            "enabled": true,
+            "emissionTimer": 0,
+            "foreground": false,
+            "particles": [],
+            "fields": []
+        };
+    }
+
     static get backgroundParticles(){
         return {
-            "id": "1d288bdf-b58d-4ff4-a80c-04c7cb337cd0",
+            "id": UUID.new,
             "position": {
               "x": 0,
               "y": 432
@@ -29,12 +189,15 @@ class Data {
               "l": 50,
               "a": 0.5
             },
-            "lifespan": 9007199254686676,
+            "lifespan": null,
             "emissionRate": 0.02,
             "particleSize": 1,
             "maxParticles": 600,
             "particleLifespan": 30000,
             "particleLifespanRandomness": 1.5,
+            "enabled": true,
+            "emissionTimer": 0,
+            "foreground": false,
             "particles": [
               {
                 "position": {
@@ -13653,10 +13816,7 @@ class Data {
                 "totalLifespan": 39170
               }
             ],
-            "fields": [],
-            "enabled": true,
-            "emissionTimer": 33.33333333333335,
-            "foreground": false
+            "fields": []
           };
     }
 }

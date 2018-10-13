@@ -158,7 +158,7 @@ class Random {
 }
 
 class UUID {
-    static new() {
+    static get new() {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0, v = c == "x" ? r : (r & 0x3 | 0x8);
             return v.toString(16);
@@ -168,7 +168,7 @@ class UUID {
 
 class Entity {
     constructor() {
-        this.id = UUID.new();
+        this.id = UUID.new;
         this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
         this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
         this.angle = Random.int(0, Math.PI * 2);

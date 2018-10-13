@@ -162,75 +162,38 @@ function draw(interp) {
 }
 
 function createBoxWallCollisionParticles(box, position, velocity) {
-    var emitter = new Emitter();
+    var emitter = Emitter.fromObject(Data.boxWithWallCollisionParticles);
     emitter.position = position;
     emitter.velocity = velocity;
-    emitter.velocityRandomness = 1.5;
-    emitter.spread = Math.PI / 2;
-    emitter.size = 10;
     emitter.color = box.color.copy();
     emitter.colorEnd = box.color.copy().alpha(0);
-    emitter.lifespan = 100;
-    emitter.particleSize = 2;
-    emitter.emissionRate = 0.1;
-    emitter.maxParticles = 100;
-    emitter.particleLifespan = 300;
-    emitter.particleLifespanRandomness = 1.5;
     world.particleSystem.emitters.push(emitter);
 }
 
 function createBoxWithBoxCollisionParticles(box, collisionPoint) {
-    var emitter = new Emitter();
+    var emitter = Emitter.fromObject(Data.boxWithBoxCollisionParticles);
     emitter.position = collisionPoint != null ? collisionPoint : box.position;
     emitter.velocity = box.velocity;
-    emitter.velocityRandomness = 1.5;
-    emitter.spread = Math.PI;
-    emitter.size = 2;
     emitter.color = box.color.copy();
     emitter.colorEnd = box.color.copy().alpha(0);
-    emitter.lifespan = 100;
-    emitter.particleSize = 2;
-    emitter.emissionRate = 0.7;
-    emitter.maxParticles = 50;
-    emitter.particleLifespan = 500;
-    emitter.particleLifespanRandomness = 1.5;
     world.particleSystem.emitters.push(emitter);
 }
 
 function createBoxDestructionParticles(box) {
-    var emitter = new Emitter();
+    var emitter = Emitter.fromObject(Data.boxDestructionParticles);
     emitter.position = box.position;
-    emitter.velocity = new Vector(2, 2);
-    emitter.velocityRandomness = 1.5;
-    emitter.spread = Math.PI;
-    emitter.size = 2;
     emitter.color = box.color.copy();
     emitter.colorEnd = box.color.copy().alpha(0);
-    emitter.lifespan = 500;
-    emitter.particleSize = 8;
-    emitter.emissionRate = 0.1;
-    emitter.maxParticles = 100;
-    emitter.particleLifespan = 500;
-    emitter.particleLifespanRandomness = 1.5;
     world.particleSystem.emitters.push(emitter);
 }
 
 function createBoxTrailParticles(box) {
-    var emitter = new Emitter();
+    var emitter = Emitter.fromObject(Data.boxTrailParticles);
     emitter.position = box.position;
     emitter.velocity = box.velocity;
-    emitter.velocityRandomness = 1.5;
-    emitter.spread = Math.PI / 8;
     emitter.size = box.width;
     emitter.color = box.color.copy();
     emitter.colorEnd = box.color.copy().alpha(0);
-    emitter.lifespan = null;
-    emitter.particleSize = 3;
-    emitter.emissionRate = 0.04;
-    emitter.maxParticles = 100;
-    emitter.particleLifespan = 600;
-    emitter.particleLifespanRandomness = 1.5;
-    emitter.foreground = false;
     world.particleSystem.emitters.push(emitter);
     box.trailEmitter = emitter;
 }
@@ -273,7 +236,7 @@ emitter.spread = Math.PI / 12;
 emitter.size = 1;
 emitter.color = new Color(0, 100, 100, 1);
 emitter.colorEnd = new Color(0, 100, 0, 0);
-emitter.lifespan = Number.MAX_SAFE_INTEGER;
+emitter.lifespan = null;
 emitter.particleSize = 2;
 emitter.emissionRate = 0.2;
 emitter.maxParticles = 1000;
