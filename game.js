@@ -59,6 +59,22 @@ class Ball extends Entity {
         this.captured = true;
     }
 
+    get minMax() {
+        return [
+            new Vector(this.position.x - this.radius, this.position.y - this.radius),
+            new Vector(this.position.x + this.radius, this.position.y + this.radius),
+        ];
+    }
+
+    get boundingBox() {
+        return [
+            new Vector(minMax[0].x, minMax[0].y),
+            new Vector(minMax[1].x, minMax[0].y),
+            new Vector(minMax[1].x, minMax[1].y),
+            new Vector(minMax[0].x, minMax[1].y)
+        ];
+    }
+
     update(delta) {
 
     }
@@ -76,55 +92,37 @@ class Ball extends Entity {
 }
 
 function update(delta) {
-    /*
+
     for (var i = world.bricks.length - 1; i >= 0; i--) {
         var brick = world.bricks[i];
+
         for (var j = 0; j < brick.points.length; j++) {
-            var collision = false;
-            if (!collision && ((brick.points[j].x > world.width && brick.velocity.x > 0) || (brick.points[j].x < 0 && brick.velocity.x < 0))) {
-                collision = true;
+            var wallCollission = false;
+            if (!wallCollission && ((brick.points[j].x > world.width && brick.velocity.x > 0) || (brick.points[j].x < 0 && brick.velocity.x < 0))) {
+                wallCollission = true;
                 brick.velocity.x *= -1;
-                createBoxWallCollisionParticles(brick, new Vector(brick.points[j].x, brick.position.y), new Vector(brick.velocity.copy().normalize().x, 0));
             }
-            if (!collision && ((brick.points[j].y > world.height && brick.velocity.y > 0) || (brick.points[j].y < 0 && brick.velocity.y < 0))) {
-                collision = true;
+            if (!wallCollission && ((brick.points[j].y > world.height && brick.velocity.y > 0) || (brick.points[j].y < 0 && brick.velocity.y < 0))) {
+                wallCollission = true;
                 brick.velocity.y *= -1;
-                createBoxWallCollisionParticles(brick, new Vector(brick.position.x, brick.points[j].y), new Vector(0, brick.velocity.copy().normalize().y));
             }
-            if (collision) {
-                if (brick.velocity.magnitude < 1.5)
-                    brick.velocity.multiply(new Vector(1.1, 1.1));
-                if (Math.abs(brick.angularVelocity) < 0.02)
-                    brick.angularVelocity *= 1.1;
-                world.soundManager.wallCollission();
+            if (wallCollission) {
+                // TODO: do something?
             }
         }
-        for (var j = 0; j < world.bricks.length; j++) {
-            var otherBrick = world.bricks[j];
-            if (brick.id != otherBrick.id && brick.visible && !brick.deleted && otherBrick.visible && !otherBrick.deleted) {
-                if (brick.intersects(otherBrick)) {
-                    if (brick.area >= otherBrick.area) {
-                        var collisionPoint = brick.intersectsEdges(otherBrick);
-                        createBoxWithBoxCollisionParticles(otherBrick, collisionPoint);
-                        otherBrick.visible = false;
-                        otherBrick.deleted = true;
-                        otherBrick.trailEmitter.lifespan = 0;
-                        brick.width += 2;
-                        brick.height += 2;
-                        brick.velocity.multiply(new Vector(0.9, 0.9));
-                        brick.angularVelocity *= 0.9;
-                        brick.color.saturation(brick.color.s - 3);
-                        if (!world.input.mouseDown)
-                            world.soundManager.boxCollission();
-                        if (brick.width >= 200 || brick.height >= 200) {
-                            createBoxDestructionParticles(brick);
-                            brick.visible = false;
-                            brick.deleted = true;
-                            brick.trailEmitter.lifespan = 0;
-                        }
-                    }
-                }
+
+        if (Collissions.boundigBoxes(brick.minMax[0], brick.minMax[1], world.ball.minMax[0], world.ball.minMax[1])) {
+            if (brick.velocity.x == 0 && brick.velocity.y == 0) {
+                brick.velocity = world.ball.velocity.copy().multiply(new Vector(Random.float(0.05, 0.15), Random.float(0.05, 0.15)));
             }
+            else {
+                brickDestruction(brick);
+                brick.visible = false;
+                brick.deleted = true;
+            }
+            // TODO: temporary
+            world.ball.velocity.y *= -1;
+            world.soundManager.padCollission();
         }
 
         if (!brick.deleted) {
@@ -136,24 +134,24 @@ function update(delta) {
             world.bricks.splice(i, 1);
         }
     }
-    */
+
     if (world.input.mouseDown) {
         world.ball.captured = false;
     }
 
     if (!world.ball.captured && world.ball.position.x + world.ball.radius > world.width && world.ball.velocity.x > 0) {
         world.ball.velocity.x *= -1;
-        createBallWithWallCollisionParticles(new Vector(world.width, world.ball.position.y), new Vector(world.ball.velocity.copy().normalize().x, 0));
+        ballWallCollission(new Vector(world.width, world.ball.position.y), new Vector(world.ball.velocity.copy().normalize().x, 0));
         world.soundManager.wallCollission();
     }
     if (!world.ball.captured && world.ball.position.x - world.ball.radius < 0 && world.ball.velocity.x < 0) {
         world.ball.velocity.x *= -1;
-        createBallWithWallCollisionParticles(new Vector(0, world.ball.position.y), new Vector(world.ball.velocity.copy().normalize().x, 0));
+        ballWallCollission(new Vector(0, world.ball.position.y), new Vector(world.ball.velocity.copy().normalize().x, 0));
         world.soundManager.wallCollission();
     }
     if (!world.ball.captured && world.ball.position.y - world.ball.radius < 0 && world.ball.velocity.y < 0) {
         world.ball.velocity.y *= -1;
-        createBallWithWallCollisionParticles(new Vector(world.ball.position.x, 0), new Vector(0, world.ball.velocity.copy().normalize().y));
+        ballWallCollission(new Vector(world.ball.position.x, 0), new Vector(0, world.ball.velocity.copy().normalize().y));
         world.soundManager.wallCollission();
     }
 
@@ -161,6 +159,7 @@ function update(delta) {
         world.ball.velocity.y *= -1;
         var collissionX = world.ball.position.copy().substract(world.pad.position).x;
         world.ball.velocity.x = collissionX * 0.01; // Magic Factor (TM)
+        ballPadCollission(new Vector(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector(0, world.ball.velocity.copy().normalize().y));
         world.soundManager.padCollission();
     }
 
@@ -169,7 +168,7 @@ function update(delta) {
         world.ball.velocity = new Vector(Random.float(-0.5, 0.5), -0.5);
         world.soundManager.floorCollission();
     }
-    
+
     world.pad.position.x = world.input.mousePosition.x;
     if (world.pad.position.x > world.width - world.pad.width / 2)
         world.pad.position.x = world.width - world.pad.width / 2;
@@ -184,6 +183,10 @@ function update(delta) {
         world.ball.position.x += world.ball.velocity.x * delta;
         world.ball.position.y += world.ball.velocity.y * delta;
         world.ball.angle += world.ball.angularVelocity * delta;
+    }
+
+    if (world.bricks.length == 0) {
+        initStage();
     }
 
     world.particleSystem.update(delta);
@@ -218,13 +221,13 @@ function draw(interp) {
             for (var j = 1; j < points.length; j++)
                 ctx.lineTo(points[j].x, points[j].y);
             ctx.closePath();
-            ctx.stroke();       
+            ctx.stroke();
         }
     }
 
     world.pad.draw(ctx, interp);
 
-    world.ball.draw(ctx, interp);    
+    world.ball.draw(ctx, interp);
 
     world.particleSystem.draw(ctx, interp, true);
 
@@ -255,10 +258,25 @@ function draw(interp) {
     ctx.restore();
 }
 
-function createBallWithWallCollisionParticles(position, velocity) {
+function ballWallCollission(position, velocity) {
     var emitter = Emitter.fromObject(Data.ballWallCollission);
     emitter.position = position;
     emitter.velocity = velocity;
+    world.particleSystem.emitters.push(emitter);
+}
+
+function ballPadCollission(position, velocity) {
+    var emitter = Emitter.fromObject(Data.ballWallCollission);
+    emitter.position = position;
+    emitter.velocity = velocity;
+    world.particleSystem.emitters.push(emitter);
+}
+
+function brickDestruction(brick) {
+    var emitter = Emitter.fromObject(Data.boxDestructionParticles);
+    emitter.position = brick.position;
+    emitter.color = brick.color.copy();
+    emitter.colorEnd = brick.color.copy().alpha(0);
     world.particleSystem.emitters.push(emitter);
 }
 
@@ -300,28 +318,33 @@ window.addEventListener("gamepadconnected", function (e) {
 
 var world = new GameWorld();
 
-world.pad.position = new Vector(world.width / 2, world.height - 30);
-world.pad.width = 100;
-world.pad.height = 20;
-world.pad.color = new Color(0, 0, 30, 1);
+function initStage() {
+    world.pad.position = new Vector(world.width / 2, world.height - 30);
+    world.pad.width = 100;
+    world.pad.height = 20;
+    world.pad.color = new Color(0, 0, 30, 1);
 
-world.ball.position = new Vector(world.pad.position.x, world.pad.position.y - world.pad.height / 2 - world.ball.radius - 1);
-world.ball.velocity = new Vector(Random.float(-0.5, 0.5), -0.5);
-world.ball.radius = 10;
-world.ball.color = new Color(0, 0, 30, 1);
+    world.ball.position = new Vector(world.pad.position.x, world.pad.position.y - world.pad.height / 2 - world.ball.radius - 1);
+    world.ball.velocity = new Vector(Random.float(-0.5, 0.5), -0.8);
+    world.ball.radius = 10;
+    world.ball.color = new Color(0, 0, 30, 1);
+    world.ball.captured = true;
 
-var brickRows = 5;
-var brickColumns = 10;
-for(var i = 1; i < brickRows; i++) {
-    for(var j = 1; j < brickColumns; j++) {
-        var brick = new Box();
-        brick.width = world.width / brickColumns - 10;
-        brick.height = 30;
-        brick.position = new Vector(world.width / brickColumns * j + 50, i * 40);
-        brick.color = new Color(Random.int(0, 360), 100, 50, 1);
-        world.bricks.push(brick);
+    var brickRows = Random.int(6, 15);
+    var brickColumns = Random.int(6, 15);
+    for (var i = 1; i < brickRows; i++) {
+        for (var j = 1; j < brickColumns - 1; j++) {
+            var brick = new Box();
+            brick.width = world.width / brickColumns - 10;
+            brick.height = 30;
+            brick.position = new Vector(world.width / brickColumns * j + 50, i * 40);
+            brick.color = new Color(Random.int(0, 360), 100, 50, 1);
+            world.bricks.push(brick);
+        }
     }
 }
+
+initStage();
 
 var backgroundParticles = Emitter.fromObject(Data.background);
 world.particleSystem.emitters.push(backgroundParticles);

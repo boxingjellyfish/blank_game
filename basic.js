@@ -62,17 +62,6 @@ class Vector {
         return new Vector(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
     }
 
-    static intersection(a0, a1, b0, b1) {
-        var s1 = a1.copy().substract(a0);
-        var s2 = b1.copy().substract(b0);
-        var s = (-s1.y * (a0.x - b0.x) + s1.x * (a0.y - b0.y)) / (-s2.x * s1.y + s1.x * s2.y);
-        var t = (s2.x * (a0.y - b0.y) - s2.y * (a0.x - b0.x)) / (-s2.x * s1.y + s1.x * s2.y);
-        if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-            return new Vector(a0.x + (t * s1.x), a0.y + (t * s1.y));
-        }
-        return null;
-    }
-
     static get Zero() {
         return new Vector(0, 0);
     }
@@ -261,7 +250,7 @@ class Box extends Entity {
     intersectsEdges(box) {
         for (var i = 0; i < this.lines.length; i++) {
             for (var j = 0; j < box.lines.length; j++) {
-                var point = Vector.intersection(this.lines[i].v0, this.lines[i].v1, box.lines[j].v0, box.lines[j].v1);
+                var point = Collissions.lineLineIntersectionPoint(this.lines[i].v0, this.lines[i].v1, box.lines[j].v0, box.lines[j].v1);
                 if (point != null) {
                     return point;
                 }
@@ -330,6 +319,13 @@ class Collissions {
             return true;
         }
         return false;
+    }
+
+    static boundigBoxes(boundingBoxStartA, boundingBoxEndA, boundingBoxStartB, boundingBoxEndB) {
+        return boundingBoxStartA.x < boundingBoxEndB.x &&
+            boundingBoxEndA.x > boundingBoxStartB.x &&
+            boundingBoxStartA.y < boundingBoxEndB.y &&
+            boundingBoxEndA.y > boundingBoxStartB.y;
     }
 
 }
