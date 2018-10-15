@@ -27,16 +27,9 @@ class ParticleSystem {
         }
     }
 
-    drawForeground(ctx, interp) {
+    draw(ctx, interp, foreground) {
         for (var i = 0; i < this.emitters.length; i++) {
-            if (this.emitters[i].foreground)
-                this.emitters[i].draw(ctx, interp);
-        }
-    }
-
-    drawBackground(ctx, interp) {
-        for (var i = 0; i < this.emitters.length; i++) {
-            if (!this.emitters[i].foreground)
+            if (this.emitters[i].foreground == foreground)
                 this.emitters[i].draw(ctx, interp);
         }
     }

@@ -44,25 +44,37 @@ class SoundManager {
         ];
     }
 
-    wallCollission() {
+    floorCollission() {
         this.oscillator = this.context.createOscillator();
         this.gain = this.context.createGain();
-        this.gain.gain.value = 0.5;
+        this.gain.gain.value = 0.2;
         this.oscillator.connect(this.gain);
-        this.oscillator.type = this.randomFrequencyType;
-        this.oscillator.frequency.value = this.randomPentatonic(2).frequency;
+        this.oscillator.type = "sawtooth";
+        this.oscillator.frequency.value = this.findNote("C1").frequency;
         this.gain.connect(this.context.destination);
         this.oscillator.start(0);
         this.gain.gain.exponentialRampToValueAtTime(0.00001, this.context.currentTime + 1.5);
     }
 
+    padCollission() {
+        this.collissionSound(3);
+    }
+
+    wallCollission() {
+        this.collissionSound(2);
+    }
+
     boxCollission() {
+        this.collissionSound(4);
+    }
+
+    collissionSound(octave) {
         this.oscillator = this.context.createOscillator();
         this.gain = this.context.createGain();
         this.gain.gain.value = 0.5;
         this.oscillator.connect(this.gain);
         this.oscillator.type = this.randomFrequencyType;
-        this.oscillator.frequency.value = this.randomPentatonic(4).frequency;
+        this.oscillator.frequency.value = this.randomPentatonic(octave).frequency;
         this.gain.connect(this.context.destination);
         this.oscillator.start(0);
         this.gain.gain.exponentialRampToValueAtTime(0.00001, this.context.currentTime + 1.5);

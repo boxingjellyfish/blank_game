@@ -76,6 +76,10 @@ class Vector {
     static get Zero() {
         return new Vector(0, 0);
     }
+
+    static get One() {
+        return new Vector(1, 1);
+    }
 }
 
 // http://hslpicker.com/
@@ -169,10 +173,10 @@ class UUID {
 class Entity {
     constructor() {
         this.id = UUID.new;
-        this.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
-        this.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
-        this.angle = Random.int(0, Math.PI * 2);
-        this.angularVelocity = Random.float(-Math.PI / 500, Math.PI / 500);
+        this.position = Vector.Zero;
+        this.velocity = Vector.Zero;
+        this.angle = 0;
+        this.angularVelocity = 0;
         this.visible = true;
         this.deleted = false;
     }
@@ -181,10 +185,23 @@ class Entity {
 class Box extends Entity {
     constructor() {
         super();
-        this.width = Random.int(10, 100);
-        this.height = Random.int(10, 100);
-        this.color = new Color(Random.int(0, 360), 100, 50, 1);
+        this.width = 0;
+        this.height = 0;
+        this.color = new Color(0, 0, 0, 0);
         this.trailEmitter = null;
+    }
+
+    static get random() {
+        var box = new Box();
+        // TODO: Basic doesnt have to know world
+        box.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
+        box.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
+        box.angle = Random.int(0, Math.PI * 2);
+        box.angularVelocity = Random.float(-Math.PI / 500, Math.PI / 500);
+        box.width = Random.int(10, 100);
+        box.height = Random.int(10, 100);
+        box.color = new Color(Random.int(0, 360), 100, 50, 1);
+        return box;
     }
 
     get area() {
@@ -258,4 +275,61 @@ class Box extends Entity {
         var otherMinMax = box.minMax;
         return thisMinMax[0].x < otherMinMax[1].x && thisMinMax[1].x > otherMinMax[0].x && thisMinMax[0].y < otherMinMax[1].y && thisMinMax[1].y > otherMinMax[0].y;
     }
+}
+
+// http://www.jeffreythompson.org/collision-detection/index.php
+
+class Collissions {
+    static pointCircle(point, circleCenter, circleRadius) {
+        var distance = point.copy().substract(circleCenter);
+        if (distance.magnitude <= circleRadius) {
+            return true;
+        }
+        return false;
+    }
+
+    static lineLine(lineStartA, lineEndA, lineStartB, lineEndB) {
+        return Collissions.lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) != null;
+    }
+
+    static lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) {
+        var s1 = lineEndA.copy().substract(lineStartA);
+        var s2 = lineEndB.copy().substract(lineStartB);
+        var s = (-s1.y * (lineStartA.x - lineStartB.x) + s1.x * (lineStartA.y - lineStartB.y)) / (-s2.x * s1.y + s1.x * s2.y);
+        var t = (s2.x * (lineStartA.y - lineStartB.y) - s2.y * (lineStartA.x - lineStartB.x)) / (-s2.x * s1.y + s1.x * s2.y);
+        if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+            return new Vector(lineStartA.x + (t * s1.x), lineStartA.y + (t * s1.y));
+        }
+        return null;
+    }
+
+    static linePoint(lineStart, lineEnd, point) {
+        var pointToStart = point.copy().substract(lineStart).magnitude;
+        var pointToEnd = point.copy().substract(lineEnd).magnitude;
+        var lineLength = lineEnd.copy().substract(lineStart).magnitude;
+        var buffer = 0.1;
+        if (pointToStart + pointToEnd >= lineLength - buffer && pointToStart + pointToEnd <= lineLength + buffer) {
+            return true;
+        }
+        return false;
+    }
+
+    static lineCircle(lineStart, lineEnd, circleCenter, circleRadius) {
+        var isStartInside = Collissions.pointCircle(lineStart, circleCenter, circleRadius);
+        var isEndInside = Collissions.pointCircle(lineEnd, circleCenter, circleRadius);
+        if (isStartInside || isEndInside)
+            return true;
+        var lineLength = lineEnd.copy().substract(lineStart).magnitude;
+        var dot = (((circleCenter.x - lineStart.x) * (lineEnd.x - lineStart.x)) + ((circleCenter.y - lineStart.y) * (lineEnd.y - lineStart.y))) / Math.pow(lineLength, 2);
+        var closestPoint = lineStart.copy().add(lineEnd.copy().substract(lineStart).multiply(new Vector(dot, dot)));
+        var onSegment = Collissions.linePoint(lineStart, lineEnd, closestPoint);
+        if (!onSegment)
+            return false;
+        var distance = closestPoint.substract(circleCenter).magnitude;
+        if (distance <= circleRadius) {
+            return true;
+        }
+        return false;
+    }
+
 }

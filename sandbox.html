@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>A·R·K·A·N·O·I·D·E</title>
+    <title>Blank Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * {
@@ -16,7 +16,6 @@
         }
         canvas {
             border: 1px solid darkgray;
-            cursor: none;
         }
         #title {
             padding-bottom: 10px;
@@ -30,21 +29,20 @@
 
 <body>
     <div id="title">
-        <span>A·R·K·A·N·O·I·D·E</span>
+        <span>Blank Game</span>
     </div>
     <div>
         <canvas id="canvas" width="1536" height="864"></canvas>
     </div>
     <div id="buttons">
-        <button onclick="startStopLoop()">Pause/Resume Loop</button>
-        <button onclick="showHideDebug()">Show/Hide Debug</button>
+        <button onclick="toggle()">Pause/Resume</button>
     </div>
     <script src="particles.js"></script>
     <script src="sound.js"></script>
     <script src="loop.js"></script>
     <script src="basic.js"></script>
     <script src="data.js"></script>
-    <script src="game.js"></script>
+    <script src="sandbox.js"></script>
 </body>
 
 </html>
