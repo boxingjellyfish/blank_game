@@ -89,7 +89,7 @@ class Emitter {
             var position = segment;
             var velocity = Vector.fromAngle(angle, Random.float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
             var life = Random.int(this.particleLifespan, this.particleLifespan * this.particleLifespanRandomness);
-            var particle = new Particle(position, velocity, Vector.Zero, this.color.copy(), this.particleSize, life);
+            var particle = new Particle(position, velocity, Vector.Zero, this.color.copy, this.particleSize, life);
             this.particles.push(particle);
         }
     }
@@ -110,7 +110,7 @@ class Emitter {
     }
 
     move(position) {
-        var delta = position.copy().substract(this.position);
+        var delta = position.copy.substract(this.position);
         this.position = position;
         for (var i = 0; i < this.fields.length; i++) {
             this.fields[i].position.add(delta);
@@ -158,7 +158,7 @@ class Particle {
         for (var i = 0; i < fields.length; i++) {
             var field = fields[i];
             if (field.enabled) {
-                var vector = field.position.copy().substract(this.position);
+                var vector = field.position.copy.substract(this.position);
                 var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
                 totalAcceleration.add(vector.multiply(new Vector(force, force)));
                 if (field.destructive) {

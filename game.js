@@ -30,8 +30,8 @@ class Pad extends Box {
         var points = this.points;
 
         var gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
-        gradient.addColorStop(0, this.color.copy().lightness(60).style);
-        gradient.addColorStop(1, this.color.copy().lightness(40).style);
+        gradient.addColorStop(0, this.color.copy.lightness(60).style);
+        gradient.addColorStop(1, this.color.copy.lightness(40).style);
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
@@ -81,8 +81,8 @@ class Ball extends Entity {
 
     draw(ctx, interp) {
         var gradient = ctx.createRadialGradient(this.position.x, this.position.y, this.radius, this.position.x - this.radius / 3, this.position.y - this.radius / 3, 2);
-        gradient.addColorStop(0, this.color.copy().lightness(30).style);
-        gradient.addColorStop(1, this.color.copy().lightness(70).style);
+        gradient.addColorStop(0, this.color.copy.lightness(30).style);
+        gradient.addColorStop(1, this.color.copy.lightness(70).style);
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
@@ -112,23 +112,35 @@ function update(delta) {
         }
 
         if (Collissions.boundigBoxes(brick.minMax[0], brick.minMax[1], world.ball.minMax[0], world.ball.minMax[1])) {
-            if (brick.velocity.x == 0 && brick.velocity.y == 0) {
-                brick.velocity = world.ball.velocity.copy().multiply(new Vector(Random.float(0.05, 0.15), Random.float(0.05, 0.15)));
+            var ballCollissionSegment = null;
+            for (var j = 0; j < brick.lines.length; j++) {
+                if (Collissions.lineCircle(brick.lines[j].v0, brick.lines[j].v1, world.ball.position, world.ball.radius)) {
+                    ballCollissionSegment = brick.lines[j];
+                }
             }
-            else {
-                brickDestruction(brick);
-                brick.visible = false;
-                brick.deleted = true;
+            if (ballCollissionSegment != null) {
+                if (brick.velocity.x == 0 && brick.velocity.y == 0) {
+                    brick.velocity = world.ball.velocity.copy.multiply(new Vector(Random.float(0.1, 0.4), Random.float(0.1, 0.4)));
+                    brick.angularVelocity = Random.float(-Math.PI / 2000, Math.PI / 2000);
+
+                    world.bricks.splice(i, 1);
+                    world.bricks.push(brick);
+                }
+                else {
+                    brickDestruction(brick);
+                    brick.visible = false;
+                    brick.deleted = true;
+                }
+                world.ball.velocity.reflect(ballCollissionSegment.v1, ballCollissionSegment.v0);
+                world.soundManager.padCollission();
             }
-            // TODO: temporary
-            world.ball.velocity.y *= -1;
-            world.soundManager.padCollission();
         }
 
         if (!brick.deleted) {
             brick.position.x += brick.velocity.x * delta;
             brick.position.y += brick.velocity.y * delta;
             brick.angle += brick.angularVelocity * delta;
+            brick.angularVelocity *= 0.995;
         }
         else {
             world.bricks.splice(i, 1);
@@ -141,25 +153,25 @@ function update(delta) {
 
     if (!world.ball.captured && world.ball.position.x + world.ball.radius > world.width && world.ball.velocity.x > 0) {
         world.ball.velocity.x *= -1;
-        ballWallCollission(new Vector(world.width, world.ball.position.y), new Vector(world.ball.velocity.copy().normalize().x, 0));
+        ballWallCollission(new Vector(world.width, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
         world.soundManager.wallCollission();
     }
     if (!world.ball.captured && world.ball.position.x - world.ball.radius < 0 && world.ball.velocity.x < 0) {
         world.ball.velocity.x *= -1;
-        ballWallCollission(new Vector(0, world.ball.position.y), new Vector(world.ball.velocity.copy().normalize().x, 0));
+        ballWallCollission(new Vector(0, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
         world.soundManager.wallCollission();
     }
     if (!world.ball.captured && world.ball.position.y - world.ball.radius < 0 && world.ball.velocity.y < 0) {
         world.ball.velocity.y *= -1;
-        ballWallCollission(new Vector(world.ball.position.x, 0), new Vector(0, world.ball.velocity.copy().normalize().y));
+        ballWallCollission(new Vector(world.ball.position.x, 0), new Vector(0, world.ball.velocity.copy.normalize.y));
         world.soundManager.wallCollission();
     }
 
     if (!world.ball.captured && Collissions.lineCircle(world.pad.boundingBox[0], world.pad.boundingBox[1], world.ball.position, world.ball.radius) && world.ball.velocity.y > 0) {
         world.ball.velocity.y *= -1;
-        var collissionX = world.ball.position.copy().substract(world.pad.position).x;
+        var collissionX = world.ball.position.copy.substract(world.pad.position).x;
         world.ball.velocity.x = collissionX * 0.01; // Magic Factor (TM)
-        ballPadCollission(new Vector(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector(0, world.ball.velocity.copy().normalize().y));
+        ballPadCollission(new Vector(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector(0, world.ball.velocity.copy.normalize.y));
         world.soundManager.padCollission();
     }
 
@@ -203,8 +215,8 @@ function draw(interp) {
         if (brick.visible && !brick.deleted) {
             var points = brick.points;
             gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
-            gradient.addColorStop(0, brick.color.copy().lightness(90).style);
-            gradient.addColorStop(1, brick.color.copy().lightness(20).style);
+            gradient.addColorStop(0, brick.color.copy.lightness(90).style);
+            gradient.addColorStop(1, brick.color.copy.lightness(20).style);
             ctx.fillStyle = gradient;
 
             ctx.beginPath();
@@ -275,8 +287,8 @@ function ballPadCollission(position, velocity) {
 function brickDestruction(brick) {
     var emitter = Emitter.fromObject(Data.boxDestructionParticles);
     emitter.position = brick.position;
-    emitter.color = brick.color.copy();
-    emitter.colorEnd = brick.color.copy().alpha(0);
+    emitter.color = brick.color.copy;
+    emitter.colorEnd = brick.color.copy.alpha(0);
     world.particleSystem.emitters.push(emitter);
 }
 
@@ -334,12 +346,14 @@ function initStage() {
     var brickColumns = Random.int(6, 15);
     for (var i = 1; i < brickRows; i++) {
         for (var j = 1; j < brickColumns - 1; j++) {
-            var brick = new Box();
-            brick.width = world.width / brickColumns - 10;
-            brick.height = 30;
-            brick.position = new Vector(world.width / brickColumns * j + 50, i * 40);
-            brick.color = new Color(Random.int(0, 360), 100, 50, 1);
-            world.bricks.push(brick);
+            if (Random.int(0, 5) > 0) {
+                var brick = new Box();
+                brick.width = world.width / brickColumns - 1;
+                brick.height = 30;
+                brick.position = new Vector(world.width / brickColumns * j + 1, i * 31);
+                brick.color = new Color(Random.int(0, 360), 100, 50, 1);
+                world.bricks.push(brick);
+            }
         }
     }
 }

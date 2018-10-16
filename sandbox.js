@@ -20,7 +20,7 @@ function update(delta) {
     if (Random.int(0, rate) == 0) {
         var box = Box.random;
         if (world.input.mouseDown) {
-            box.position = world.input.mousePosition.copy();
+            box.position = world.input.mousePosition.copy;
         }
         canPlace = true;
         for (var i = 0; canPlace && i < box.points.length; i++) {
@@ -43,12 +43,12 @@ function update(delta) {
             if (!collision && ((box.points[j].x > world.width && box.velocity.x > 0) || (box.points[j].x < 0 && box.velocity.x < 0))) {
                 collision = true;
                 box.velocity.x *= -1;
-                createBoxWallCollisionParticles(box, new Vector(box.points[j].x, box.position.y), new Vector(box.velocity.copy().normalize().x, 0));
+                createBoxWallCollisionParticles(box, new Vector(box.points[j].x, box.position.y), new Vector(box.velocity.copy.normalize.x, 0));
             }
             if (!collision && ((box.points[j].y > world.height && box.velocity.y > 0) || (box.points[j].y < 0 && box.velocity.y < 0))) {
                 collision = true;
                 box.velocity.y *= -1;
-                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.points[j].y), new Vector(0, box.velocity.copy().normalize().y));
+                createBoxWallCollisionParticles(box, new Vector(box.position.x, box.points[j].y), new Vector(0, box.velocity.copy.normalize.y));
             }
             if (collision) {
                 if (box.velocity.magnitude < 1.5)
@@ -111,8 +111,8 @@ function draw(interp) {
             //var gradient = ctx.createLinearGradient(minMax[0].x, minMax[0].y, minMax[1].x, minMax[1].y);
             var points = box.points;
             var gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
-            gradient.addColorStop(0, box.color.copy().lightness(90).style);
-            gradient.addColorStop(1, box.color.copy().lightness(20).style);
+            gradient.addColorStop(0, box.color.copy.lightness(90).style);
+            gradient.addColorStop(1, box.color.copy.lightness(20).style);
             ctx.fillStyle = gradient;
 
             ctx.beginPath();
@@ -166,6 +166,82 @@ function draw(interp) {
     ctx.textBaseline = "middle";
     ctx.fillText(Math.round(loop.getFPS()) + " FPS", world.width - 55, 35);
 
+
+    /*
+        var o = new Vector(500, 500);
+        var v = new Vector(20, 10);
+        var a = new Vector(50, 10);
+        var b = new Vector(80, 100);
+        */
+
+    
+    var o = new Vector(500, 500);
+    var v = new Vector(20, 0);
+    var a = new Vector(50, 10);
+    var b = new Vector(50, -10);
+    
+/*
+    var o = new Vector(500, 500);
+    var v = new Vector(20, 10);
+    var a = new Vector(0, 100);
+    var b = new Vector(100, 0);
+*/
+    var n = b.copy.substract(a).rotate(Math.PI / 2).normalize;
+
+    // vector - 2 * Vector2.Dot(vector, normal) * normal;
+    var r = v.copy.substract(new Vector(2 * v.dot(n), 2 * v.dot(n)).multiply(n));
+    /*
+        var x = -2 * r.copy.dot(v);
+        var s = new Vector(x, x).multiply(n.copy.substract(v);
+    */
+
+    var rr = v.copy
+
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#fff";
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y);
+    ctx.lineTo(o.copy.add(v).x, o.copy.add(v).y);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.strokeStyle = "#f00";
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y);
+    ctx.lineTo(o.copy.add(a).x, o.copy.add(a).y);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.strokeStyle = "#0f0";
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y);
+    ctx.lineTo(o.copy.add(b).x, o.copy.add(b).y);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.strokeStyle = "#00f";
+    ctx.beginPath();
+    ctx.moveTo(o.copy.add(a).x, o.copy.add(a).y);
+    ctx.lineTo(o.copy.add(b).x, o.copy.add(b).y);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.strokeStyle = "#0ff";
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y);
+    ctx.lineTo(o.copy.add(n).x, o.copy.add(n).y);
+    ctx.closePath();
+    ctx.stroke();
+
+
+    ctx.strokeStyle = "#f0f";
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y);
+    ctx.lineTo(o.copy.add(r).x, o.copy.add(r).y);
+    ctx.closePath();
+    ctx.stroke();
+
     ctx.restore();
 }
 
@@ -173,8 +249,8 @@ function createBoxWallCollisionParticles(box, position, velocity) {
     var emitter = Emitter.fromObject(Data.boxWithWallCollisionParticles);
     emitter.position = position;
     emitter.velocity = velocity;
-    emitter.color = box.color.copy();
-    emitter.colorEnd = box.color.copy().alpha(0);
+    emitter.color = box.color.copy;
+    emitter.colorEnd = box.color.copy.alpha(0);
     world.particleSystem.emitters.push(emitter);
 }
 
@@ -182,16 +258,16 @@ function createBoxWithBoxCollisionParticles(box, collisionPoint) {
     var emitter = Emitter.fromObject(Data.boxWithBoxCollisionParticles);
     emitter.position = collisionPoint != null ? collisionPoint : box.position;
     emitter.velocity = box.velocity;
-    emitter.color = box.color.copy();
-    emitter.colorEnd = box.color.copy().alpha(0);
+    emitter.color = box.color.copy;
+    emitter.colorEnd = box.color.copy.alpha(0);
     world.particleSystem.emitters.push(emitter);
 }
 
 function createBoxDestructionParticles(box) {
     var emitter = Emitter.fromObject(Data.boxDestructionParticles);
     emitter.position = box.position;
-    emitter.color = box.color.copy();
-    emitter.colorEnd = box.color.copy().alpha(0);
+    emitter.color = box.color.copy;
+    emitter.colorEnd = box.color.copy.alpha(0);
     world.particleSystem.emitters.push(emitter);
 }
 
@@ -200,8 +276,8 @@ function createBoxTrailParticles(box) {
     emitter.position = box.position;
     emitter.velocity = box.velocity;
     emitter.size = box.width;
-    emitter.color = box.color.copy();
-    emitter.colorEnd = box.color.copy().alpha(0);
+    emitter.color = box.color.copy;
+    emitter.colorEnd = box.color.copy.alpha(0);
     world.particleSystem.emitters.push(emitter);
     box.trailEmitter = emitter;
 }

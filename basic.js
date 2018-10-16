@@ -30,20 +30,21 @@ class Vector {
         return this;
     }
 
-    normalize() {
-        var m = this.magnitude;
-        if (m > 0) {
-            this.divide(new Vector(m, m));
-        }
-        return this;
-    }
-
     rotate(angle) {
         var newX = this.x * Math.cos(angle) - this.y * Math.sin(angle);
         var newY = this.y * Math.cos(angle) + this.x * Math.sin(angle);
         this.x = newX;
         this.y = newY;
         return this;
+    }
+
+    dot(vector) {
+        return this.x * vector.x + this.y * vector.y;
+    }
+
+    reflect(start, end) {
+        var n = Vector.normal(start, end);
+        return this.substract(new Vector(2 * this.dot(n), 2 * this.dot(n)).multiply(n));
     }
 
     get angle() {
@@ -54,12 +55,28 @@ class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
-    copy() {
+    get normalize() {
+        var m = this.magnitude;
+        if (m > 0) {
+            this.divide(new Vector(m, m));
+        }
+        return this;
+    }
+
+    get copy() {
         return new Vector(this.x, this.y);
+    }
+
+    get toString() {
+        return this.x + "," + this.y + " (" + this.angle + "," + this.magnitude + ")";
     }
 
     static fromAngle(angle, magnitude) {
         return new Vector(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
+    }
+
+    static normal(start, end) {
+        return end.copy.substract(start).rotate(Math.PI / 2).normalize;
     }
 
     static get Zero() {
@@ -85,7 +102,7 @@ class Color {
         return "hsla(" + this.h + ", " + this.s + "%, " + this.l + "%, " + this.a + ")";
     }
 
-    copy() {
+    get copy() {
         return new Color(this.h, this.s, this.l, this.a);
     }
 
@@ -198,24 +215,22 @@ class Box extends Entity {
     }
 
     get points() {
-        var points = [
+        return [
             new Vector(this.width / 2, this.height / 2).rotate(this.angle).add(this.position),
             new Vector(this.width / 2 * -1, this.height / 2).rotate(this.angle).add(this.position),
             new Vector(this.width / 2 * -1, this.height / 2 * -1).rotate(this.angle).add(this.position),
             new Vector(this.width / 2, this.height / 2 * -1).rotate(this.angle).add(this.position)
         ];
-        return points;
     }
 
     get lines() {
         var points = this.points;
-        var lines = [
+        return [
             { v0: points[0], v1: points[1] },
             { v0: points[1], v1: points[2] },
             { v0: points[2], v1: points[3] },
             { v0: points[3], v1: points[0] },
         ];
-        return lines;
     }
 
     get minMax() {
@@ -270,7 +285,7 @@ class Box extends Entity {
 
 class Collissions {
     static pointCircle(point, circleCenter, circleRadius) {
-        var distance = point.copy().substract(circleCenter);
+        var distance = point.copy.substract(circleCenter);
         if (distance.magnitude <= circleRadius) {
             return true;
         }
@@ -282,8 +297,8 @@ class Collissions {
     }
 
     static lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) {
-        var s1 = lineEndA.copy().substract(lineStartA);
-        var s2 = lineEndB.copy().substract(lineStartB);
+        var s1 = lineEndA.copy.substract(lineStartA);
+        var s2 = lineEndB.copy.substract(lineStartB);
         var s = (-s1.y * (lineStartA.x - lineStartB.x) + s1.x * (lineStartA.y - lineStartB.y)) / (-s2.x * s1.y + s1.x * s2.y);
         var t = (s2.x * (lineStartA.y - lineStartB.y) - s2.y * (lineStartA.x - lineStartB.x)) / (-s2.x * s1.y + s1.x * s2.y);
         if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
@@ -293,9 +308,9 @@ class Collissions {
     }
 
     static linePoint(lineStart, lineEnd, point) {
-        var pointToStart = point.copy().substract(lineStart).magnitude;
-        var pointToEnd = point.copy().substract(lineEnd).magnitude;
-        var lineLength = lineEnd.copy().substract(lineStart).magnitude;
+        var pointToStart = point.copy.substract(lineStart).magnitude;
+        var pointToEnd = point.copy.substract(lineEnd).magnitude;
+        var lineLength = lineEnd.copy.substract(lineStart).magnitude;
         var buffer = 0.1;
         if (pointToStart + pointToEnd >= lineLength - buffer && pointToStart + pointToEnd <= lineLength + buffer) {
             return true;
@@ -308,9 +323,9 @@ class Collissions {
         var isEndInside = Collissions.pointCircle(lineEnd, circleCenter, circleRadius);
         if (isStartInside || isEndInside)
             return true;
-        var lineLength = lineEnd.copy().substract(lineStart).magnitude;
+        var lineLength = lineEnd.copy.substract(lineStart).magnitude;
         var dot = (((circleCenter.x - lineStart.x) * (lineEnd.x - lineStart.x)) + ((circleCenter.y - lineStart.y) * (lineEnd.y - lineStart.y))) / Math.pow(lineLength, 2);
-        var closestPoint = lineStart.copy().add(lineEnd.copy().substract(lineStart).multiply(new Vector(dot, dot)));
+        var closestPoint = lineStart.copy.add(lineEnd.copy.substract(lineStart).multiply(new Vector(dot, dot)));
         var onSegment = Collissions.linePoint(lineStart, lineEnd, closestPoint);
         if (!onSegment)
             return false;
@@ -328,4 +343,73 @@ class Collissions {
             boundingBoxEndA.y > boundingBoxStartB.y;
     }
 
+}
+
+// https://gist.github.com/gre/1650294
+
+class Easing {
+    // no easing, no acceleration
+    static linear(t) {
+        return t
+    }
+
+    // accelerating from zero velocity
+    static easeInQuad(t) {
+        return t * t
+    }
+
+    // decelerating to zero velocity
+    static easeOutQuad(t) {
+        return t * (2 - t)
+    }
+
+    // acceleration until halfway, then deceleration
+    static easeInOutQuad(t) {
+        return t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+    }
+
+    // accelerating from zero velocity 
+    static easeInCubic(t) {
+        return t * t * t
+    }
+
+    // decelerating to zero velocity 
+    static easeOutCubic(t) {
+        return (--t) * t * t + 1
+    }
+
+    // acceleration until halfway, then deceleration 
+    static easeInOutCubic(t) {
+        return t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
+    }
+
+    // accelerating from zero velocity 
+    static easeInQuart(t) {
+        return t * t * t * t
+    }
+
+    // decelerating to zero velocity 
+    static easeOutQuart(t) {
+        return 1 - (--t) * t * t * t
+    }
+
+    // acceleration until halfway, then deceleration
+    static easeInOutQuart(t) {
+        return t < .5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t
+    }
+
+    // accelerating from zero velocity
+    static easeInQuint(t) {
+        return t * t * t * t * t
+    }
+
+    // decelerating to zero velocity
+    static easeOutQuint(t) {
+        return 1 + (--t) * t * t * t * t
+    }
+
+    // acceleration until halfway, then deceleration 
+    static easeInOutQuint(t) {
+        return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t
+    }
 }
