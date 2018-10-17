@@ -48,14 +48,15 @@ class Emitter {
         this.lifespan = 1;
         this.emissionRate = 1;
         this.particleSize = 1;
+        this.particleSizeRandomness = 1;
         this.maxParticles = 1;
         this.particleLifespan = 1;
         this.particleLifespanRandomness = 1;
         this.enabled = true;
         this.emissionTimer = 0;
         this.foreground = true;
-        this.particles = [];
         this.fields = [];
+        this.particles = [];
     }
 
     update(step) {
@@ -89,7 +90,8 @@ class Emitter {
             var position = segment;
             var velocity = Vector.fromAngle(angle, Random.float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
             var life = Random.int(this.particleLifespan, this.particleLifespan * this.particleLifespanRandomness);
-            var particle = new Particle(position, velocity, Vector.Zero, this.color.copy, this.particleSize, life);
+            var size = Random.int(this.particleSize, this.particleSize * this.particleSizeRandomness);
+            var particle = new Particle(position, velocity, Vector.Zero, this.color.copy, size, life);
             this.particles.push(particle);
         }
     }
@@ -184,6 +186,7 @@ class Particle {
 
 class Field {
     constructor() {
+        this.id = UUID.new;
         this.position = Vector.Zero;
         this.mass = 1;
         this.destructive = true;

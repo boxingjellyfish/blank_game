@@ -195,7 +195,8 @@ function update(delta) {
         world.ball.position.x += world.ball.velocity.x * delta;
         world.ball.position.y += world.ball.velocity.y * delta;
         world.ball.angle += world.ball.angularVelocity * delta;
-    }
+    }    
+    backgroundParticles.fields[0].position = world.ball.position;
 
     if (world.bricks.length == 0) {
         initStage();
@@ -215,8 +216,8 @@ function draw(interp) {
         if (brick.visible && !brick.deleted) {
             var points = brick.points;
             gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
-            gradient.addColorStop(0, brick.color.copy.lightness(90).style);
-            gradient.addColorStop(1, brick.color.copy.lightness(20).style);
+            gradient.addColorStop(0, brick.color.copy.lightness(70).style);
+            gradient.addColorStop(1, brick.color.copy.lightness(30).style);
             ctx.fillStyle = gradient;
 
             ctx.beginPath();
