@@ -92,22 +92,15 @@ class Ball extends Entity {
 }
 
 function update(delta) {
-
     for (var i = world.bricks.length - 1; i >= 0; i--) {
         var brick = world.bricks[i];
 
         for (var j = 0; j < brick.points.length; j++) {
-            var wallCollission = false;
-            if (!wallCollission && ((brick.points[j].x > world.width && brick.velocity.x > 0) || (brick.points[j].x < 0 && brick.velocity.x < 0))) {
-                wallCollission = true;
+            if ((brick.points[j].x > world.width && brick.velocity.x > 0) || (brick.points[j].x < 0 && brick.velocity.x < 0)) {
                 brick.velocity.x *= -1;
             }
-            if (!wallCollission && ((brick.points[j].y > world.height && brick.velocity.y > 0) || (brick.points[j].y < 0 && brick.velocity.y < 0))) {
-                wallCollission = true;
+            if ((brick.points[j].y > world.height && brick.velocity.y > 0) || (brick.points[j].y < 0 && brick.velocity.y < 0)) {
                 brick.velocity.y *= -1;
-            }
-            if (wallCollission) {
-                // TODO: do something?
             }
         }
 
@@ -119,10 +112,10 @@ function update(delta) {
                 }
             }
             if (ballCollissionSegment != null) {
-                if (brick.velocity.x == 0 && brick.velocity.y == 0) {
+                if (!brick.visible) {
                     brick.velocity = world.ball.velocity.copy.multiply(new Vector(Random.float(0.1, 0.4), Random.float(0.1, 0.4)));
                     brick.angularVelocity = Random.float(-Math.PI / 2000, Math.PI / 2000);
-
+                    brick.visible = true;
                     world.bricks.splice(i, 1);
                     world.bricks.push(brick);
                 }
@@ -168,16 +161,16 @@ function update(delta) {
     }
 
     if (!world.ball.captured && Collissions.lineCircle(world.pad.boundingBox[0], world.pad.boundingBox[1], world.ball.position, world.ball.radius) && world.ball.velocity.y > 0) {
-        world.ball.velocity.y *= -1;
-        var collissionX = world.ball.position.copy.substract(world.pad.position).x;
-        world.ball.velocity.x = collissionX * 0.01; // Magic Factor (TM)
+        var magnitude = world.ball.velocity.magnitude;
+        var percentage = world.ball.position.copy.substract(world.pad.position).x / world.pad.width / 2;
+        world.ball.velocity = Vector.fromAngleAndMagnitude(Math.PI * percentage - (Math.PI / 2), magnitude);
         ballPadCollission(new Vector(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector(0, world.ball.velocity.copy.normalize.y));
         world.soundManager.padCollission();
     }
 
     if (!world.ball.captured && world.ball.position.y + world.ball.radius > world.height && world.ball.velocity.y > 0) {
         world.ball.captured = true;
-        world.ball.velocity = new Vector(Random.float(-0.5, 0.5), -0.5);
+        world.ball.velocity = new Vector(0.2, -0.8);
         world.soundManager.floorCollission();
     }
 
@@ -195,7 +188,7 @@ function update(delta) {
         world.ball.position.x += world.ball.velocity.x * delta;
         world.ball.position.y += world.ball.velocity.y * delta;
         world.ball.angle += world.ball.angularVelocity * delta;
-    }    
+    }
     backgroundParticles.fields[0].position = world.ball.position;
 
     if (world.bricks.length == 0) {
@@ -333,13 +326,13 @@ var world = new GameWorld();
 
 function initStage() {
     world.pad.position = new Vector(world.width / 2, world.height - 30);
-    world.pad.width = 100;
+    world.pad.width = Random.int(100, 300);
     world.pad.height = 20;
     world.pad.color = new Color(0, 0, 30, 1);
 
     world.ball.position = new Vector(world.pad.position.x, world.pad.position.y - world.pad.height / 2 - world.ball.radius - 1);
-    world.ball.velocity = new Vector(Random.float(-0.5, 0.5), -0.8);
-    world.ball.radius = 10;
+    world.ball.velocity = new Vector(0.2, -0.8);
+    world.ball.radius = Random.int(10, 30);
     world.ball.color = new Color(0, 0, 30, 1);
     world.ball.captured = true;
 
@@ -347,14 +340,13 @@ function initStage() {
     var brickColumns = Random.int(6, 15);
     for (var i = 1; i < brickRows; i++) {
         for (var j = 1; j < brickColumns - 1; j++) {
-            if (Random.int(0, 5) > 0) {
-                var brick = new Box();
-                brick.width = world.width / brickColumns - 1;
-                brick.height = 30;
-                brick.position = new Vector(world.width / brickColumns * j + 1, i * 31);
-                brick.color = new Color(Random.int(0, 360), 100, 50, 1);
-                world.bricks.push(brick);
-            }
+            var brick = new Box();
+            brick.width = world.width / brickColumns - 1;
+            brick.height = Random.int(30, 50);
+            brick.position = new Vector(world.width / brickColumns * j + 1, i * 51);
+            brick.color = new Color(Random.int(0, 360), 100, 50, 1);
+            brick.visible = Random.int(0, 5) > 0;
+            world.bricks.push(brick);
         }
     }
 }

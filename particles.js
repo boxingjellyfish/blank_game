@@ -43,6 +43,8 @@ class Emitter {
         this.spread = Math.PI * 2;
         this.velocityRandomness = 1;
         this.size = 1;
+        this.width = 1;
+        this.height = 1;
         this.color = new Color(0, 0, 0, 0);
         this.colorEnd = new Color(0, 0, 0, 0);
         this.lifespan = 1;
@@ -83,12 +85,12 @@ class Emitter {
         }
         for (var j = 0; j < particlesToEmit; j++) {
             var angle = this.velocity.angle + this.spread - Random.float(0, this.spread * 2);
-            var segment = Vector.fromAngle(this.velocity.angle + Math.PI / 2, this.size);
-            var randomSegment = Vector.fromAngle(this.velocity.angle - Math.PI / 2, Random.float(0, this.size * 2));
+            var segment = Vector.fromAngleAndMagnitude(this.velocity.angle + Math.PI / 2, this.size);
+            var randomSegment = Vector.fromAngleAndMagnitude(this.velocity.angle - Math.PI / 2, Random.float(0, this.size * 2));
             segment.add(randomSegment);
             segment.add(this.position);
             var position = segment;
-            var velocity = Vector.fromAngle(angle, Random.float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
+            var velocity = Vector.fromAngleAndMagnitude(angle, Random.float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
             var life = Random.int(this.particleLifespan, this.particleLifespan * this.particleLifespanRandomness);
             var size = Random.int(this.particleSize, this.particleSize * this.particleSizeRandomness);
             var particle = new Particle(position, velocity, Vector.Zero, this.color.copy, size, life);

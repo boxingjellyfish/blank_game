@@ -71,7 +71,7 @@ class Vector {
         return this.x + "," + this.y + " (" + this.angle + "," + this.magnitude + ")";
     }
 
-    static fromAngle(angle, magnitude) {
+    static fromAngleAndMagnitude(angle, magnitude) {
         return new Vector(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
     }
 
