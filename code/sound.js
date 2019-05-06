@@ -42,6 +42,30 @@ class SoundManager {
             { note: "A5", frequency: 880.00 },
             { note: "B5", frequency: 987.77 },
         ];
+        this.musicTimer1 = null;        
+        this.musicTimer2 = null;
+    }
+
+
+     startMusic() {
+        this.boxCollission();
+        this.musicTimer1 = setInterval(function() {
+            this.boxCollission();
+        }, 250);
+
+        this.wallCollission();
+        this.musicTimer2 = setInterval(function() {
+            this.wallCollission();
+        }, 1000);
+    }
+
+    stopMusic() {
+        if(this.musicTimer1) {
+            clearInterval(this.musicTimer1);
+        }
+        if(this.musicTimer2) {
+            clearInterval(this.musicTimer2);
+        }
     }
 
     floorCollission() {

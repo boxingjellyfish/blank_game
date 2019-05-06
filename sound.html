@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Sounds</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+    <div id="buttons">
+        <button onclick="play()">Play</button>
+        <button onclick="stop()">Stop</button>
+    </div>
+    <script src="code/basic.js"></script>
+    <script src="code/sound.js"></script>
+    <script>
+
+        var soundManager = null;
+
+        function play() {
+            if (!soundManager) {
+                soundManager = new SoundManager();
+            }
+            soundManager.startMusic();
+        }
+
+        function stop() {
+            if (!soundManager) {
+                soundManager = new SoundManager();
+            }
+            soundManager.stopMusic();
+        }
+    </script>
+</body>
+
+</html>
