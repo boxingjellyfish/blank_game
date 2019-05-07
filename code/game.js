@@ -51,7 +51,7 @@ class Pad extends Box {
     }
 }
 
-class Ball extends Entity {
+class Ball extends GameEntity {
     constructor() {
         super();
         this.radius = 10;
@@ -104,14 +104,14 @@ function update(delta) {
             }
         }
 
-        if (Collissions.boundigBoxes(brick.minMax[0], brick.minMax[1], world.ball.minMax[0], world.ball.minMax[1])) {
-            var ballCollissionSegment = null;
+        if (Collisions.boundigBoxes(brick.minMax[0], brick.minMax[1], world.ball.minMax[0], world.ball.minMax[1])) {
+            var ballCollisionSegment = null;
             for (var j = 0; j < brick.lines.length; j++) {
-                if (Collissions.lineCircle(brick.lines[j].v0, brick.lines[j].v1, world.ball.position, world.ball.radius)) {
-                    ballCollissionSegment = brick.lines[j];
+                if (Collisions.lineCircle(brick.lines[j].v0, brick.lines[j].v1, world.ball.position, world.ball.radius)) {
+                    ballCollisionSegment = brick.lines[j];
                 }
             }
-            if (ballCollissionSegment != null) {
+            if (ballCollisionSegment != null) {
                 if (!brick.visible) {
                     brick.velocity = world.ball.velocity.copy.multiply(new Vector(Random.float(0.1, 0.4), Random.float(0.1, 0.4)));
                     brick.angularVelocity = Random.float(-Math.PI / 2000, Math.PI / 2000);
@@ -124,8 +124,8 @@ function update(delta) {
                     brick.visible = false;
                     brick.deleted = true;
                 }
-                world.ball.velocity.reflect(ballCollissionSegment.v1, ballCollissionSegment.v0);
-                world.soundManager.padCollission();
+                world.ball.velocity.reflect(ballCollisionSegment.v1, ballCollisionSegment.v0);
+                world.soundManager.padCollision();
             }
         }
 
@@ -146,32 +146,32 @@ function update(delta) {
 
     if (!world.ball.captured && world.ball.position.x + world.ball.radius > world.width && world.ball.velocity.x > 0) {
         world.ball.velocity.x *= -1;
-        ballWallCollission(new Vector(world.width, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
-        world.soundManager.wallCollission();
+        ballWallCollision(new Vector(world.width, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
+        world.soundManager.wallCollision();
     }
     if (!world.ball.captured && world.ball.position.x - world.ball.radius < 0 && world.ball.velocity.x < 0) {
         world.ball.velocity.x *= -1;
-        ballWallCollission(new Vector(0, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
-        world.soundManager.wallCollission();
+        ballWallCollision(new Vector(0, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
+        world.soundManager.wallCollision();
     }
     if (!world.ball.captured && world.ball.position.y - world.ball.radius < 0 && world.ball.velocity.y < 0) {
         world.ball.velocity.y *= -1;
-        ballWallCollission(new Vector(world.ball.position.x, 0), new Vector(0, world.ball.velocity.copy.normalize.y));
-        world.soundManager.wallCollission();
+        ballWallCollision(new Vector(world.ball.position.x, 0), new Vector(0, world.ball.velocity.copy.normalize.y));
+        world.soundManager.wallCollision();
     }
 
-    if (!world.ball.captured && Collissions.lineCircle(world.pad.boundingBox[0], world.pad.boundingBox[1], world.ball.position, world.ball.radius) && world.ball.velocity.y > 0) {
+    if (!world.ball.captured && Collisions.lineCircle(world.pad.boundingBox[0], world.pad.boundingBox[1], world.ball.position, world.ball.radius) && world.ball.velocity.y > 0) {
         var magnitude = world.ball.velocity.magnitude;
         var percentage = world.ball.position.copy.substract(world.pad.position).x / world.pad.width / 2;
         world.ball.velocity = Vector.fromAngleAndMagnitude(Math.PI * percentage - (Math.PI / 2), magnitude);
-        ballPadCollission(new Vector(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector(0, world.ball.velocity.copy.normalize.y));
-        world.soundManager.padCollission();
+        ballPadCollision(new Vector(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector(0, world.ball.velocity.copy.normalize.y));
+        world.soundManager.padCollision();
     }
 
     if (!world.ball.captured && world.ball.position.y + world.ball.radius > world.height && world.ball.velocity.y > 0) {
         world.ball.captured = true;
         world.ball.velocity = new Vector(0.2, -0.8);
-        world.soundManager.floorCollission();
+        world.soundManager.floorCollision();
     }
 
     world.pad.position.x = world.input.mousePosition.x;
@@ -264,15 +264,15 @@ function draw(interp) {
     ctx.restore();
 }
 
-function ballWallCollission(position, velocity) {
-    var emitter = Emitter.fromObject(Data.ballWallCollission);
+function ballWallCollision(position, velocity) {
+    var emitter = Emitter.fromObject(Data.ballWallCollision);
     emitter.position = position;
     emitter.velocity = velocity;
     world.particleSystem.emitters.push(emitter);
 }
 
-function ballPadCollission(position, velocity) {
-    var emitter = Emitter.fromObject(Data.ballWallCollission);
+function ballPadCollision(position, velocity) {
+    var emitter = Emitter.fromObject(Data.ballWallCollision);
     emitter.position = position;
     emitter.velocity = velocity;
     world.particleSystem.emitters.push(emitter);

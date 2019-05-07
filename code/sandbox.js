@@ -55,7 +55,7 @@ function update(delta) {
                     box.velocity.multiply(new Vector(1.1, 1.1));
                 if (Math.abs(box.angularVelocity) < 0.02)
                     box.angularVelocity *= 1.1;
-                world.soundManager.wallCollission();
+                world.soundManager.wallCollision();
             }
         }
         for (var j = 0; j < world.physicObjects.length; j++) {
@@ -74,7 +74,7 @@ function update(delta) {
                         box.angularVelocity *= 0.9;
                         box.color.saturation(box.color.s - 3);
                         if (!world.input.mouseDown)
-                            world.soundManager.boxCollission();
+                            world.soundManager.boxCollision();
                         if (box.width >= 200 || box.height >= 200) {
                             createBoxDestructionParticles(box);
                             box.visible = false;

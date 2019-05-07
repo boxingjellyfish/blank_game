@@ -48,14 +48,14 @@ class SoundManager {
 
 
      startMusic() {
-        this.boxCollission();
+        this.boxCollision();
         this.musicTimer1 = setInterval(function() {
-            this.boxCollission();
+            this.boxCollision();
         }, 250);
 
-        this.wallCollission();
+        this.wallCollision();
         this.musicTimer2 = setInterval(function() {
-            this.wallCollission();
+            this.wallCollision();
         }, 1000);
     }
 
@@ -68,7 +68,7 @@ class SoundManager {
         }
     }
 
-    floorCollission() {
+    floorCollision() {
         this.oscillator = this.context.createOscillator();
         this.gain = this.context.createGain();
         this.gain.gain.value = 0.2;
@@ -80,19 +80,19 @@ class SoundManager {
         this.gain.gain.exponentialRampToValueAtTime(0.00001, this.context.currentTime + 1.5);
     }
 
-    padCollission() {
-        this.collissionSound(3);
+    padCollision() {
+        this.collisionSound(3);
     }
 
-    wallCollission() {
-        this.collissionSound(2);
+    wallCollision() {
+        this.collisionSound(2);
     }
 
-    boxCollission() {
-        this.collissionSound(4);
+    boxCollision() {
+        this.collisionSound(4);
     }
 
-    collissionSound(octave) {
+    collisionSound(octave) {
         this.oscillator = this.context.createOscillator();
         this.gain = this.context.createGain();
         this.gain.gain.value = 0.5;

@@ -176,7 +176,7 @@ class UUID {
     }
 }
 
-class Entity {
+class GameEntity {
     constructor() {
         this.id = UUID.new;
         this.position = Vector.Zero;
@@ -188,7 +188,7 @@ class Entity {
     }
 }
 
-class Box extends Entity {
+class Box extends GameEntity {
     constructor() {
         super();
         this.width = 0;
@@ -265,7 +265,7 @@ class Box extends Entity {
     intersectsEdges(box) {
         for (var i = 0; i < this.lines.length; i++) {
             for (var j = 0; j < box.lines.length; j++) {
-                var point = Collissions.lineLineIntersectionPoint(this.lines[i].v0, this.lines[i].v1, box.lines[j].v0, box.lines[j].v1);
+                var point = Collisions.lineLineIntersectionPoint(this.lines[i].v0, this.lines[i].v1, box.lines[j].v0, box.lines[j].v1);
                 if (point != null) {
                     return point;
                 }
@@ -283,7 +283,7 @@ class Box extends Entity {
 
 // http://www.jeffreythompson.org/collision-detection/index.php
 
-class Collissions {
+class Collisions {
     static pointCircle(point, circleCenter, circleRadius) {
         var distance = point.copy.substract(circleCenter);
         if (distance.magnitude <= circleRadius) {
@@ -293,7 +293,7 @@ class Collissions {
     }
 
     static lineLine(lineStartA, lineEndA, lineStartB, lineEndB) {
-        return Collissions.lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) != null;
+        return Collisions.lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) != null;
     }
 
     static lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) {
@@ -319,14 +319,14 @@ class Collissions {
     }
 
     static lineCircle(lineStart, lineEnd, circleCenter, circleRadius) {
-        var isStartInside = Collissions.pointCircle(lineStart, circleCenter, circleRadius);
-        var isEndInside = Collissions.pointCircle(lineEnd, circleCenter, circleRadius);
+        var isStartInside = Collisions.pointCircle(lineStart, circleCenter, circleRadius);
+        var isEndInside = Collisions.pointCircle(lineEnd, circleCenter, circleRadius);
         if (isStartInside || isEndInside)
             return true;
         var lineLength = lineEnd.copy.substract(lineStart).magnitude;
         var dot = (((circleCenter.x - lineStart.x) * (lineEnd.x - lineStart.x)) + ((circleCenter.y - lineStart.y) * (lineEnd.y - lineStart.y))) / Math.pow(lineLength, 2);
         var closestPoint = lineStart.copy.add(lineEnd.copy.substract(lineStart).multiply(new Vector(dot, dot)));
-        var onSegment = Collissions.linePoint(lineStart, lineEnd, closestPoint);
+        var onSegment = Collisions.linePoint(lineStart, lineEnd, closestPoint);
         if (!onSegment)
             return false;
         var distance = closestPoint.substract(circleCenter).magnitude;

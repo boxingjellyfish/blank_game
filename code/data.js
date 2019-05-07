@@ -1,5 +1,5 @@
 class Data {
-  static get ballWallCollission() {
+  static get ballWallCollision() {
     return {
       "id": UUID.new,
       "position": {
