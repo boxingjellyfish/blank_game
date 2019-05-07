@@ -14,6 +14,8 @@
         <button onclick="stop()">Stop</button>
         <button onclick="kick()">Kick</button>
         <button onclick="snare()">Snare</button>
+        <button onclick="startSequencer()">Start Sequencer</button>
+        <button onclick="stopSequencer()">Stop Sequencer</button>
     </div>
     <script src="code/basic.js"></script>
     <script src="code/sound.js"></script>
@@ -44,6 +46,19 @@
         function snare() {
             init();
             soundManager.snare.trigger();
+        }
+
+        var sequencer = null;
+
+        function startSequencer() {
+            if (!sequencer)
+                sequencer = new Sequencer();
+            sequencer.start();
+        }
+
+        function stopSequencer() {
+            if (sequencer)
+                sequencer.stop();
         }
 
     </script>

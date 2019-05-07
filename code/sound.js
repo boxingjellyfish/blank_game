@@ -13,26 +13,25 @@ class SoundManager {
     }
 
     startMusic() {
-        
-        setTimeout(() => {
-            this.bass.trigger(Notes.randomPentatonic(2));
-            this.kickTimer = setInterval(() => {
-                this.bass.trigger(Notes.randomPentatonic(2));
-            }, Random.value([250, 500, 750]));
-        }, 0);
 
         this.kick.trigger();
-        this.snareTimer = setInterval(() => {
+        this.kickTimer = setInterval(() => {
             this.kick.trigger();
         }, 500);
 
         setTimeout(() => {
             this.snare.trigger();
-            this.bassTimer = setInterval(() => {
+            this.snareTimer = setInterval(() => {
                 this.snare.trigger();
             }, 1000);
         }, 500);
 
+        setTimeout(() => {
+            this.bass.trigger(Notes.randomPentatonic(2));
+            this.bassTimer = setInterval(() => {
+                this.bass.trigger(Notes.randomPentatonic(2));
+            }, Random.value([250, 500, 750]));
+        }, 4000);
     }
 
     stopMusic() {
@@ -63,6 +62,62 @@ class SoundManager {
         this.bass.trigger(Notes.randomPentatonic(4));
     }
 
+}
+
+class Sequencer {
+    constructor(context) {
+        this.context = new AudioContext();
+        this.kick = new Kick(this.context);
+        this.snare = new Snare(this.context);
+        this.bass = new Bass(this.context);
+        this.interval = null;
+        this.timeout = 120;
+        this.position = 0;
+    }
+
+    start() {
+        this.position = 0;
+        this.triggerCurrentPosition();
+        this.advancePosition();
+        this.interval = setInterval(() => {
+            this.triggerCurrentPosition();
+            this.advancePosition();
+        }, this.timeout);
+    }
+
+    stop() {
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+        this.position = 0;
+    }
+
+    advancePosition() {
+        this.position++;
+        if (this.position >= 16)
+            this.position = 0;
+    }
+
+    triggerCurrentPosition() {
+        if (this.kickTrack[this.position] == "X")
+            this.kick.trigger();
+        if (this.snareTrack[this.position] == "X")
+            this.snare.trigger();
+        if (this.bassTrack[this.position] != "-")
+            this.bass.trigger(Notes.findNote(this.bassTrack[this.position]));
+    }
+
+    get kickTrack() {
+        return "X---X---X---X---";
+    }
+
+    get snareTrack() {
+        return "----X-------X---";
+    }
+
+    get bassTrack() {
+        return ["C2", "-", "D2", "-", "C2", "-", "E2", "-", "C2", "-", "F2", "-", "C2", "-", "G2", "-",];
+    }
 }
 
 class Kick {
