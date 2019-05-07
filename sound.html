@@ -12,6 +12,8 @@
     <div id="buttons">
         <button onclick="play()">Play</button>
         <button onclick="stop()">Stop</button>
+        <button onclick="kick()">Kick</button>
+        <button onclick="snare()">Snare</button>
     </div>
     <script src="code/basic.js"></script>
     <script src="code/sound.js"></script>
@@ -19,19 +21,31 @@
 
         var soundManager = null;
 
-        function play() {
-            if (!soundManager) {
+        function init() {
+            if (!soundManager)
                 soundManager = new SoundManager();
-            }
+        }
+
+        function play() {
+            init();
             soundManager.startMusic();
         }
 
         function stop() {
-            if (!soundManager) {
-                soundManager = new SoundManager();
-            }
+            init();
             soundManager.stopMusic();
         }
+
+        function kick() {
+            init();
+            soundManager.kick.trigger();
+        }
+
+        function snare() {
+            init();
+            soundManager.snare.trigger();
+        }
+
     </script>
 </body>
 

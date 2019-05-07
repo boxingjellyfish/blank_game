@@ -58,6 +58,7 @@
                 this.particleSystem = new ParticleSystem();
                 this.movementSystem = new MovementSystem();
                 this.collisionSystem = new CollisionSystem();
+                this.soundManager = new SoundManager();
             }
         }
 
@@ -149,6 +150,8 @@
         rightWallCollision.boundingBox = new Vector(1, scene.height / 2);
         rightWall.addComponent(rightWallCollision);
         scene.entities.push(rightWall);
+        
+        scene.soundManager.startMusic();
 
     </script>
 </body>

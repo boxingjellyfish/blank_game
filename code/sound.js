@@ -1,128 +1,290 @@
 // http://marcgg.com/blog/2016/11/01/javascript-audio/
+// https://dev.opera.com/articles/drum-sounds-webaudio/
 
 class SoundManager {
     constructor() {
         this.context = new AudioContext();
-        this.oscillator = null;
-        this.gain = null;
-        this.notes = [
-            { note: "C1", frequency: 32.70 },
-            { note: "D1", frequency: 36.71 },
-            { note: "E1", frequency: 41.20 },
-            { note: "F1", frequency: 43.65 },
-            { note: "G1", frequency: 49.00 },
-            { note: "A1", frequency: 55.00 },
-            { note: "B1", frequency: 61.74 },
-            { note: "C2", frequency: 65.41 },
-            { note: "D2", frequency: 73.42 },
-            { note: "E2", frequency: 82.41 },
-            { note: "F2", frequency: 87.31 },
-            { note: "G2", frequency: 98.00 },
-            { note: "A2", frequency: 110.00 },
-            { note: "B2", frequency: 123.47 },
-            { note: "C3", frequency: 130.81 },
-            { note: "D3", frequency: 146.83 },
-            { note: "E3", frequency: 164.81 },
-            { note: "F3", frequency: 174.61 },
-            { note: "G3", frequency: 196.00 },
-            { note: "A3", frequency: 220.00 },
-            { note: "B3", frequency: 246.94 },
-            { note: "C4", frequency: 261.63 },
-            { note: "D4", frequency: 293.66 },
-            { note: "E4", frequency: 329.63 },
-            { note: "F4", frequency: 349.23 },
-            { note: "G4", frequency: 392.00 },
-            { note: "A4", frequency: 440.00 },
-            { note: "B4", frequency: 493.88 },
-            { note: "C5", frequency: 523.25 },
-            { note: "D5", frequency: 587.33 },
-            { note: "E5", frequency: 659.25 },
-            { note: "F5", frequency: 698.46 },
-            { note: "G5", frequency: 783.99 },
-            { note: "A5", frequency: 880.00 },
-            { note: "B5", frequency: 987.77 },
-        ];
-        this.musicTimer1 = null;        
-        this.musicTimer2 = null;
+        this.kick = new Kick(this.context);
+        this.snare = new Snare(this.context);
+        this.bass = new Bass(this.context);
+        this.kickTimer = null;
+        this.snareTimer = null;
+        this.bassTimer = null;
     }
 
+    startMusic() {
+        
+        setTimeout(() => {
+            this.bass.trigger(Notes.randomPentatonic(2));
+            this.kickTimer = setInterval(() => {
+                this.bass.trigger(Notes.randomPentatonic(2));
+            }, Random.value([250, 500, 750]));
+        }, 0);
 
-     startMusic() {
-        this.boxCollision();
-        this.musicTimer1 = setInterval(function() {
-            this.boxCollision();
-        }, 250);
+        this.kick.trigger();
+        this.snareTimer = setInterval(() => {
+            this.kick.trigger();
+        }, 500);
 
-        this.wallCollision();
-        this.musicTimer2 = setInterval(function() {
-            this.wallCollision();
-        }, 1000);
+        setTimeout(() => {
+            this.snare.trigger();
+            this.bassTimer = setInterval(() => {
+                this.snare.trigger();
+            }, 1000);
+        }, 500);
+
     }
 
     stopMusic() {
-        if(this.musicTimer1) {
-            clearInterval(this.musicTimer1);
+        if (this.kickTimer) {
+            clearInterval(this.kickTimer);
         }
-        if(this.musicTimer2) {
-            clearInterval(this.musicTimer2);
+        if (this.snareTimer) {
+            clearInterval(this.snareTimer);
+        }
+        if (this.bassTimer) {
+            clearInterval(this.bassTimer);
         }
     }
 
     floorCollision() {
-        this.oscillator = this.context.createOscillator();
-        this.gain = this.context.createGain();
-        this.gain.gain.value = 0.2;
-        this.oscillator.connect(this.gain);
-        this.oscillator.type = "sawtooth";
-        this.oscillator.frequency.value = this.findNote("C1").frequency;
-        this.gain.connect(this.context.destination);
-        this.oscillator.start(0);
-        this.gain.gain.exponentialRampToValueAtTime(0.00001, this.context.currentTime + 1.5);
+        this.bass.trigger(Notes.findNote("C1"));
     }
 
     padCollision() {
-        this.collisionSound(3);
+        this.bass.trigger(Notes.randomPentatonic(3));
     }
 
     wallCollision() {
-        this.collisionSound(2);
+        this.bass.trigger(Notes.randomPentatonic(2));
     }
 
     boxCollision() {
-        this.collisionSound(4);
+        this.bass.trigger(Notes.randomPentatonic(4));
     }
 
-    collisionSound(octave) {
+}
+
+class Kick {
+    constructor(context) {
+        this.context = context;
+        this.oscillator = null;
+        this.gain = null;
+    }
+
+    trigger() {
+        var time = this.context.currentTime;
         this.oscillator = this.context.createOscillator();
         this.gain = this.context.createGain();
-        this.gain.gain.value = 0.5;
         this.oscillator.connect(this.gain);
-        this.oscillator.type = this.randomFrequencyType;
-        this.oscillator.frequency.value = this.randomPentatonic(octave).frequency;
-        this.gain.connect(this.context.destination);
-        this.oscillator.start(0);
-        this.gain.gain.exponentialRampToValueAtTime(0.00001, this.context.currentTime + 1.5);
+        this.gain.connect(this.context.destination)
+        this.oscillator.frequency.setValueAtTime(150, time);
+        this.gain.gain.setValueAtTime(1, time);
+        this.oscillator.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+        this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+        this.oscillator.start(time);
+        this.oscillator.stop(time + 0.5);
+    }
+}
+
+class Snare {
+    constructor(context) {
+        this.context = context;
+        this.oscillator = null;
+        this.gain = null;
+        this.noise = null;
+        this.noiseFilter = null;
+        this.noiseEnvelope = null;
     }
 
-    randomNote(octave) {
-        return this.notes[Random.int(octave * 7 - 7, octave * 7)];
+    trigger() {
+        var time = this.context.currentTime;
+        this.noise = this.context.createBufferSource();
+        this.noise.buffer = this.noiseBuffer();
+        this.noiseFilter = this.context.createBiquadFilter();
+        this.noiseFilter.type = 'highpass';
+        this.noiseFilter.frequency.value = 1000;
+        this.noise.connect(this.noiseFilter);
+        this.noiseEnvelope = this.context.createGain();
+        this.noiseFilter.connect(this.noiseEnvelope);
+        this.noiseEnvelope.connect(this.context.destination);
+        this.oscillator = this.context.createOscillator();
+        this.oscillator.type = 'triangle';
+        this.gain = this.context.createGain();
+        this.oscillator.connect(this.gain);
+        this.gain.connect(this.context.destination)
+        this.noiseEnvelope.gain.setValueAtTime(1, time);
+        this.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+        this.noise.start(time);
+        this.oscillator.frequency.setValueAtTime(100, time);
+        this.gain.gain.setValueAtTime(0.7, time);
+        this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+        this.oscillator.start(time)
+        this.oscillator.stop(time + 0.2);
+        this.noise.stop(time + 0.2);
     }
 
-    randomPentatonic(octave) {
-        var scale = ["A" + octave, "C" + octave, "D" + octave, "E" + octave, "G" + octave];
-        return this.findNote(Random.value(scale));
-    }
-
-    findNote(note) {
-        for (var i = 0; i < this.notes.length; i++) {
-            if (this.notes[i].note == note)
-                return this.notes[i];
+    noiseBuffer() {
+        var bufferSize = this.context.sampleRate;
+        var buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+        var output = buffer.getChannelData(0);
+        for (var i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
         }
-        return this.notes[0];
+        return buffer;
+    }
+}
+
+class Bass {
+    constructor(context) {
+        this.context = context;
+        this.oscillator = null;
+        this.gain = null;
     }
 
-    get randomFrequencyType() {
-        var types = ["sine", "triangle"/*, "square", "sawtooth"*/];
-        return types[Random.int(0, types.length)];
+    trigger(note) {
+        var time = this.context.currentTime;
+        this.oscillator = this.context.createOscillator();
+        this.gain = this.context.createGain();
+        this.oscillator.connect(this.gain);
+        this.gain.connect(this.context.destination)
+        this.oscillator.type = "triangle";
+        this.oscillator.frequency.setValueAtTime(note.frequency, time);
+        this.gain.gain.setValueAtTime(1, time);
+        this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
+        this.oscillator.start(time);
+        this.oscillator.stop(time + 0.25);
+    }
+}
+
+class Notes {
+    static randomNote(octave) {
+        return Notes.notes[Random.int(octave * 7 - 7, octave * 7)];
+    }
+
+    static randomPentatonic(octave) {
+        var scale = ["A" + octave, "C" + octave, "D" + octave, "E" + octave, "G" + octave];
+        return Notes.findNote(Random.value(scale));
+    }
+
+    static findNote(note) {
+        for (var i = 0; i < Notes.notes.length; i++) {
+            if (Notes.notes[i].note == note)
+                return Notes.notes[i];
+        }
+        return Notes.notes[0];
+    }
+
+    static get notes() {
+        return [
+            { note: "C0", frequency: 16.35 },
+            { note: "C#0", frequency: 17.32 },
+            { note: "D0", frequency: 18.35 },
+            { note: "D#0", frequency: 19.45 },
+            { note: "E0", frequency: 20.60 },
+            { note: "F0", frequency: 21.83 },
+            { note: "F#0", frequency: 23.12 },
+            { note: "G0", frequency: 24.50 },
+            { note: "G#0", frequency: 25.96 },
+            { note: "A0", frequency: 27.50 },
+            { note: "A#0", frequency: 29.14 },
+            { note: "B0", frequency: 30.87 },
+            { note: "C1", frequency: 32.70 },
+            { note: "C#1", frequency: 34.65 },
+            { note: "D1", frequency: 36.71 },
+            { note: "D#1", frequency: 38.89 },
+            { note: "E1", frequency: 41.20 },
+            { note: "F1", frequency: 43.65 },
+            { note: "F#1", frequency: 46.25 },
+            { note: "G1", frequency: 49.00 },
+            { note: "G#1", frequency: 51.91 },
+            { note: "A1", frequency: 55.00 },
+            { note: "A#1", frequency: 58.27 },
+            { note: "B1", frequency: 61.74 },
+            { note: "C2", frequency: 65.41 },
+            { note: "C#2", frequency: 69.30 },
+            { note: "D2", frequency: 73.42 },
+            { note: "D#2", frequency: 77.78 },
+            { note: "E2", frequency: 82.41 },
+            { note: "F2", frequency: 87.31 },
+            { note: "F#2", frequency: 92.50 },
+            { note: "G2", frequency: 98.00 },
+            { note: "G#2", frequency: 103.83 },
+            { note: "A2", frequency: 110.00 },
+            { note: "A#2", frequency: 116.54 },
+            { note: "B2", frequency: 123.47 },
+            { note: "C3", frequency: 130.81 },
+            { note: "C#3", frequency: 138.59 },
+            { note: "D3", frequency: 146.83 },
+            { note: "D#3", frequency: 155.56 },
+            { note: "E3", frequency: 164.81 },
+            { note: "F3", frequency: 174.61 },
+            { note: "F#3", frequency: 185.00 },
+            { note: "G3", frequency: 196.00 },
+            { note: "G#3", frequency: 207.65 },
+            { note: "A3", frequency: 220.00 },
+            { note: "A#3", frequency: 233.08 },
+            { note: "B3", frequency: 246.94 },
+            { note: "C4", frequency: 261.63 },
+            { note: "C#4", frequency: 277.18 },
+            { note: "D4", frequency: 293.66 },
+            { note: "D#4", frequency: 311.13 },
+            { note: "E4", frequency: 329.63 },
+            { note: "F4", frequency: 349.23 },
+            { note: "F#4", frequency: 369.99 },
+            { note: "G4", frequency: 392.00 },
+            { note: "G#4", frequency: 415.30 },
+            { note: "A4", frequency: 440.00 },
+            { note: "A#4", frequency: 466.16 },
+            { note: "B4", frequency: 493.88 },
+            { note: "C5", frequency: 523.25 },
+            { note: "C#5", frequency: 554.37 },
+            { note: "D5", frequency: 587.33 },
+            { note: "D#5", frequency: 622.25 },
+            { note: "E5", frequency: 659.25 },
+            { note: "F5", frequency: 698.46 },
+            { note: "F#5", frequency: 739.99 },
+            { note: "G5", frequency: 783.99 },
+            { note: "G#5", frequency: 830.61 },
+            { note: "A5", frequency: 880.00 },
+            { note: "A#5", frequency: 932.33 },
+            { note: "B5", frequency: 987.77 },
+            { note: "C6", frequency: 1046.50 },
+            { note: "C#6", frequency: 1108.73 },
+            { note: "D6", frequency: 1174.66 },
+            { note: "D#6", frequency: 1244.51 },
+            { note: "E6", frequency: 1318.51 },
+            { note: "F6", frequency: 1396.91 },
+            { note: "F#6", frequency: 1479.98 },
+            { note: "G6", frequency: 1567.98 },
+            { note: "G#6", frequency: 1661.22 },
+            { note: "A6", frequency: 1760.00 },
+            { note: "A#6", frequency: 1864.66 },
+            { note: "B6", frequency: 1975.53 },
+            { note: "C7", frequency: 2093.00 },
+            { note: "C#7", frequency: 2217.46 },
+            { note: "D7", frequency: 2349.32 },
+            { note: "D#7", frequency: 2489.02 },
+            { note: "E7", frequency: 2637.02 },
+            { note: "F7", frequency: 2793.83 },
+            { note: "F#7", frequency: 2959.96 },
+            { note: "G7", frequency: 3135.96 },
+            { note: "G#7", frequency: 3322.44 },
+            { note: "A7", frequency: 3520.00 },
+            { note: "A#7", frequency: 3729.31 },
+            { note: "B7", frequency: 3951.07 },
+            { note: "C8", frequency: 4186.01 },
+            { note: "C#8", frequency: 4434.92 },
+            { note: "D8", frequency: 4698.63 },
+            { note: "D#8", frequency: 4978.03 },
+            { note: "E8", frequency: 5274.04 },
+            { note: "F8", frequency: 5587.65 },
+            { note: "F#8", frequency: 5919.91 },
+            { note: "G8", frequency: 6271.93 },
+            { note: "G#8", frequency: 6644.88 },
+            { note: "A8", frequency: 7040.00 },
+            { note: "A#8", frequency: 7458.62 },
+            { note: "B8", frequency: 7902.13 }
+        ];
     }
 }
