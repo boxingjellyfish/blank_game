@@ -6,6 +6,7 @@ class SoundManager {
         this.context = new AudioContext();
         this.kick = new Kick(this.context);
         this.snare = new Snare(this.context);
+        this.click = new Click(this.context);
         this.bass = new Bass(this.context);
         this.kickTimer = null;
         this.snareTimer = null;
@@ -69,9 +70,10 @@ class Sequencer {
         this.context = new AudioContext();
         this.kick = new Kick(this.context);
         this.snare = new Snare(this.context);
+        this.click = new Click(this.context);
         this.bass = new Bass(this.context);
         this.interval = null;
-        this.timeout = 120;
+        this.timeout = 110;
         this.position = 0;
     }
 
@@ -103,20 +105,28 @@ class Sequencer {
             this.kick.trigger();
         if (this.snareTrack[this.position] == "X")
             this.snare.trigger();
+        if (this.clickTrack[this.position] == "X")
+            this.click.trigger();
         if (this.bassTrack[this.position] != "-")
             this.bass.trigger(Notes.findNote(this.bassTrack[this.position]));
     }
 
     get kickTrack() {
-        return "X---X---X---X---";
+        var rand = Random.value(["X", "-"]);
+        return "X---X---X---X-" + rand + "-";
     }
 
     get snareTrack() {
         return "----X-------X---";
     }
 
+    get clickTrack() {
+        return "----------------";
+    }
+
     get bassTrack() {
-        return ["C2", "-", "D2", "-", "C2", "-", "E2", "-", "C2", "-", "F2", "-", "C2", "-", "G2", "-",];
+        var rand = Random.value(["C3", "D3", "E3", "F3", "-", "-"]);
+        return ["A2", "-", rand, "-", "A2", "-", rand, "-", "A2", "-", rand, "-", "A2", "-", rand, "-"];
     }
 }
 
@@ -134,7 +144,7 @@ class Kick {
         this.oscillator.connect(this.gain);
         this.gain.connect(this.context.destination)
         this.oscillator.frequency.setValueAtTime(150, time);
-        this.gain.gain.setValueAtTime(1, time);
+        this.gain.gain.setValueAtTime(0.8, time);
         this.oscillator.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
         this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
         this.oscillator.start(time);
@@ -168,7 +178,7 @@ class Snare {
         this.gain = this.context.createGain();
         this.oscillator.connect(this.gain);
         this.gain.connect(this.context.destination)
-        this.noiseEnvelope.gain.setValueAtTime(1, time);
+        this.noiseEnvelope.gain.setValueAtTime(0.4, time);
         this.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
         this.noise.start(time);
         this.oscillator.frequency.setValueAtTime(100, time);
@@ -187,6 +197,29 @@ class Snare {
             output[i] = Math.random() * 2 - 1;
         }
         return buffer;
+    }
+}
+
+class Click {
+    constructor(context) {
+        this.context = context;
+        this.oscillator = null;
+        this.gain = null;
+    }
+
+    trigger() {
+        var time = this.context.currentTime;
+        this.oscillator = this.context.createOscillator();
+        this.gain = this.context.createGain();
+        this.oscillator.connect(this.gain);
+        this.gain.connect(this.context.destination)
+        this.oscillator.frequency.setValueAtTime(3000, time);
+        this.oscillator.type = 'sine';
+        this.gain.gain.setValueAtTime(0.1, time);
+        this.oscillator.frequency.exponentialRampToValueAtTime(2900, time + 0.25);
+        this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
+        this.oscillator.start(time);
+        this.oscillator.stop(time + 0.25);
     }
 }
 

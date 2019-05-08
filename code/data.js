@@ -231,10 +231,10 @@ class Data {
         "a": 0.5
       },
       "lifespan": null,
-      "emissionRate": 0.02,
-      "particleSize": 2,
+      "emissionRate": 0.05,
+      "particleSize": 3,
       "particleSizeRandomness": 2,
-      "maxParticles": 600,
+      "maxParticles": 1000,
       "particleLifespan": 30000,
       "particleLifespanRandomness": 1.5,
       "enabled": true,

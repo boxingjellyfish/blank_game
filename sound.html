@@ -14,6 +14,7 @@
         <button onclick="stop()">Stop</button>
         <button onclick="kick()">Kick</button>
         <button onclick="snare()">Snare</button>
+        <button onclick="clickTrigger()">Click</button>
         <button onclick="startSequencer()">Start Sequencer</button>
         <button onclick="stopSequencer()">Stop Sequencer</button>
     </div>
@@ -46,6 +47,11 @@
         function snare() {
             init();
             soundManager.snare.trigger();
+        }
+
+        function clickTrigger() {
+            init();
+            soundManager.click.trigger();
         }
 
         var sequencer = null;

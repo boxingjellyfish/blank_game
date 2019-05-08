@@ -57,14 +57,16 @@
                 this.entities = [];
                 this.particleSystem = new ParticleSystem();
                 this.movementSystem = new MovementSystem();
-                this.collisionSystem = new CollisionSystem();
-                this.soundManager = new SoundManager();
+                this.collisionDetectionSystem = new CollisionDetectionSystem();
+                this.collisionHandlingSystem = new CollisionHandlingSystem();
+                this.sequencer = new Sequencer();
             }
         }
 
         function update(delta) {
             scene.movementSystem.update(delta, scene.entities);
-            scene.collisionSystem.update(delta, scene.entities);
+            scene.collisionDetectionSystem.update(delta, scene.entities);
+            scene.collisionHandlingSystem.update(delta, scene.entities);
             scene.particleSystem.update(delta);
         }
 
@@ -75,16 +77,14 @@
             // Entities
             for (var i = 0; i < scene.entities.length; i++) {
                 var entity = scene.entities[i];
-                if (entity.hasComponent("Transform") && entity.hasComponent("Motion")) {
-                    var transform = entity.getComponent("Transform");
-                    var motion = entity.getComponent("Motion");
+                if (entity.hasComponent("Transform")) {
                     //ctx.fillStyle = new Color(0, 0, 100, 1).style;
                     ctx.fillStyle = "#" + entity.id.substring(0, 6);
                     ctx.font = "12px monospace";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     //ctx.fillText("{" + transform.position.x.toFixed(0) + "," + transform.position.y.toFixed(0) + "}", transform.position.x, transform.position.y);
-                    ctx.fillText(entity.id.substring(0, 6), transform.position.x, transform.position.y);
+                    ctx.fillText(entity.id.substring(0, 6), entity.transform.position.x.toFixed(0), entity.transform.position.y.toFixed(0));
                 }
             }
 
@@ -106,10 +106,13 @@
             var transform = new TransformComponent();
             transform.position = new Vector(Random.int(0, scene.width), Random.int(0, scene.height));
             entity.addComponent(transform);
-            var motion = new MotionComponent();
-            motion.velocity = new Vector(Random.float(-0.3, 0.3), Random.float(-0.3, 0.3));
-            entity.addComponent(motion);
-            var collision = new CollisionComponent();
+            if (Random.float(0, 1) < 0.8) {
+                var motion = new MotionComponent();
+                motion.acceleration = new Vector(Random.float(-0.001, 0.001), Random.float(-0.001, 0.001));
+                motion.maxVelocity = Random.float(0.1, 0.3);
+                entity.addComponent(motion);
+            }
+            var collision = new CollisionDetectionComponent();
             collision.boundingBox = new Vector(3, 3);
             entity.addComponent(collision);
             scene.entities.push(entity);
@@ -119,7 +122,7 @@
         var topWallTransform = new TransformComponent();
         topWallTransform.position = new Vector(scene.width / 2, 5);
         topWall.addComponent(topWallTransform);
-        var topWallCollision = new CollisionComponent();
+        var topWallCollision = new CollisionDetectionComponent();
         topWallCollision.boundingBox = new Vector(scene.width / 2, 1);
         topWall.addComponent(topWallCollision);
         scene.entities.push(topWall);
@@ -128,7 +131,7 @@
         var bottomWallTransform = new TransformComponent();
         bottomWallTransform.position = new Vector(scene.width / 2, scene.height - 5);
         bottomWall.addComponent(bottomWallTransform);
-        var bottomWallCollision = new CollisionComponent();
+        var bottomWallCollision = new CollisionDetectionComponent();
         bottomWallCollision.boundingBox = new Vector(scene.width / 2, 1);
         bottomWall.addComponent(bottomWallCollision);
         scene.entities.push(bottomWall);
@@ -137,7 +140,7 @@
         var leftWallTransform = new TransformComponent();
         leftWallTransform.position = new Vector(5, scene.height / 2);
         leftWall.addComponent(leftWallTransform);
-        var leftWallCollision = new CollisionComponent();
+        var leftWallCollision = new CollisionDetectionComponent();
         leftWallCollision.boundingBox = new Vector(1, scene.height / 2);
         leftWall.addComponent(leftWallCollision);
         scene.entities.push(leftWall);
@@ -146,12 +149,12 @@
         var rightWallTransform = new TransformComponent();
         rightWallTransform.position = new Vector(scene.width - 5, scene.height / 2);
         rightWall.addComponent(rightWallTransform);
-        var rightWallCollision = new CollisionComponent();
+        var rightWallCollision = new CollisionDetectionComponent();
         rightWallCollision.boundingBox = new Vector(1, scene.height / 2);
         rightWall.addComponent(rightWallCollision);
         scene.entities.push(rightWall);
-        
-        scene.soundManager.startMusic();
+
+        scene.sequencer.start();
 
     </script>
 </body>

@@ -11,6 +11,7 @@ class GameWorld {
             mouseDown: false
         };
         this.soundManager = new SoundManager();
+        this.sequencer = new Sequencer();
         this.pad = new Pad();
         this.ball = new Ball();
         this.bricks = [];
@@ -289,9 +290,11 @@ function brickDestruction(brick) {
 function startStopLoop() {
     if (loop.isRunning()) {
         loop.stop();
+        world.sequencer.stop();
     }
     else {
         loop.start();
+        world.sequencer.start();
     }
 }
 
@@ -356,4 +359,5 @@ initStage();
 var backgroundParticles = Emitter.fromObject(Data.background);
 world.particleSystem.emitters.push(backgroundParticles);
 
-var loop = new Loop().setUpdate(update).setDraw(draw).start();
+var loop = new Loop().setUpdate(update).setDraw(draw);
+startStopLoop();
