@@ -6,7 +6,7 @@ class SoundManager {
     constructor() {
         this.context = new AudioContext();
         this.sequencer = new Sequencer(this.context);
-    }    
+    }
 
     floorCollision() {
         this.sequencer.bass.trigger(Notes.findNote("C1"));
@@ -36,7 +36,7 @@ class Sequencer {
         this.click = new HiHat(this.context, this.masterGain);
         this.bass = new Bass(this.context);
         this.interval = null;
-        this.timeout = 110;
+        this.timeout = 80;
         this.position = 0;
     }
 
@@ -95,6 +95,31 @@ class Sequencer {
 }
 
 class Kick {
+    /*
+        constructor(context) {
+            this.context = context;
+        }
+    
+        trigger() {
+            var time = this.context.currentTime;
+            var gain = this.context.createGain();
+            var oscillator = this.context.createOscillator();
+            gain.connect(this.context.destination);
+            oscillator.connect(gain);
+            oscillator.frequency.setValueAtTime(150, time);
+            gain.gain.setValueAtTime(0.8, time);
+            oscillator.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+            oscillator.start(time);
+            oscillator.stop(time + 0.5);
+    
+            oscillator.onended = () => {
+                gain.disconnect();
+                gain = null;
+            };
+        }
+    
+            */
     constructor(context, masterGain) {
         this.context = context;
         this.masterGain = masterGain;
@@ -107,8 +132,8 @@ class Kick {
         var gainOsc = this.context.createGain();
         var gainOsc2 = this.context.createGain();
 
-        osc.type = 'triangle';
-        osc2.type = 'sine';
+        osc.type = "triangle";
+        osc2.type = "sine";
 
         gainOsc.gain.setValueAtTime(1, time);
         gainOsc.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
@@ -128,7 +153,19 @@ class Kick {
         osc2.start(time);
         osc.stop(time + 0.5);
         osc2.stop(time + 0.5);
+
+
+
+        osc.onended = () => {
+            gainOsc.disconnect();
+            gainOsc = null;
+        };
+        osc2.onended = () => {
+            gainOsc2.disconnect();
+            gainOsc2 = null;
+        };
     }
+
 }
 
 class Snare {
@@ -146,7 +183,7 @@ class Snare {
         filterGain.gain.setValueAtTime(1, time);
         filterGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
 
-        osc3.type = 'triangle';
+        osc3.type = "triangle";
         osc3.frequency.value = 100;
 
         gainOsc3.gain.value = 0;
@@ -154,6 +191,11 @@ class Snare {
 
         osc3.connect(gainOsc3);
         gainOsc3.connect(this.masterGain);
+
+        osc3.onended = () => {
+            gainOsc3.disconnect();
+            gainOsc3 = null;
+        };
 
         osc3.start(time);
         osc3.stop(time + 0.2);
@@ -164,7 +206,7 @@ class Snare {
 
         var filter = this.context.createBiquadFilter();
 
-        filter.type = 'highpass';
+        filter.type = "highpass";
         filter.frequency.setValueAtTime(100, time);
         filter.frequency.linearRampToValueAtTime(1000, time + 0.2);
 
@@ -182,6 +224,11 @@ class Snare {
 
         node.start(time);
         node.stop(time + 0.2);
+
+        node.onended = () => {
+            filterGain.disconnect();
+            filterGain = null;
+        };
     }
 }
 
@@ -209,11 +256,19 @@ class HiHat {
             osc4.connect(bandpass);
             osc4.start(time);
             osc4.stop(time + 0.05);
+
+            osc4.onended = () => {
+                if (gainOsc4) {
+                    gainOsc4.disconnect();
+                    gainOsc4 = null;
+                }
+            };
         });
         gainOsc4.gain.setValueAtTime(1, time);
         gainOsc4.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
         bandpass.connect(highpass);
         highpass.connect(gainOsc4);
+
 
         gainOsc4.connect(this.masterGain);
     }
