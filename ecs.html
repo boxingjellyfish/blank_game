@@ -59,7 +59,7 @@
                 this.movementSystem = new MovementSystem();
                 this.collisionDetectionSystem = new CollisionDetectionSystem();
                 this.collisionHandlingSystem = new CollisionHandlingSystem();
-                this.sequencer = new Sequencer();
+                this.soundManager = new SoundManager();
             }
         }
 
@@ -154,7 +154,7 @@
         rightWall.addComponent(rightWallCollision);
         scene.entities.push(rightWall);
 
-        scene.sequencer.start();
+        scene.soundManager.sequencer.start();
 
     </script>
 </body>

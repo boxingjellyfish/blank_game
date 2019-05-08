@@ -12,11 +12,6 @@
     <div id="buttons">
         <button onclick="play()">Play</button>
         <button onclick="stop()">Stop</button>
-        <button onclick="kick()">Kick</button>
-        <button onclick="snare()">Snare</button>
-        <button onclick="clickTrigger()">Click</button>
-        <button onclick="startSequencer()">Start Sequencer</button>
-        <button onclick="stopSequencer()">Stop Sequencer</button>
     </div>
     <script src="code/basic.js"></script>
     <script src="code/sound.js"></script>
@@ -31,40 +26,12 @@
 
         function play() {
             init();
-            soundManager.startMusic();
+            soundManager.sequencer.start();
         }
 
         function stop() {
             init();
-            soundManager.stopMusic();
-        }
-
-        function kick() {
-            init();
-            soundManager.kick.trigger();
-        }
-
-        function snare() {
-            init();
-            soundManager.snare.trigger();
-        }
-
-        function clickTrigger() {
-            init();
-            soundManager.click.trigger();
-        }
-
-        var sequencer = null;
-
-        function startSequencer() {
-            if (!sequencer)
-                sequencer = new Sequencer();
-            sequencer.start();
-        }
-
-        function stopSequencer() {
-            if (sequencer)
-                sequencer.stop();
+            soundManager.sequencer.stop();
         }
 
     </script>

@@ -1,76 +1,39 @@
 // http://marcgg.com/blog/2016/11/01/javascript-audio/
 // https://dev.opera.com/articles/drum-sounds-webaudio/
+// https://sonoport.github.io/synthesising-sounds-webaudio.html
 
 class SoundManager {
     constructor() {
         this.context = new AudioContext();
-        this.kick = new Kick(this.context);
-        this.snare = new Snare(this.context);
-        this.click = new Click(this.context);
-        this.bass = new Bass(this.context);
-        this.kickTimer = null;
-        this.snareTimer = null;
-        this.bassTimer = null;
-    }
-
-    startMusic() {
-
-        this.kick.trigger();
-        this.kickTimer = setInterval(() => {
-            this.kick.trigger();
-        }, 500);
-
-        setTimeout(() => {
-            this.snare.trigger();
-            this.snareTimer = setInterval(() => {
-                this.snare.trigger();
-            }, 1000);
-        }, 500);
-
-        setTimeout(() => {
-            this.bass.trigger(Notes.randomPentatonic(2));
-            this.bassTimer = setInterval(() => {
-                this.bass.trigger(Notes.randomPentatonic(2));
-            }, Random.value([250, 500, 750]));
-        }, 4000);
-    }
-
-    stopMusic() {
-        if (this.kickTimer) {
-            clearInterval(this.kickTimer);
-        }
-        if (this.snareTimer) {
-            clearInterval(this.snareTimer);
-        }
-        if (this.bassTimer) {
-            clearInterval(this.bassTimer);
-        }
-    }
+        this.sequencer = new Sequencer(this.context);
+    }    
 
     floorCollision() {
-        this.bass.trigger(Notes.findNote("C1"));
+        this.sequencer.bass.trigger(Notes.findNote("C1"));
     }
 
     padCollision() {
-        this.bass.trigger(Notes.randomPentatonic(3));
+        this.sequencer.bass.trigger(Notes.randomPentatonic(3));
     }
 
     wallCollision() {
-        this.bass.trigger(Notes.randomPentatonic(2));
+        this.sequencer.bass.trigger(Notes.randomPentatonic(2));
     }
 
     boxCollision() {
-        this.bass.trigger(Notes.randomPentatonic(4));
+        this.sequencer.bass.trigger(Notes.randomPentatonic(4));
     }
 
 }
 
 class Sequencer {
     constructor(context) {
-        this.context = new AudioContext();
-        this.kick = new Kick(this.context);
-        this.snare = new Snare(this.context);
-        this.click = new Click(this.context);
+        this.context = context;
+        this.masterGain = this.context.createGain();
+        this.masterGain.connect(this.context.destination);
+        this.kick = new Kick(this.context, this.masterGain);
+        this.snare = new Snare(this.context, this.masterGain);
+        this.click = new HiHat(this.context, this.masterGain);
         this.bass = new Bass(this.context);
         this.interval = null;
         this.timeout = 110;
@@ -117,109 +80,142 @@ class Sequencer {
     }
 
     get snareTrack() {
-        return "----X-------X---";
+        var rand = Random.value(["X", "-", "-", "-"]);
+        return "----X-----" + rand + "-X---";
     }
 
     get clickTrack() {
-        return "----------------";
+        return "X-X-X-X-X-X-X-X-";
     }
 
     get bassTrack() {
-        var rand = Random.value(["C3", "D3", "E3", "F3", "-", "-"]);
-        return ["A2", "-", rand, "-", "A2", "-", rand, "-", "A2", "-", rand, "-", "A2", "-", rand, "-"];
+        var rand = Random.value(["D2", "D#2", "F2", "G2", "-", "-"]);
+        return ["C2", "-", rand, "-", "C2", "-", rand, "-", "C2", "-", rand, "-", "C2", "-", rand, "-"];
     }
 }
 
 class Kick {
-    constructor(context) {
+    constructor(context, masterGain) {
         this.context = context;
-        this.oscillator = null;
-        this.gain = null;
+        this.masterGain = masterGain;
     }
 
     trigger() {
         var time = this.context.currentTime;
-        this.oscillator = this.context.createOscillator();
-        this.gain = this.context.createGain();
-        this.oscillator.connect(this.gain);
-        this.gain.connect(this.context.destination)
-        this.oscillator.frequency.setValueAtTime(150, time);
-        this.gain.gain.setValueAtTime(0.8, time);
-        this.oscillator.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
-        this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
-        this.oscillator.start(time);
-        this.oscillator.stop(time + 0.5);
+        var osc = this.context.createOscillator();
+        var osc2 = this.context.createOscillator();
+        var gainOsc = this.context.createGain();
+        var gainOsc2 = this.context.createGain();
+
+        osc.type = 'triangle';
+        osc2.type = 'sine';
+
+        gainOsc.gain.setValueAtTime(1, time);
+        gainOsc.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+        gainOsc2.gain.setValueAtTime(1, time);
+        gainOsc2.gain.exponentialRampToValueAtTime(0.001, time + 0.5);
+        osc.frequency.setValueAtTime(120, time);
+        osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.5);
+        osc2.frequency.setValueAtTime(50, time);
+
+        //Connections
+        osc.connect(gainOsc);
+        osc2.connect(gainOsc2);
+        gainOsc2.connect(this.masterGain);
+        gainOsc.connect(this.masterGain);
+
+        osc.start(time);
+        osc2.start(time);
+        osc.stop(time + 0.5);
+        osc2.stop(time + 0.5);
     }
 }
 
 class Snare {
-    constructor(context) {
+    constructor(context, masterGain) {
         this.context = context;
-        this.oscillator = null;
-        this.gain = null;
-        this.noise = null;
-        this.noiseFilter = null;
-        this.noiseEnvelope = null;
+        this.masterGain = masterGain;
     }
 
     trigger() {
         var time = this.context.currentTime;
-        this.noise = this.context.createBufferSource();
-        this.noise.buffer = this.noiseBuffer();
-        this.noiseFilter = this.context.createBiquadFilter();
-        this.noiseFilter.type = 'highpass';
-        this.noiseFilter.frequency.value = 1000;
-        this.noise.connect(this.noiseFilter);
-        this.noiseEnvelope = this.context.createGain();
-        this.noiseFilter.connect(this.noiseEnvelope);
-        this.noiseEnvelope.connect(this.context.destination);
-        this.oscillator = this.context.createOscillator();
-        this.oscillator.type = 'triangle';
-        this.gain = this.context.createGain();
-        this.oscillator.connect(this.gain);
-        this.gain.connect(this.context.destination)
-        this.noiseEnvelope.gain.setValueAtTime(0.4, time);
-        this.noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-        this.noise.start(time);
-        this.oscillator.frequency.setValueAtTime(100, time);
-        this.gain.gain.setValueAtTime(0.7, time);
-        this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-        this.oscillator.start(time)
-        this.oscillator.stop(time + 0.2);
-        this.noise.stop(time + 0.2);
-    }
+        var osc3 = this.context.createOscillator();
+        var gainOsc3 = this.context.createGain();
+        var filterGain = this.context.createGain();
 
-    noiseBuffer() {
-        var bufferSize = this.context.sampleRate;
-        var buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
-        var output = buffer.getChannelData(0);
-        for (var i = 0; i < bufferSize; i++) {
-            output[i] = Math.random() * 2 - 1;
+        filterGain.gain.setValueAtTime(1, time);
+        filterGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+
+        osc3.type = 'triangle';
+        osc3.frequency.value = 100;
+
+        gainOsc3.gain.value = 0;
+        gainOsc3.gain.setValueAtTime(0, time);
+
+        osc3.connect(gainOsc3);
+        gainOsc3.connect(this.masterGain);
+
+        osc3.start(time);
+        osc3.stop(time + 0.2);
+
+        var node = this.context.createBufferSource(),
+            buffer = this.context.createBuffer(1, 4096, this.context.sampleRate),
+            data = buffer.getChannelData(0);
+
+        var filter = this.context.createBiquadFilter();
+
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(100, time);
+        filter.frequency.linearRampToValueAtTime(1000, time + 0.2);
+
+        for (var i = 0; i < 4096; i++) {
+            data[i] = Math.random();
         }
-        return buffer;
+
+        node.buffer = buffer;
+        node.loop = true;
+
+        //Connections
+        node.connect(filter);
+        filter.connect(filterGain);
+        filterGain.connect(this.masterGain);
+
+        node.start(time);
+        node.stop(time + 0.2);
     }
 }
 
-class Click {
-    constructor(context) {
+class HiHat {
+    constructor(context, masterGain) {
         this.context = context;
-        this.oscillator = null;
-        this.gain = null;
+        this.masterGain = masterGain;
     }
 
     trigger() {
         var time = this.context.currentTime;
-        this.oscillator = this.context.createOscillator();
-        this.gain = this.context.createGain();
-        this.oscillator.connect(this.gain);
-        this.gain.connect(this.context.destination)
-        this.oscillator.frequency.setValueAtTime(3000, time);
-        this.oscillator.type = 'sine';
-        this.gain.gain.setValueAtTime(0.1, time);
-        this.oscillator.frequency.exponentialRampToValueAtTime(2900, time + 0.25);
-        this.gain.gain.exponentialRampToValueAtTime(0.01, time + 0.25);
-        this.oscillator.start(time);
-        this.oscillator.stop(time + 0.25);
+        var gainOsc4 = this.context.createGain();
+        var fundamental = 40;
+        var ratios = [2, 3, 4.16, 5.43, 6.79, 8.21];
+        var bandpass = this.context.createBiquadFilter();
+        bandpass.type = "bandpass";
+        bandpass.frequency.value = 10000;
+        var highpass = this.context.createBiquadFilter();
+        highpass.type = "highpass";
+        highpass.frequency.value = 7000;
+        ratios.forEach((ratio) => {
+            var osc4 = this.context.createOscillator();
+            osc4.type = "square";
+            osc4.frequency.value = fundamental * ratio;
+            osc4.connect(bandpass);
+            osc4.start(time);
+            osc4.stop(time + 0.05);
+        });
+        gainOsc4.gain.setValueAtTime(1, time);
+        gainOsc4.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+        bandpass.connect(highpass);
+        highpass.connect(gainOsc4);
+
+        gainOsc4.connect(this.masterGain);
     }
 }
 

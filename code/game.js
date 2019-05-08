@@ -11,7 +11,6 @@ class GameWorld {
             mouseDown: false
         };
         this.soundManager = new SoundManager();
-        this.sequencer = new Sequencer();
         this.pad = new Pad();
         this.ball = new Ball();
         this.bricks = [];
@@ -290,11 +289,11 @@ function brickDestruction(brick) {
 function startStopLoop() {
     if (loop.isRunning()) {
         loop.stop();
-        world.sequencer.stop();
+        world.soundManager.sequencer.stop();
     }
     else {
         loop.start();
-        world.sequencer.start();
+        world.soundManager.sequencer.start();
     }
 }
 
