@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Blank Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            display: block;
+            background-color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="code/loop.js"></script>
+    <script src="code/basic.js"></script>
+    <script src="code/ecs.js"></script>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+
+        window.addEventListener("resize", resizeCanvas, false);
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+
+        class Scene {
+            constructor() {
+                this.width = 5000;
+                this.height = 5000;
+                this.entities = [];
+                this.movementSystem = new MovementSystem();
+            }
+        }
+
+        function update(delta) {
+            scene.movementSystem.update(delta, scene.entities);
+        }
+
+        var paths = [];
+        var maxPaths = 20000;
+
+        function draw(interp) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+
+            // Entities
+            for (var i = 0; i < scene.entities.length; i++) {
+                var entity = scene.entities[i];
+                if (entity.hasComponent("Transform")) {
+                    ctx.fillStyle = "#" + entity.id.substring(0, 6);
+                    ctx.fillRect(entity.transform.position.x.toFixed(0) - 3, entity.transform.position.y.toFixed(0) - 3, 6, 6);
+                    paths.push({ "x": entity.transform.position.x.toFixed(0), "y": entity.transform.position.y.toFixed(0), "c": "#" + entity.id.substring(0, 6) });
+                    if (paths.length > maxPaths)
+                        paths.shift();
+                }
+            }
+
+            // Paths
+            for (var i = 0; i < paths.length; i++) {
+                ctx.fillStyle = paths[i].c;
+                ctx.fillRect(paths[i].x, paths[i].y, 1, 1);
+            }
+
+            ctx.restore();
+
+            // FPS
+            ctx.fillStyle = new Color(0, 0, 100, 0.5).style;
+            ctx.font = "12px monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 55, 35);
+
+            ctx.fillText(canvas.width + "x" + canvas.height, 50, 35);
+        }
+
+        var scene = new Scene();
+        var loop = new Loop().setUpdate(update).setDraw(draw).start();
+
+        for (var i = 0; i < 150; i++) {
+            var entity = new Entity();
+            var transform = new TransformComponent();
+            transform.position = Vector.Zero;
+            entity.addComponent(transform);
+            var motion = new MotionComponent();
+            motion.velocity = new Vector(Random.float(-0.1, 0.1), Random.float(-0.1, 0.1));
+            motion.acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
+            motion.maxVelocity = Number.MAX_SAFE_INTEGER
+            entity.addComponent(motion);
+            scene.entities.push(entity);
+        }
+
+    </script>
+</body>
+
+</html>

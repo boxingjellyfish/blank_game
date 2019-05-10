@@ -36,7 +36,7 @@ class Sequencer {
         this.click = new HiHat(this.context, this.masterGain);
         this.bass = new Bass(this.context);
         this.interval = null;
-        this.timeout = 80;
+        this.timeout = 115;
         this.position = 0;
     }
 
@@ -59,19 +59,19 @@ class Sequencer {
 
     advancePosition() {
         this.position++;
-        if (this.position >= 16)
+        if (this.position >= 32)
             this.position = 0;
     }
 
     triggerCurrentPosition() {
-        if (this.kickTrack[this.position] == "X")
+        if (this.kickTrack[this.position % this.kickTrack.length] == "X")
             this.kick.trigger();
-        if (this.snareTrack[this.position] == "X")
+        if (this.snareTrack[this.position % this.snareTrack.length] == "X")
             this.snare.trigger();
-        if (this.clickTrack[this.position] == "X")
+        if (this.clickTrack[this.position % this.clickTrack.length] == "X")
             this.click.trigger();
-        if (this.bassTrack[this.position] != "-")
-            this.bass.trigger(Notes.findNote(this.bassTrack[this.position]));
+        if (this.bassTrack[this.position % this.bassTrack.length] != "-")
+            this.bass.trigger(Notes.findNote(this.bassTrack[this.position % this.bassTrack.length]));
     }
 
     get kickTrack() {
@@ -81,45 +81,22 @@ class Sequencer {
 
     get snareTrack() {
         var rand = Random.value(["X", "-", "-", "-"]);
-        return "----X-----" + rand + "-X---";
+        return "----X-------X-------X-----" + rand + "-X---";
     }
 
     get clickTrack() {
-        return "X-X-X-X-X-X-X-X-";
+        return "X-";
     }
 
     get bassTrack() {
-        var rand = Random.value(["D2", "D#2", "F2", "G2", "-", "-"]);
-        return ["C2", "-", rand, "-", "C2", "-", rand, "-", "C2", "-", rand, "-", "C2", "-", rand, "-"];
+        var rand1 = Random.value(["D2", "D#2", "F2", "G2", "-", "-"]);
+        var rand2 = Random.value(["D#2", "F2", "G2"]);
+        return ["C2", "-", rand1, "-", "C2", "-", rand1, "-", "C2", "-", rand1, "-", "C2", "-", rand1, "-",
+        rand2, "-", "-", "-", rand2, "-", "-", "-", rand2, "-", "-", "-", rand2, "-", "-", "-"];
     }
 }
 
 class Kick {
-    /*
-        constructor(context) {
-            this.context = context;
-        }
-    
-        trigger() {
-            var time = this.context.currentTime;
-            var gain = this.context.createGain();
-            var oscillator = this.context.createOscillator();
-            gain.connect(this.context.destination);
-            oscillator.connect(gain);
-            oscillator.frequency.setValueAtTime(150, time);
-            gain.gain.setValueAtTime(0.8, time);
-            oscillator.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
-            oscillator.start(time);
-            oscillator.stop(time + 0.5);
-    
-            oscillator.onended = () => {
-                gain.disconnect();
-                gain = null;
-            };
-        }
-    
-            */
     constructor(context, masterGain) {
         this.context = context;
         this.masterGain = masterGain;
@@ -143,7 +120,6 @@ class Kick {
         osc.frequency.exponentialRampToValueAtTime(0.001, time + 0.5);
         osc2.frequency.setValueAtTime(50, time);
 
-        //Connections
         osc.connect(gainOsc);
         osc2.connect(gainOsc2);
         gainOsc2.connect(this.masterGain);
@@ -217,7 +193,6 @@ class Snare {
         node.buffer = buffer;
         node.loop = true;
 
-        //Connections
         node.connect(filter);
         filter.connect(filterGain);
         filterGain.connect(this.masterGain);

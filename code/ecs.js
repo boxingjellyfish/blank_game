@@ -64,7 +64,7 @@ class MotionComponent {
         this.acceleration = Vector.Zero;
         this.angularVelocity = 0;
         this.angularAcceleration = 0;
-        this.maxVelocity = 0;
+        this.maxVelocity = Number.MAX_SAFE_INTEGER;
     }
 }
 
