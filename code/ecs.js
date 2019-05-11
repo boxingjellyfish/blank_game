@@ -84,6 +84,11 @@ class CollisionHandlingComponent {
 }
 
 class MovementSystem {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+    }
+
     update(delta, entities) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
@@ -98,6 +103,10 @@ class MovementSystem {
                 }
                 entity.motion.angularVelocity += entity.motion.angularAcceleration * delta;
 
+                if (Math.abs(entity.transform.position.x) > this.width / 2)
+                    entity.transform.position.x *= -1;
+                if (Math.abs(entity.transform.position.y) > this.height / 2)
+                    entity.transform.position.y *= -1;
             }
         }
     }

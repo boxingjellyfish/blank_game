@@ -149,6 +149,10 @@ class Color {
         this.alpha(endColor.a + ((startColor.a - endColor.a) / total) * step);
         return this;
     }
+
+    static fixedStyle(h, s, l, a) {
+        return "hsla(" + h + ", " + s + "%, " + l + "%, " + a + ")";
+    }
 }
 
 // https://www.redblobgames.com/articles/probability/damage-rolls.html
