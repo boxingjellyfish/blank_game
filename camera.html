@@ -25,7 +25,7 @@
     </style>
 </head>
 
-<body>
+<body oncontextmenu="return false;">
     <canvas id="canvas"></canvas>
     <script src="code/loop.js"></script>
     <script src="code/basic.js"></script>
@@ -41,6 +41,8 @@
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            scene.camera.width = canvas.width;
+            scene.camera.height = canvas.height;
         }
 
         window.addEventListener("keypress", doKeyDown, false);
@@ -63,24 +65,31 @@
 
         class Scene {
             constructor() {
-                this.width = 2000;
+                this.width = 2600;
                 this.height = 2000;
                 this.entities = [];
                 this.entityToFollow = null;
                 this.movementSystem = new MovementSystem(this.width, this.height);
-                this.camera = new Camera();
+                this.camera = new Camera(canvas.width, canvas.height);
                 this.shapeRendererSystem = new ShapeRendererSystem();
                 this.traceRendererSystem = new TraceRendererSystem();
                 this.input = new Input();
+                this.runUpdate = true;
             }
 
             update(delta) {
                 if (Input.instance.isKeyDown("NumpadMultiply"))
                     this.entityToFollow = null;
 
-                this.movementSystem.update(delta, this.entities);
-                this.traceRendererSystem.update(delta, this.entities);
+                if (this.runUpdate) {
+                    this.movementSystem.update(delta, this.entities);
+                    this.traceRendererSystem.update(delta, this.entities);
+                }
+
                 this.camera.update(delta);
+
+                if (Input.instance.isKeyDown("Space"))
+                    this.runUpdate = !this.runUpdate;
             }
 
             draw(interp) {
@@ -119,6 +128,13 @@
 
                 ctx.textAlign = "left";
                 ctx.fillText("Canvas: " + canvas.width + "x" + canvas.height, 20, 20);
+
+                // Screen to World Test
+                var cursorPosition = Input.instance.mousePosition;
+                var worldPosition = this.camera.screenToWorldPoint(cursorPosition);
+                ctx.fillText("Screen position: " + cursorPosition.x + "x" + cursorPosition.y, cursorPosition.x + 20, cursorPosition.y - 10);
+                ctx.fillText("Cursor position: " + worldPosition.x.toFixed(2) + "x" + worldPosition.y.toFixed(2), cursorPosition.x + 20, cursorPosition.y + 10);
+
             }
         }
 
@@ -143,8 +159,9 @@
             var maxVelocity = Random.float(0.5, 0.5);
             var acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
             entity.addComponent(new MotionComponent(velocity, maxVelocity, acceleration));
-            entity.addComponent(new ShapeComponent(6, 6, Color.fixedStyle(100, 100, 50, 1)));
-            entity.addComponent(new TraceComponent(1, Color.fixedStyle(100, 100, 50, 1)));
+            var color = Color.fixedStyle(Random.value([0, 60, 100, 250]), 100, 60, 1);
+            entity.addComponent(new ShapeComponent(6, 6, color));
+            entity.addComponent(new TraceComponent(1, color));
             scene.entities.push(entity);
         }
 
