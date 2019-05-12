@@ -86,6 +86,10 @@ class Vector {
     static get One() {
         return new Vector(1, 1);
     }
+
+    static get MinusOne() {
+        return new Vector(-1, -1);
+    }
 }
 
 // http://hslpicker.com/
@@ -153,6 +157,18 @@ class Color {
     static fixedStyle(h, s, l, a) {
         return "hsla(" + h + ", " + s + "%, " + l + "%, " + a + ")";
     }
+
+    static get White() {
+        return Color.fixedStyle(0, 0, 100, 1);
+    }
+    
+    static get Black() {
+        return Color.fixedStyle(0, 0, 0, 1);
+    }
+
+    static get Gray() {
+        return Color.fixedStyle(0, 0, 50, 1);
+    }
 }
 
 // https://www.redblobgames.com/articles/probability/damage-rolls.html
@@ -168,6 +184,10 @@ class Random {
 
     static value(array) {
         return array[Random.int(0, array.length)];
+    }
+
+    static bool() {
+        return Math.random() < 0.5;
     }
 }
 
@@ -352,6 +372,11 @@ class Collisions {
 // https://gist.github.com/gre/1650294
 
 class Easing {
+
+    static lerp(value, target, factor) {
+        return value + (target - value) * factor;
+    }
+
     // no easing, no acceleration
     static linear(t) {
         return t

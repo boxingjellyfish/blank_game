@@ -30,6 +30,8 @@
     <script src="code/loop.js"></script>
     <script src="code/basic.js"></script>
     <script src="code/ecs.js"></script>
+    <script src="code/camera.js"></script>
+    <script src="code/input.js"></script>
     <script>
         var canvas = document.getElementById("canvas");
         var ctx = canvas.getContext("2d");
@@ -41,153 +43,108 @@
             canvas.height = window.innerHeight;
         }
 
-        resizeCanvas();
-
         window.addEventListener("keypress", doKeyDown, false);
 
         function doKeyDown(e) {
-            if (e.keyCode == 43)
-                entityToFollow++;
-            if (e.keyCode == 45)
-                entityToFollow--;
+            if (e.keyCode == 47) {
+                for (var i = 0; i < scene.entities.length; i++) {
+                    scene.entities[i].motion.acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
+                }
+            }
+            if (e.keyCode == 46) {
+                if (!scene.entityToFollow)
+                    scene.entityToFollow = 0;
+                scene.entities[scene.entityToFollow].getComponent("Shape").highlight = false;
+                scene.entityToFollow = scene.entityToFollow >= scene.entities.length - 1 ? 0 : scene.entityToFollow + 1;
+                scene.entities[scene.entityToFollow].getComponent("Shape").highlight = true;
+                scene.camera.targetPosition = scene.entities[scene.entityToFollow].transform.position;
+            }
         }
 
         class Scene {
             constructor() {
-                this.width = 5000;
-                this.height = 5000;
+                this.width = 2000;
+                this.height = 2000;
                 this.entities = [];
-                this.cameraCenter = Vector.Zero;
-                this.cameraScale = 0.1;
+                this.entityToFollow = null;
                 this.movementSystem = new MovementSystem(this.width, this.height);
+                this.camera = new Camera();
+                this.shapeRendererSystem = new ShapeRendererSystem();
+                this.traceRendererSystem = new TraceRendererSystem();
+                this.input = new Input();
+            }
+
+            update(delta) {
+                if (Input.instance.isKeyDown("NumpadMultiply"))
+                    this.entityToFollow = null;
+
+                this.movementSystem.update(delta, this.entities);
+                this.traceRendererSystem.update(delta, this.entities);
+                this.camera.update(delta);
+            }
+
+            draw(interp) {
+                // Clear canvas and save 
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+
+                // Zoom camera according to scale
+                ctx.scale(this.camera.zoom, this.camera.zoom);
+
+                // Center world in canvas
+                ctx.translate(canvas.width / (2 * this.camera.zoom), canvas.height / (2 * this.camera.zoom));
+
+                // Scroll camera center
+                ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
+
+                this.shapeRendererSystem.draw(interp, ctx, this.entities);
+                this.traceRendererSystem.draw(interp, ctx, this.entities);
+
+                // World edges
+                ctx.beginPath();
+                ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 0.5);
+                ctx.lineWidth = 2;
+                ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
+                ctx.stroke();
+
+                // Restore to draw relative to window edges
+                ctx.restore();
+
+                // FPS
+                ctx.fillStyle = new Color(0, 0, 100, 0.5).style;
+                ctx.font = "12px monospace";
+                ctx.textBaseline = "top";
+                ctx.textAlign = "right";
+                ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 20, 20);
+
+                ctx.textAlign = "left";
+                ctx.fillText("Canvas: " + canvas.width + "x" + canvas.height, 20, 20);
             }
         }
 
         function update(delta) {
-            scene.movementSystem.update(delta, scene.entities);
+            scene.update(delta);
         }
-
-        var paths = [];
-        var maxPaths = 1000;
-        var entityToFollow = 0;
 
         function draw(interp) {
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-
-            // Zoom camera according to scale
-            ctx.scale(scene.cameraScale, scene.cameraScale);
-            // Center world in canvas
-            ctx.translate(canvas.width / (2 * scene.cameraScale), canvas.height / (2 * scene.cameraScale));
-            // Scroll camera center
-            ctx.translate(-1 * scene.cameraCenter.x, -1 * scene.cameraCenter.y);
-
-            // Entities
-            for (var i = 0; i < scene.entities.length; i++) {
-                var entity = scene.entities[i];
-                if (entity.hasComponent("Transform")) {
-                    var pos = entity.transform.position.copy;
-                    if (i == entityToFollow) {
-                        lerp(scene.cameraCenter, pos);
-                        ctx.beginPath();
-                        ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 0.5);
-                        ctx.lineWidth = "1";
-                        ctx.rect(Math.round(pos.x) - 8, Math.round(pos.y) - 8, 16, 16);
-                        ctx.stroke();
-                        if (entity.hasComponent("Motion")) {
-                            var vel = entity.motion.velocity;
-                            ctx.fillStyle = Color.fixedStyle(0, 0, 100, 0.5);
-                            ctx.font = Math.round(12 / scene.cameraScale) + "px monospace";
-                            ctx.textAlign = "left";
-                            ctx.textBaseline = "middle";
-                            ctx.fillText("pos: {" + pos.x.toFixed(0) + "," + pos.y.toFixed(0) + "} vel: {" + vel.x.toFixed(2) + "," + vel.y.toFixed(2) + "}", Math.round(pos.x + 15), Math.round(pos.y));
-                        }
-                    }
-                    if (isInViewport(pos)) {
-                        ctx.fillStyle = Color.fixedStyle(100, 100, 50, 1);
-                        ctx.fillRect(Math.round(pos.x) - 3, Math.round(pos.y) - 3, 6, 6);
-
-                        paths.push({ "pos": pos, "c": Color.fixedStyle(100, 100, 50, 1) });
-                        if (paths.length > maxPaths)
-                            paths.shift();
-                    }
-                }
-            }
-
-            // Paths
-            for (var i = paths.length - 1; i >= 0; i--) {
-                if (isInViewport(paths[i].pos)) {
-                    ctx.fillStyle = paths[i].c;
-                    ctx.fillRect(paths[i].pos.x, paths[i].pos.y, 1, 1);
-                } else
-                    paths.splice(i, 1);
-            }
-
-
-            ctx.beginPath();
-            ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 0.5);
-            ctx.lineWidth = "1";
-            ctx.rect(0 - Math.round(scene.width / 2), 0 - Math.round(scene.height / 2), scene.width, scene.height);
-            ctx.stroke();
-
-            ctx.restore();
-
-            // Followed Entity
-            /*
-            var entity = scene.entities[entityToFollow];
-            if (entity && entity.hasComponent("Motion")) {
-                var pos = entity.transform.position.copy;
-                var vel = entity.motion.velocity;
-                ctx.fillStyle = Color.fixedStyle(0, 0, 100, 0.5);
-                ctx.font = "12px monospace";
-                ctx.textAlign = "left";
-                ctx.textBaseline = "middle";
-                ctx.fillText("pos: {" + pos.x.toFixed(0) + "," + pos.y.toFixed(0) + "}", Math.round(canvas.width / 2 + 15), Math.round(canvas.height / 2 - 8));
-                ctx.fillText("vel: {" + vel.x.toFixed(2) + "," + vel.y.toFixed(2) + "}", Math.round(canvas.width / 2 + 15), Math.round(canvas.height / 2 + 8));
-            }
-            */
-
-            // FPS
-            ctx.fillStyle = new Color(0, 0, 100, 0.5).style;
-            ctx.font = "12px monospace";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 55, 35);
-
-            //ctx.fillText(canvas.width + "x" + canvas.height, 50, 35);
-            //ctx.fillText(paths.length + " paths", 50, 55);
-        }
-
-        function lerp(position, targetPosition) {
-            var diff = targetPosition.copy.substract(position.copy);
-            position.x += diff.x * 0.1;
-            position.y += diff.y * 0.1;
-        }
-
-        function isInViewport(point) {
-            return true;
-            /*
-            return point.x > canvas.width / -2
-                && point.x < canvas.width / 2
-                && point.y > canvas.height / -2
-                && point.y < canvas.height / 2;
-                */
+            scene.draw(interp);
         }
 
         var scene = new Scene();
         var loop = new Loop().setUpdate(update).setDraw(draw).start();
+        resizeCanvas();
 
+        // Random entities
         for (var i = 0; i < 50; i++) {
             var entity = new Entity();
-            var transform = new TransformComponent();
-            transform.position = Vector.Zero;
-            entity.addComponent(transform);
-            var motion = new MotionComponent();
-            motion.velocity = Vector.Zero; //new Vector(Random.float(-0.1, 0.1), Random.float(-0.1, 0.1));
-            motion.acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
-            motion.maxVelocity = Random.float(0.005, 0.005);
-            entity.addComponent(motion);
+            var position = new Vector(Random.float(-100, 100), Random.float(-100, 100));
+            entity.addComponent(new TransformComponent(position));
+            var velocity = new Vector(Random.float(-0.1, 0.1), Random.float(-0.1, 0.1));
+            var maxVelocity = Random.float(0.5, 0.5);
+            var acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
+            entity.addComponent(new MotionComponent(velocity, maxVelocity, acceleration));
+            entity.addComponent(new ShapeComponent(6, 6, Color.fixedStyle(100, 100, 50, 1)));
+            entity.addComponent(new TraceComponent(1, Color.fixedStyle(100, 100, 50, 1)));
             scene.entities.push(entity);
         }
 

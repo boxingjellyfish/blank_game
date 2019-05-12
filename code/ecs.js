@@ -50,36 +50,55 @@ class Entity {
 }
 
 class TransformComponent {
-    constructor() {
+    constructor(position, angle) {
         this.name = "Transform";
-        this.position = Vector.Zero;
-        this.angle = 0;
+        this.position = position;
+        this.angle = angle;
     }
 }
 
 class MotionComponent {
-    constructor() {
+    constructor(velocity, maxVelocity, acceleration, angularVelocity, angularAcceleration) {
         this.name = "Motion";
-        this.velocity = Vector.Zero;
-        this.acceleration = Vector.Zero;
-        this.angularVelocity = 0;
-        this.angularAcceleration = 0;
-        this.maxVelocity = Number.MAX_SAFE_INTEGER;
+        this.velocity = velocity;
+        this.maxVelocity = maxVelocity;
+        this.acceleration = acceleration;
+        this.angularVelocity = angularVelocity;
+        this.angularAcceleration = angularAcceleration;
     }
 }
 
 class CollisionDetectionComponent {
-    constructor() {
+    constructor(boundingBox) {
         this.name = "CollisionDetection";
-        this.boundingBox = Vector.Zero;
-        // TODO: Handle other types of collisions
+        this.boundingBox = boundingBox;
     }
 }
 
 class CollisionHandlingComponent {
-    constructor() {
+    constructor(collided) {
         this.name = "CollisionHandling";
-        this.collided = null;
+        this.collided = collided;
+    }
+}
+
+class ShapeComponent {
+    constructor(width, height, color) {
+        this.name = "Shape";
+        this.width = width;
+        this.height = height;
+        this.color = color;
+        this.highlight = false;
+    }
+}
+
+class TraceComponent {
+    constructor(width, color) {
+        this.name = "Trace";
+        this.width = width;
+        this.color = color;
+        this.points = [];
+        this.maxPoints = 200;
     }
 }
 
@@ -97,9 +116,12 @@ class MovementSystem {
                 entity.transform.position.y += entity.motion.velocity.y * delta;
                 entity.transform.angle += entity.motion.angularVelocity * delta;
 
-                if (entity.motion.velocity.magnitude <= entity.motion.maxVelocity) {
-                    entity.motion.velocity.x += entity.motion.acceleration.x * delta;
-                    entity.motion.velocity.y += entity.motion.acceleration.y * delta;
+                var velocity = entity.motion.velocity.copy;
+                velocity.x += entity.motion.acceleration.x * delta;
+                velocity.y += entity.motion.acceleration.y * delta;
+
+                if (velocity.magnitude <= entity.motion.maxVelocity) {
+                    entity.motion.velocity = velocity;
                 }
                 entity.motion.angularVelocity += entity.motion.angularAcceleration * delta;
 
@@ -153,6 +175,66 @@ class CollisionHandlingSystem {
                 collider.removeComponent("CollisionHandling");
                 collider.motion.velocity.multiply(new Vector(-1, -1));
                 collider.motion.acceleration.multiply(new Vector(-1, -1));
+            }
+        }
+    }
+}
+
+class ShapeRendererSystem {
+    draw(interp, ctx, entities) {
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (entity.hasComponents(["Transform", "Shape"])) {
+                var transform = entity.getComponent("Transform");
+                var shape = entity.getComponent("Shape");
+                ctx.fillStyle = shape.color;
+                ctx.fillRect(Math.round(transform.position.x) - shape.width / 2, Math.round(transform.position.y) - shape.height / 2, shape.width, shape.height);
+                if (shape.highlight) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = shape.color;
+                    ctx.lineWidth = 1;
+                    ctx.rect(Math.round(transform.position.x) - shape.width / 2 - 4, Math.round(transform.position.y) - shape.height / 2 - 4, shape.width + 8, shape.height + 8);
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+}
+
+class TraceRendererSystem {
+    update(delta, entities) {
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (entity.hasComponents(["Transform", "Trace"])) {
+                var transform = entity.getComponent("Transform");
+                var trace = entity.getComponent("Trace");
+                trace.points.push(transform.position.copy);
+                if (trace.points.length > trace.maxPoints)
+                    trace.points.shift();
+            }
+        }
+    }
+
+    draw(interp, ctx, entities) {
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (entity.hasComponents(["Trace"])) {
+                var trace = entity.getComponent("Trace");
+                if (trace.points.length > 0) {
+                    var pos = trace.points[0];
+                    ctx.beginPath();
+                    ctx.strokeStyle = trace.color;
+                    ctx.lineWidth = trace.width;
+                    ctx.moveTo(Math.round(pos.x), Math.round(pos.y));
+                    for (var j = 1; j < trace.points.length; j++) {
+                        if (Math.abs(pos.x - trace.points[j].x) < 100 && Math.abs(pos.y - trace.points[j].y) < 100)
+                            ctx.lineTo(Math.round(trace.points[j].x), Math.round(trace.points[j].y));
+                        else
+                            ctx.moveTo(Math.round(trace.points[j].x), Math.round(trace.points[j].y));
+                        pos = trace.points[j];
+                    }
+                    ctx.stroke();
+                }
             }
         }
     }
