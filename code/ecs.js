@@ -65,6 +65,7 @@ class MotionComponent {
         this.acceleration = acceleration;
         this.angularVelocity = angularVelocity;
         this.angularAcceleration = angularAcceleration;
+        this.wraparound = true;
     }
 }
 
@@ -98,7 +99,7 @@ class TraceComponent {
         this.width = width;
         this.color = color;
         this.points = [];
-        this.maxPoints = 200;
+        this.maxPoints = 100;
     }
 }
 
@@ -106,29 +107,39 @@ class MovementSystem {
     constructor(width, height) {
         this.width = width;
         this.height = height;
+        this.halfWidth = width / 2;
+        this.halfHeight = height / 2;
     }
 
     update(delta, entities) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
             if (entity.hasComponents(["Transform", "Motion"])) {
-                entity.transform.position.x += entity.motion.velocity.x * delta;
-                entity.transform.position.y += entity.motion.velocity.y * delta;
-                entity.transform.angle += entity.motion.angularVelocity * delta;
+                var transform = entity.getComponent("Transform");
+                var motion = entity.getComponent("Motion");
+                transform.position.x += motion.velocity.x * delta;
+                transform.position.y += motion.velocity.y * delta;
+                transform.angle += motion.angularVelocity * delta;
 
-                var velocity = entity.motion.velocity.copy;
-                velocity.x += entity.motion.acceleration.x * delta;
-                velocity.y += entity.motion.acceleration.y * delta;
+                var velocity = motion.velocity.copy;
+                velocity.x += motion.acceleration.x * delta;
+                velocity.y += motion.acceleration.y * delta;
 
-                if (velocity.magnitude <= entity.motion.maxVelocity) {
-                    entity.motion.velocity = velocity;
+                if (velocity.magnitude <= motion.maxVelocity) {
+                    motion.velocity = velocity;
                 }
-                entity.motion.angularVelocity += entity.motion.angularAcceleration * delta;
+                motion.angularVelocity += motion.angularAcceleration * delta;
 
-                if (Math.abs(entity.transform.position.x) > this.width / 2)
-                    entity.transform.position.x *= -1;
-                if (Math.abs(entity.transform.position.y) > this.height / 2)
-                    entity.transform.position.y *= -1;
+                if (motion.wraparound) {
+                    if (transform.position.x > this.halfWidth)
+                        transform.position.x = -1 * this.halfWidth;
+                    else if (transform.position.x < -1 * this.halfWidth)
+                        transform.position.x = this.halfWidth;
+                    if (transform.position.y > this.halfHeight)
+                        transform.position.y = -1 * this.halfHeight;
+                    else if (transform.position.y < -1 * this.halfHeight)
+                        transform.position.y = this.halfHeight;
+                }
             }
         }
     }

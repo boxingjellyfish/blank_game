@@ -5,7 +5,8 @@ class Camera {
         this.position = Vector.Zero;
         this.targetPosition = this.position;
         this.zoom = 1;
-        this.targetZoom = null;
+        this.targetZoom = 2;
+        this.lastWheelDelta = 0;
     }
 
     update(delta) {
@@ -21,13 +22,21 @@ class Camera {
 
         // Handle Zoom
         if (Input.Instance.isKeyDown("NumpadAdd"))
-            this.zoom *= 1.01;
+            this.targetZoom *= 1.05;
         else if (Input.Instance.isKeyDown("NumpadSubtract"))
-            this.zoom *= 0.99;
+            this.targetZoom /= 1.05;
+        if (this.lastWheelDelta > Input.instance.wheelDelta)
+            this.targetZoom *= 1.1;
+        else if (this.lastWheelDelta < Input.instance.wheelDelta)
+            this.targetZoom /= 1.1;
+
+        this.lastWheelDelta = Input.instance.wheelDelta;
 
         // Reset Camera
-        if (Input.Instance.isKeyDown("NumpadMultiply"))
+        if (Input.Instance.isKeyDown("NumpadMultiply") || Input.Instance.isButtonDown(1)) {
             this.targetPosition = Vector.Zero;
+            this.targetZoom = 1;
+        }
 
         // Follow target, if set
         if (this.targetPosition) {
@@ -37,18 +46,32 @@ class Camera {
 
         // Zoom to target, if set
         if (this.targetZoom) {
-            this.zoom = Easing.lerp(this.zoom, this.targetZoom, 0.01);
+            this.zoom = Easing.lerp(this.zoom, this.targetZoom, 0.1);
         }
     }
 
+    // TODO:  Zoom + Scroll IS NOT WORKING OK!!!!
     screenToWorldPoint(point) {
+        var world = point.copy
+
         // Center
-        var world = point.copy.substract(new Vector(this.width / 2, this.height / 2));
-        // Position
+        world.substract(new Vector(this.width / 2, this.height / 2));
+
+        // Scroll
         world.add(this.position);
+
         // Zoom
-        world.multiply(new Vector(this.zoom, this.zoom));
+        world.divide(new Vector(this.zoom, this.zoom));
         return world;
+    }
+
+    toString() {
+        var worldPoint = this.screenToWorldPoint(Input.instance.mousePosition);
+        return "Camera Viewport:  " + this.width + "x" + this.height + "\n"
+            + "Camera Position:  " + this.position.x.toFixed(2) + ";" + this.position.y.toFixed(2) + "\n"
+            + "Camera Zoom:      " + this.zoom.toFixed(2) + "\n"
+            + "Screen Cursor:    " + Input.instance.mousePosition.x + ";" + Input.instance.mousePosition.y + "\n"
+            + "World Cursor:     " + worldPoint.x.toFixed(2) + ";" + worldPoint.y.toFixed(2);
     }
 
 }

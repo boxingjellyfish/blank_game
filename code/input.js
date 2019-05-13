@@ -10,11 +10,13 @@ class Input {
         this.keys = [];
         this.mousePosition = Vector.Zero;
         this.buttons = [];
+        this.wheelDelta = 0;
         window.addEventListener("keydown", (e) => { this.handleKeyDown(e) }, false);
         window.addEventListener("keyup", (e) => { this.handleKeyUp(e) }, false);
         window.addEventListener("mousemove", (e) => { this.handleMouseMove(e) }, false);
         window.addEventListener("mousedown", (e) => { this.handleMouseDown(e) }, false);
         window.addEventListener("mouseup", (e) => { this.handleMouseUp(e) }, false);
+        window.addEventListener("wheel", (e) => { this.handleWheel(e) }, false);
         Input.instance = this;
     }
 
@@ -37,6 +39,10 @@ class Input {
 
     handleMouseUp(e) {
         this.buttons[e.button] = false;
+    }
+
+    handleWheel(e) {
+        this.wheelDelta += e.deltaY;
     }
 
     isKeyDown(keyCode) {

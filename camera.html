@@ -65,8 +65,8 @@
 
         class Scene {
             constructor() {
-                this.width = 2600;
-                this.height = 2000;
+                this.width = 400;
+                this.height = 400;
                 this.entities = [];
                 this.entityToFollow = null;
                 this.movementSystem = new MovementSystem(this.width, this.height);
@@ -111,8 +111,8 @@
 
                 // World edges
                 ctx.beginPath();
-                ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 0.5);
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 1);
+                ctx.lineWidth = 4;
                 ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
                 ctx.stroke();
 
@@ -126,15 +126,15 @@
                 ctx.textAlign = "right";
                 ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 20, 20);
 
-                ctx.textAlign = "left";
-                ctx.fillText("Canvas: " + canvas.width + "x" + canvas.height, 20, 20);
+                debug(ctx, scene.camera.toString(), 15, 15);
 
                 // Screen to World Test
+                /*
                 var cursorPosition = Input.instance.mousePosition;
                 var worldPosition = this.camera.screenToWorldPoint(cursorPosition);
                 ctx.fillText("Screen position: " + cursorPosition.x + "x" + cursorPosition.y, cursorPosition.x + 20, cursorPosition.y - 10);
-                ctx.fillText("Cursor position: " + worldPosition.x.toFixed(2) + "x" + worldPosition.y.toFixed(2), cursorPosition.x + 20, cursorPosition.y + 10);
-
+                ctx.fillText("World  position: " + worldPosition.x.toFixed(0) + "x" + worldPosition.y.toFixed(0), cursorPosition.x + 20, cursorPosition.y + 10);
+                */
             }
         }
 
@@ -163,6 +163,18 @@
             entity.addComponent(new ShapeComponent(6, 6, color));
             entity.addComponent(new TraceComponent(1, color));
             scene.entities.push(entity);
+        }
+
+        function debug(ctx, text, x, y, baseline = "top", align = "left") {
+            ctx.fillStyle = new Color(0, 0, 100, 0.5).style;
+            ctx.font = "12px monospace";
+            ctx.textBaseline = baseline;
+            ctx.textAlign = align;
+            var lines = text.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                ctx.fillText(lines[i], x, y);
+                y += 15;
+            }
         }
 
     </script>
