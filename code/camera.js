@@ -2,23 +2,24 @@ class Camera {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.position = new Vector(150, 150);
-        this.targetPosition = this.position;
+        this.position = Vector.Zero;
+        this.targetPosition = Vector.Zero;
         this.zoom = 1;
-        this.targetZoom = 2;
+        this.targetZoom = 1;
         this.lastWheelDelta = 0;
     }
 
     update(delta) {
         // Handle Pan
-        if (Input.Instance.isKeyDown("ArrowLeft"))
-            this.targetPosition.x -= 10;
-        if (Input.Instance.isKeyDown("ArrowRight"))
-            this.targetPosition.x += 10;
-        if (Input.Instance.isKeyDown("ArrowUp"))
-            this.targetPosition.y -= 10;
-        if (Input.Instance.isKeyDown("ArrowDown"))
-            this.targetPosition.y += 10;
+        var panSpeed = 10 / this.zoom
+        if (Input.Instance.isKeyDown("ArrowLeft") || Input.Instance.isKeyDown("KeyA"))
+            this.targetPosition.x -= panSpeed;
+        if (Input.Instance.isKeyDown("ArrowRight") || Input.Instance.isKeyDown("KeyD"))
+            this.targetPosition.x += panSpeed;
+        if (Input.Instance.isKeyDown("ArrowUp") || Input.Instance.isKeyDown("KeyW"))
+            this.targetPosition.y -= panSpeed;
+        if (Input.Instance.isKeyDown("ArrowDown") || Input.Instance.isKeyDown("KeyS"))
+            this.targetPosition.y += panSpeed;
 
         // Handle Zoom
         if (Input.Instance.isKeyDown("NumpadAdd"))

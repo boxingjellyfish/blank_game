@@ -50,7 +50,7 @@
         function doKeyDown(e) {
             if (e.keyCode == 47) {
                 for (var i = 0; i < scene.entities.length; i++) {
-                    scene.entities[i].motion.acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
+                    scene.entities[i].motion.acceleration.rotate(Random.value([Math.PI * 0.5, Math.PI * 1.5]));
                 }
             }
             if (e.keyCode == 46) {
@@ -65,8 +65,8 @@
 
         class Scene {
             constructor() {
-                this.width = 400;
-                this.height = 400;
+                this.width = 5000;
+                this.height = 2400;
                 this.entities = [];
                 this.entityToFollow = null;
                 this.movementSystem = new MovementSystem(this.width, this.height);
@@ -106,20 +106,12 @@
                 // Scroll camera center
                 ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
 
-                this.shapeRendererSystem.draw(interp, ctx, this.entities);
-                this.traceRendererSystem.draw(interp, ctx, this.entities);
 
-                // World edges
-                ctx.beginPath();
-                ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 1);
-                ctx.lineWidth = 4;
-                ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
-                ctx.stroke();
 
                 // Reference points
                 for (var i = this.width / -2; i < this.width / 2; i += 20) {
                     ctx.beginPath();
-                    ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5): Color.fixedStyle(0, 0, 100, 0.5);
+                    ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5) : Color.fixedStyle(0, 0, 100, 0.2);
                     ctx.lineWidth = 1;
                     ctx.moveTo(i, this.height / -2);
                     ctx.lineTo(i, this.height / 2);
@@ -127,12 +119,22 @@
                 }
                 for (var i = this.height / -2; i < this.height / 2; i += 20) {
                     ctx.beginPath();
-                    ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5): Color.fixedStyle(0, 0, 100, 0.5);
+                    ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5) : Color.fixedStyle(0, 0, 100, 0.2);
                     ctx.lineWidth = 1;
                     ctx.moveTo(this.width / -2, i);
                     ctx.lineTo(this.width / 2, i);
                     ctx.stroke();
                 }
+                
+                // World edges
+                ctx.beginPath();
+                ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 1);
+                ctx.lineWidth = 4;
+                ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
+                ctx.stroke();
+
+                this.shapeRendererSystem.draw(interp, ctx, this.entities);
+                this.traceRendererSystem.draw(interp, ctx, this.entities);
 
                 // Restore to draw relative to window edges
                 ctx.restore();
@@ -169,7 +171,7 @@
         resizeCanvas();
 
         // Random entities
-        for (var i = 0; i < 1; i++) {
+        for (var i = 0; i < 501; i++) {
             var entity = new Entity();
             var position = new Vector(Random.float(-100, 100), Random.float(-100, 100));
             entity.addComponent(new TransformComponent(position));
