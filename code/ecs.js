@@ -125,9 +125,16 @@ class MovementSystem {
                 velocity.x += motion.acceleration.x * delta;
                 velocity.y += motion.acceleration.y * delta;
 
+
                 if (velocity.magnitude <= motion.maxVelocity) {
                     motion.velocity = velocity;
                 }
+                else {
+                    // Damping
+                    motion.velocity.multiply(new Vector(0.95, 0.95));
+                }
+
+
                 motion.angularVelocity += motion.angularAcceleration * delta;
 
                 if (motion.wraparound) {
@@ -229,8 +236,9 @@ class TraceRendererSystem {
     draw(interp, ctx, entities) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            if (entity.hasComponents(["Trace"])) {
+            if (entity.hasComponents(["Trace", "Motion"])) {
                 var trace = entity.getComponent("Trace");
+                var motion = entity.getComponent("Motion");
                 if (trace.points.length > 0) {
                     var pos = trace.points[0];
                     ctx.beginPath();
@@ -244,6 +252,14 @@ class TraceRendererSystem {
                             ctx.moveTo(Math.round(trace.points[j].x), Math.round(trace.points[j].y));
                         pos = trace.points[j];
                     }
+                    ctx.stroke();
+
+                    var acc = motion.acceleration.copy.normalize.multiply(new Vector(20, 20));
+                    ctx.beginPath();
+                    ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 1);
+                    ctx.lineWidth = trace.width;
+                    ctx.moveTo(Math.round(pos.x), Math.round(pos.y));
+                    ctx.lineTo(Math.round(pos.x + acc.x), Math.round(pos.y + acc.y));
                     ctx.stroke();
                 }
             }
