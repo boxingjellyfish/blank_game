@@ -2,7 +2,7 @@ class Camera {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.position = Vector.Zero;
+        this.position = new Vector(150, 150);
         this.targetPosition = this.position;
         this.zoom = 1;
         this.targetZoom = 2;
@@ -50,19 +50,11 @@ class Camera {
         }
     }
 
-    // TODO:  Zoom + Scroll IS NOT WORKING OK!!!!
     screenToWorldPoint(point) {
-        var world = point.copy
-
-        // Center
-        world.substract(new Vector(this.width / 2, this.height / 2));
-
-        // Scroll
-        world.add(this.position);
-
-        // Zoom
-        world.divide(new Vector(this.zoom, this.zoom));
-        return world;
+        var c = new Vector(this.width / 2, this.height / 2);
+        var x = point.copy.substract(c);
+        var j = x.copy.divide(new Vector(this.zoom, this.zoom));
+        return this.position.copy.add(j);        
     }
 
     toString() {

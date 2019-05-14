@@ -99,7 +99,7 @@ class TraceComponent {
         this.width = width;
         this.color = color;
         this.points = [];
-        this.maxPoints = 100;
+        this.maxPoints = 10;
     }
 }
 

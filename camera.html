@@ -116,11 +116,29 @@
                 ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
                 ctx.stroke();
 
+                // Reference points
+                for (var i = this.width / -2; i < this.width / 2; i += 20) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5): Color.fixedStyle(0, 0, 100, 0.5);
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(i, this.height / -2);
+                    ctx.lineTo(i, this.height / 2);
+                    ctx.stroke();
+                }
+                for (var i = this.height / -2; i < this.height / 2; i += 20) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5): Color.fixedStyle(0, 0, 100, 0.5);
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(this.width / -2, i);
+                    ctx.lineTo(this.width / 2, i);
+                    ctx.stroke();
+                }
+
                 // Restore to draw relative to window edges
                 ctx.restore();
 
                 // FPS
-                ctx.fillStyle = new Color(0, 0, 100, 0.5).style;
+                ctx.fillStyle = Color.fixedStyle(0, 0, 100, 0.5);
                 ctx.font = "12px monospace";
                 ctx.textBaseline = "top";
                 ctx.textAlign = "right";
@@ -151,7 +169,7 @@
         resizeCanvas();
 
         // Random entities
-        for (var i = 0; i < 50; i++) {
+        for (var i = 0; i < 1; i++) {
             var entity = new Entity();
             var position = new Vector(Random.float(-100, 100), Random.float(-100, 100));
             entity.addComponent(new TransformComponent(position));
