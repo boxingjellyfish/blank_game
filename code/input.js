@@ -8,8 +8,10 @@ class Input {
         if (Input.instance)
             return Input.instance;
         this.keys = [];
+        this.keysDuration = [];
         this.mousePosition = Vector.Zero;
         this.buttons = [];
+        this.buttonsDuration = [];
         this.wheelDelta = 0;
         window.addEventListener("keydown", (e) => { this.handleKeyDown(e) }, false);
         window.addEventListener("keyup", (e) => { this.handleKeyUp(e) }, false);
@@ -22,10 +24,12 @@ class Input {
 
     handleKeyDown(e) {
         this.keys[e.code] = true;
+        this.keysDuration[e.code] = Date.now();
     }
 
     handleKeyUp(e) {
         this.keys[e.code] = false;
+        this.keysDuration[e.code] = Date.now() - this.keysDuration[e.code];
     }
 
     handleMouseMove(e) {
@@ -35,10 +39,12 @@ class Input {
 
     handleMouseDown(e) {
         this.buttons[e.button] = true;
+        this.buttonsDuration[e.button] = Date.now();
     }
 
     handleMouseUp(e) {
         this.buttons[e.button] = false;
+        this.buttonsDuration[e.button] = Date.now() - this.buttonsDuration[e.button];
     }
 
     handleWheel(e) {
@@ -57,3 +63,30 @@ class Input {
         return Input.instance;
     }
 }
+
+class ClickHandler {
+    constructor() {
+        this.buttonsDuration = [];
+        this.position = null;
+        this.clickDuration = 200;
+    }
+
+    clickStarted(button) {
+        if (Input.instance.isButtonDown(button) && this.buttonsDuration[button] == null) {
+            this.buttonsDuration[button] = Date.now();
+            return true;
+        }
+        return false;
+    }
+
+    clickEnded(button) {
+        if (!Input.instance.isButtonDown(button) && this.buttonsDuration[button] != null) {
+            var elapsed = Date.now() - this.buttonsDuration[button];
+            this.buttonsDuration[button] = null;
+            if (elapsed < this.clickDuration)
+                return true;
+        }
+        return false;
+    }
+}
+

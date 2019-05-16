@@ -12,14 +12,22 @@ class Camera {
     update(delta) {
         // Handle Pan
         var panSpeed = 10 / this.zoom
-        if (Input.Instance.isKeyDown("ArrowLeft") || Input.Instance.isKeyDown("KeyA"))
+        if (Input.Instance.isKeyDown("ArrowLeft") || Input.Instance.isKeyDown("KeyA")) {
+            this.targetPosition = this.targetPosition.copy;
             this.targetPosition.x -= panSpeed;
-        if (Input.Instance.isKeyDown("ArrowRight") || Input.Instance.isKeyDown("KeyD"))
+        }
+        if (Input.Instance.isKeyDown("ArrowRight") || Input.Instance.isKeyDown("KeyD")) {
+            this.targetPosition = this.targetPosition.copy;
             this.targetPosition.x += panSpeed;
-        if (Input.Instance.isKeyDown("ArrowUp") || Input.Instance.isKeyDown("KeyW"))
+        }
+        if (Input.Instance.isKeyDown("ArrowUp") || Input.Instance.isKeyDown("KeyW")) {
+            this.targetPosition = this.targetPosition.copy;
             this.targetPosition.y -= panSpeed;
-        if (Input.Instance.isKeyDown("ArrowDown") || Input.Instance.isKeyDown("KeyS"))
+        }
+        if (Input.Instance.isKeyDown("ArrowDown") || Input.Instance.isKeyDown("KeyS")) {
+            this.targetPosition = this.targetPosition.copy;
             this.targetPosition.y += panSpeed;
+        }
 
         // Handle Zoom
         if (Input.Instance.isKeyDown("NumpadAdd"))
@@ -55,7 +63,7 @@ class Camera {
         var c = new Vector(this.width / 2, this.height / 2);
         var x = point.copy.substract(c);
         var j = x.copy.divide(new Vector(this.zoom, this.zoom));
-        return this.position.copy.add(j);        
+        return this.position.copy.add(j);
     }
 
     toString() {

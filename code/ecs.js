@@ -99,7 +99,14 @@ class TraceComponent {
         this.width = width;
         this.color = color;
         this.points = [];
-        this.maxPoints = 50;
+        this.maxPoints = 1;
+    }
+}
+
+class SelectableComponent {
+    constructor() {
+        this.name = "Selectable";
+        this.threshold = 20;
     }
 }
 
@@ -125,7 +132,6 @@ class MovementSystem {
                 velocity.x += motion.acceleration.x * delta;
                 velocity.y += motion.acceleration.y * delta;
 
-
                 if (velocity.magnitude <= motion.maxVelocity) {
                     motion.velocity = velocity;
                 }
@@ -133,7 +139,6 @@ class MovementSystem {
                     // Damping
                     motion.velocity.multiply(new Vector(0.95, 0.95));
                 }
-
 
                 motion.angularVelocity += motion.angularAcceleration * delta;
 
@@ -183,7 +188,6 @@ class CollisionDetectionSystem {
             colliderBoundingBoxEnd.y > collidedBoundingBoxStart.y;
     }
 }
-
 
 class CollisionHandlingSystem {
     update(delta, entities) {
@@ -263,6 +267,39 @@ class TraceRendererSystem {
                     ctx.stroke();
                 }
             }
+        }
+    }
+}
+
+class SelectionSystem {
+    constructor() {
+        this.position = null;
+        this.clickHandler = new ClickHandler();
+    }
+
+    update(delta, entities, camera) {
+        if (this.clickHandler.clickStarted(0)) {
+            this.position = camera.screenToWorldPoint(Input.Instance.mousePosition);
+        }
+        if (this.clickHandler.clickEnded(0)) {
+            var target = this.position.copy;
+            var found = false;
+            for (var i = 0; i < entities.length; i++) {
+                var entity = entities[i];
+                if (entity.hasComponents(["Transform", "Selectable", "Shape"])) {
+                    var transform = entity.getComponent("Transform");
+                    var selectable = entity.getComponent("Selectable");
+                    var shape = entity.getComponent("Shape");
+                    shape.highlight = false;
+                    if (!found && Math.abs(transform.position.x - this.position.x) <= selectable.threshold
+                        && Math.abs(transform.position.y - this.position.y) <= selectable.threshold) {
+                        shape.highlight = true;
+                        target = transform.position;
+                        found = true;
+                    }
+                }
+            }
+            camera.targetPosition = target;
         }
     }
 }
