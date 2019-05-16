@@ -90,3 +90,27 @@ class ClickHandler {
     }
 }
 
+class KeyHandler {
+    constructor() {
+        this.keysDuration = [];
+        this.pressDuration = 200;
+    }
+
+    keyStarted(keyCode) {
+        if (Input.instance.isKeyDown(keyCode) && this.keysDuration[keyCode] == null) {
+            this.keysDuration[keyCode] = Date.now();
+            return true;
+        }
+        return false;
+    }
+
+    keyEnded(keyCode) {
+        if (!Input.instance.isKeyDown(keyCode) && this.keysDuration[keyCode] != null) {
+            var elapsed = Date.now() - this.keysDuration[keyCode];
+            this.keysDuration[keyCode] = null;
+            if (elapsed < this.pressDuration)
+                return true;
+        }
+        return false;
+    }
+}

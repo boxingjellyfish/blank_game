@@ -84,16 +84,16 @@ class Emitter {
             this.emissionTimer = this.emissionTimer % emissionRateInv;
         }
         for (var j = 0; j < particlesToEmit; j++) {
-            var angle = this.velocity.angle + this.spread - Random.float(0, this.spread * 2);
-            var segment = Vector.fromAngleAndMagnitude(this.velocity.angle + Math.PI / 2, this.size);
-            var randomSegment = Vector.fromAngleAndMagnitude(this.velocity.angle - Math.PI / 2, Random.float(0, this.size * 2));
-            segment.add(randomSegment);
-            segment.add(this.position);
+            var angle = Vector.angle(this.velocity) + this.spread - Random.float(0, this.spread * 2);
+            var segment = Vector.fromAngleAndMagnitude(Vector.angle(this.velocity) + Math.PI / 2, this.size);
+            var randomSegment = Vector.fromAngleAndMagnitude(Vector.angle(this.velocity) - Math.PI / 2, Random.float(0, this.size * 2));
+            Vector.add(segment, randomSegment);
+            Vector.add(segment, this.position);
             var position = segment;
-            var velocity = Vector.fromAngleAndMagnitude(angle, Random.float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
+            var velocity = Vector.fromAngleAndMagnitude(angle, Random.float(Vector.magnitude(this.velocity), Vector.magnitude(this.velocity) * this.velocityRandomness));
             var life = Random.int(this.particleLifespan, this.particleLifespan * this.particleLifespanRandomness);
             var size = Random.int(this.particleSize, this.particleSize * this.particleSizeRandomness);
-            var particle = new Particle(position, velocity, Vector.Zero, this.color.copy, size, life);
+            var particle = new Particle(position, velocity, Vector.Zero, Color.copy(this.color), size, life);
             this.particles.push(particle);
         }
     }
@@ -106,7 +106,7 @@ class Emitter {
             particle.update(step);
             particle.lifespan -= step;
             if (particle.lifespan > 0) {
-                particle.color = particle.color.blend(this.color, this.colorEnd, particle.totalLifespan, particle.lifespan);
+                particle.color = Color.blend(this.color, this.colorEnd, particle.totalLifespan, particle.lifespan);
                 updatedParticles.push(particle);
             }
         }
@@ -114,10 +114,10 @@ class Emitter {
     }
 
     move(position) {
-        var delta = position.copy.substract(this.position);
+        var delta = Vector.substract(Vector.copy(position), this.position);
         this.position = position;
         for (var i = 0; i < this.fields.length; i++) {
-            this.fields[i].position.add(delta);
+            Vector.add(this.fields[i].position, delta);
         }
     }
 
@@ -129,16 +129,16 @@ class Emitter {
     static fromObject(emitter) {
         emitter.__proto__ = Emitter.prototype;
         emitter.position.__proto__ = Vector.prototype;
-        emitter.velocity.__proto__ = Vector.prototype;    
+        emitter.velocity.__proto__ = Vector.prototype;
         emitter.color.__proto__ = Color.prototype;
         emitter.colorEnd.__proto__ = Color.prototype;
-        for(var i = 0; i < emitter.particles.length; i++) {
+        for (var i = 0; i < emitter.particles.length; i++) {
             emitter.particles[i].__proto__ = Particle.prototype;
             emitter.particles[i].position.__proto__ = Vector.prototype;
-            emitter.particles[i].velocity.__proto__ = Vector.prototype;    
+            emitter.particles[i].velocity.__proto__ = Vector.prototype;
             emitter.particles[i].color.__proto__ = Color.prototype;
         }
-        for(var i = 0; i < emitter.fields.length; i++) {
+        for (var i = 0; i < emitter.fields.length; i++) {
             emitter.fields[i].__proto__ = Field.prototype;
             emitter.fields[i].position.__proto__ = Vector.prototype;
         }
@@ -162,9 +162,9 @@ class Particle {
         for (var i = 0; i < fields.length; i++) {
             var field = fields[i];
             if (field.enabled) {
-                var vector = field.position.copy.substract(this.position);
+                var vector = Vector.substract(Vector.copy(field.position), this.position);
                 var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
-                totalAcceleration.add(vector.multiply(new Vector(force, force)));
+                Vector.add(totalAcceleration, Vector.multiply(vector, new Vector(force, force)));
                 if (field.destructive) {
                     if (Math.pow(this.position.x - field.position.x, 2) + Math.pow(this.position.y - field.position.y, 2) < Math.pow(field.radius, 2)) {
                         this.lifespan = 0;
@@ -176,12 +176,12 @@ class Particle {
     }
 
     update(delta) {
-        this.velocity.add(this.acceleration);
-        this.position.add(this.velocity);
+        Vector.add(this.velocity, this.acceleration);
+        Vector.add(this.position, this.velocity);
     }
 
     draw(ctx, interp) {
-        ctx.fillStyle = this.color.style;
+        ctx.fillStyle = Color.style(this.color);
         ctx.fillRect(this.position.x, this.position.y, this.size, this.size);
     }
 }

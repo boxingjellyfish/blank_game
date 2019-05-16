@@ -4,44 +4,39 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Blank Game</title>
+    <title>Sandbox</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="favicon.ico">
     <style>
         * {
-            font-family: monospace;
+            margin: 0;
+            padding: 0;
         }
-        body {            
-            background-color: black;
-            color: darkgray;
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            cursor: none;
         }
+
         canvas {
-            border: 1px solid darkgray;
-        }
-        #title {
-            padding-bottom: 10px;
-            font-size: 18px;
-        }
-        #buttons {
-            padding-top: 10px;
+            display: block;
+            background-color: black;
         }
     </style>
 </head>
 
-<body>
-    <div id="title">
-        <span>Blank Game</span>
-    </div>
-    <div>
-        <canvas id="canvas" width="1536" height="864"></canvas>
-    </div>
-    <div id="buttons">
-        <button onclick="toggle()">Pause/Resume</button>
-    </div>
-    <script src="code/particles.js"></script>
-    <script src="code/sound.js"></script>
+<body oncontextmenu="return false;">
+    <canvas id="canvas"></canvas>
+    <script src="code/core.js"></script>
     <script src="code/loop.js"></script>
-    <script src="code/basic.js"></script>
+    <script src="code/ecs.js"></script>
+    <script src="code/camera.js"></script>
+    <script src="code/input.js"></script>
+    <script src="code/particles.js"></script>
     <script src="code/data.js"></script>
+    <script src="code/sound.js"></script>
     <script src="code/sandbox.js"></script>
 </body>
 

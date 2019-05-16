@@ -8,44 +8,24 @@ class Entity {
         this.components = {};
     }
 
-    getComponent(name) {
-        return this.components[name];
+    static getComponent(entity, name) {
+        return entity.components[name];
     }
 
-    hasComponent(name) {
-        return this.components[name] != null;
-    }
-
-    hasComponents(names) {
+    static hasComponents(entity, names) {
         var hasAll = true;
         for (var i = 0; i < names.length; i++) {
-            hasAll &= this.components[names[i]] != null;
+            hasAll &= entity.components[names[i]] != null;
         }
         return hasAll;
     }
 
-    addComponent(component) {
-        this.components[component.name] = component;
+    static addComponent(entity, component) {
+        entity.components[component.name] = component;
     }
 
-    removeComponent(name) {
-        this.components[name] = null;
-    }
-
-    get transform() {
-        return this.getComponent("Transform");
-    }
-
-    get motion() {
-        return this.getComponent("Motion");
-    }
-
-    get collisionDetection() {
-        return this.getComponent("CollisionDetection");
-    }
-
-    get collisionHandling() {
-        return this.getComponent("CollisionHandling");
+    static removeComponent(entity, name) {
+        entity.components[name] = null;
     }
 }
 
@@ -99,7 +79,7 @@ class TraceComponent {
         this.width = width;
         this.color = color;
         this.points = [];
-        this.maxPoints = 1;
+        this.maxPoints = 25;
     }
 }
 
@@ -121,23 +101,23 @@ class MovementSystem {
     update(delta, entities) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            if (entity.hasComponents(["Transform", "Motion"])) {
-                var transform = entity.getComponent("Transform");
-                var motion = entity.getComponent("Motion");
+            if (Entity.hasComponents(entity, ["Transform", "Motion"])) {
+                var transform = Entity.getComponent(entity, "Transform");
+                var motion = Entity.getComponent(entity, "Motion");
                 transform.position.x += motion.velocity.x * delta;
                 transform.position.y += motion.velocity.y * delta;
                 transform.angle += motion.angularVelocity * delta;
 
-                var velocity = motion.velocity.copy;
+                var velocity = Vector.copy(motion.velocity);
                 velocity.x += motion.acceleration.x * delta;
                 velocity.y += motion.acceleration.y * delta;
 
-                if (velocity.magnitude <= motion.maxVelocity) {
+                if (Vector.magnitude(velocity) <= motion.maxVelocity) {
                     motion.velocity = velocity;
                 }
                 else {
                     // Damping
-                    motion.velocity.multiply(new Vector(0.95, 0.95));
+                    Vector.multiply(motion.velocity, new Vector(0.95, 0.95));
                 }
 
                 motion.angularVelocity += motion.angularAcceleration * delta;
@@ -161,11 +141,11 @@ class CollisionDetectionSystem {
     update(delta, entities) {
         for (var i = 0; i < entities.length; i++) {
             var collider = entities[i];
-            if (collider.hasComponents(["Transform", "Motion", "CollisionDetection"])) {
+            if (Entity.hasComponents(collider, ["Transform", "Motion", "CollisionDetection"])) {
                 var collisionHandling = null;
                 for (var j = 0; j < entities.length && !collisionHandling; j++) {
                     var collided = entities[j];
-                    if (collider.id != collided.id && collided.hasComponents(["Transform", "CollisionDetection"])) {
+                    if (collider.id != collided.id && Entity.hasComponents(collided, ["Transform", "CollisionDetection"])) {
                         if (this.areBoundingBoxesIntersecting(collider, collided)) {
                             collisionHandling = new CollisionHandlingComponent();
                             collisionHandling.collided = collided;
@@ -178,10 +158,14 @@ class CollisionDetectionSystem {
     }
 
     areBoundingBoxesIntersecting(collider, collided) {
-        var colliderBoundingBoxStart = collider.transform.position.copy.substract(collider.collisionDetection.boundingBox);
-        var colliderBoundingBoxEnd = collider.transform.position.copy.add(collider.collisionDetection.boundingBox);
-        var collidedBoundingBoxStart = collided.transform.position.copy.substract(collided.collisionDetection.boundingBox);
-        var collidedBoundingBoxEnd = collided.transform.position.copy.add(collided.collisionDetection.boundingBox);
+        var colliderPosition = Entity.getComponent(collider, "Transform").position;
+        var collidedPosition = Entity.getComponent(collided, "Transform").position;
+        var colliderBoundingBox = Entity.getComponent(collider, "CollisionDetection").boundingBox;
+        var collidedBoundingBox = Entity.getComponent(collided, "CollisionDetection").boundingBox;
+        var colliderBoundingBoxStart = Vector.substract(Vector.copy(colliderPosition), colliderBoundingBox);
+        var colliderBoundingBoxEnd = Vector.add(Vector.copy(colliderPosition), colliderBoundingBox);
+        var collidedBoundingBoxStart = Vector.substract(Vector.copy(collidedPosition), collidedBoundingBox);
+        var collidedBoundingBoxEnd = Vector.add(Vector.copy(collidedPosition), collidedBoundingBox);
         return colliderBoundingBoxStart.x < collidedBoundingBoxEnd.x &&
             colliderBoundingBoxEnd.x > collidedBoundingBoxStart.x &&
             colliderBoundingBoxStart.y < collidedBoundingBoxEnd.y &&
@@ -193,10 +177,11 @@ class CollisionHandlingSystem {
     update(delta, entities) {
         for (var i = 0; i < entities.length; i++) {
             var collider = entities[i];
-            if (collider.hasComponents(["Motion", "CollisionHandling"])) {
-                collider.removeComponent("CollisionHandling");
-                collider.motion.velocity.multiply(new Vector(-1, -1));
-                collider.motion.acceleration.multiply(new Vector(-1, -1));
+            if (Entity.hasComponents(collider, ["Motion", "CollisionHandling"])) {
+                Entity.removeComponent(collider, "CollisionHandling");
+                var motion = Entity.getComponent(collider, "Motion");
+                Vector.multiply(motion.velocity, new Vector(-1, -1));
+                Vector.multiply(motion.acceleration, new Vector(-1, -1));
             }
         }
     }
@@ -206,9 +191,9 @@ class ShapeRendererSystem {
     draw(interp, ctx, entities) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            if (entity.hasComponents(["Transform", "Shape"])) {
-                var transform = entity.getComponent("Transform");
-                var shape = entity.getComponent("Shape");
+            if (Entity.hasComponents(entity, ["Transform", "Shape"])) {
+                var transform = Entity.getComponent(entity, "Transform");
+                var shape = Entity.getComponent(entity, "Shape");
                 ctx.fillStyle = shape.color;
                 ctx.fillRect(Math.round(transform.position.x) - shape.width / 2, Math.round(transform.position.y) - shape.height / 2, shape.width, shape.height);
                 if (shape.highlight) {
@@ -227,10 +212,10 @@ class TraceRendererSystem {
     update(delta, entities) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            if (entity.hasComponents(["Transform", "Trace"])) {
-                var transform = entity.getComponent("Transform");
-                var trace = entity.getComponent("Trace");
-                trace.points.push(transform.position.copy);
+            if (Entity.hasComponents(entity, ["Transform", "Trace"])) {
+                var transform = Entity.getComponent(entity, "Transform");
+                var trace = Entity.getComponent(entity, "Trace");
+                trace.points.push(Vector.copy(transform.position));
                 if (trace.points.length > trace.maxPoints)
                     trace.points.shift();
             }
@@ -240,9 +225,9 @@ class TraceRendererSystem {
     draw(interp, ctx, entities) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            if (entity.hasComponents(["Trace", "Motion"])) {
-                var trace = entity.getComponent("Trace");
-                var motion = entity.getComponent("Motion");
+            if (Entity.hasComponents(entity, ["Trace", "Motion"])) {
+                var trace = Entity.getComponent(entity, "Trace");
+                var motion = Entity.getComponent(entity, "Motion");
                 if (trace.points.length > 0) {
                     var pos = trace.points[0];
                     ctx.beginPath();
@@ -258,7 +243,7 @@ class TraceRendererSystem {
                     }
                     ctx.stroke();
 
-                    var acc = motion.acceleration.copy.normalize.multiply(new Vector(20, 20));
+                    var acc = Vector.multiply(Vector.normalize(Vector.copy(motion.acceleration)), new Vector(20, 20));
                     ctx.beginPath();
                     ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 1);
                     ctx.lineWidth = trace.width;
@@ -282,14 +267,14 @@ class SelectionSystem {
             this.position = camera.screenToWorldPoint(Input.Instance.mousePosition);
         }
         if (this.clickHandler.clickEnded(0)) {
-            var target = this.position.copy;
+            var target = Vector.copy(this.position);
             var found = false;
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
-                if (entity.hasComponents(["Transform", "Selectable", "Shape"])) {
-                    var transform = entity.getComponent("Transform");
-                    var selectable = entity.getComponent("Selectable");
-                    var shape = entity.getComponent("Shape");
+                if (Entity.hasComponents(entity, ["Transform", "Selectable", "Shape"])) {
+                    var transform = Entity.getComponent(entity, "Transform");
+                    var selectable = Entity.getComponent(entity, "Selectable");
+                    var shape = Entity.getComponent(entity, "Shape");
                     shape.highlight = false;
                     if (!found && Math.abs(transform.position.x - this.position.x) <= selectable.threshold
                         && Math.abs(transform.position.y - this.position.y) <= selectable.threshold) {

@@ -7,25 +7,27 @@ class Camera {
         this.zoom = 1;
         this.targetZoom = 1;
         this.lastWheelDelta = 0;
+        this.maxZoom = 1000;
+        this.minZoom = 0.01;
     }
 
     update(delta) {
         // Handle Pan
         var panSpeed = 10 / this.zoom
         if (Input.Instance.isKeyDown("ArrowLeft") || Input.Instance.isKeyDown("KeyA")) {
-            this.targetPosition = this.targetPosition.copy;
+            this.targetPosition = Vector.copy(this.targetPosition);
             this.targetPosition.x -= panSpeed;
         }
         if (Input.Instance.isKeyDown("ArrowRight") || Input.Instance.isKeyDown("KeyD")) {
-            this.targetPosition = this.targetPosition.copy;
+            this.targetPosition = Vector.copy(this.targetPosition);
             this.targetPosition.x += panSpeed;
         }
         if (Input.Instance.isKeyDown("ArrowUp") || Input.Instance.isKeyDown("KeyW")) {
-            this.targetPosition = this.targetPosition.copy;
+            this.targetPosition = Vector.copy(this.targetPosition);
             this.targetPosition.y -= panSpeed;
         }
         if (Input.Instance.isKeyDown("ArrowDown") || Input.Instance.isKeyDown("KeyS")) {
-            this.targetPosition = this.targetPosition.copy;
+            this.targetPosition = Vector.copy(this.targetPosition);
             this.targetPosition.y += panSpeed;
         }
 
@@ -38,6 +40,11 @@ class Camera {
             this.targetZoom *= 1.1;
         else if (this.lastWheelDelta < Input.instance.wheelDelta)
             this.targetZoom /= 1.1;
+
+        if (this.targetZoom > this.maxZoom)
+            this.targetZoom = this.maxZoom;
+        if (this.targetZoom < this.minZoom)
+            this.targetZoom = this.minZoom;
 
         this.lastWheelDelta = Input.instance.wheelDelta;
 
@@ -61,9 +68,9 @@ class Camera {
 
     screenToWorldPoint(point) {
         var c = new Vector(this.width / 2, this.height / 2);
-        var x = point.copy.substract(c);
-        var j = x.copy.divide(new Vector(this.zoom, this.zoom));
-        return this.position.copy.add(j);
+        var x = Vector.substract(Vector.copy(point), c);
+        var j = Vector.divide(Vector.copy(x), new Vector(this.zoom, this.zoom));
+        return Vector.add(Vector.copy(this.position), j);
     }
 
     toString() {
