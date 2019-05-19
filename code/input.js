@@ -7,6 +7,11 @@ class Input {
     // Singleton instance.
     static _input = null;
 
+    // Returns singleton instance.
+    static get Instance() {
+        return Input._input;
+    }
+
     // Private constructor.
     constructor() {
         if (Input._input)
@@ -71,9 +76,25 @@ class Input {
         return this.buttons[button];
     }
 
-    // Returns singleton instance.
-    static get Instance() {
-        return Input._input;
+    // Loop render function.
+    draw(interp, ctx, entities) {
+        var w = 12;
+        ctx.fillStyle = Color.Style(new Color(0, 0, 100, 0.8));
+        ctx.beginPath();
+        ctx.moveTo(this.mousePosition.x, this.mousePosition.y);
+        ctx.lineTo(this.mousePosition.x + w, this.mousePosition.y + w);
+        ctx.lineTo(this.mousePosition.x, this.mousePosition.y + w * 1.4142);
+        ctx.closePath();
+        ctx.fill();
+    
+        ctx.strokeStyle = Color.Style(Color.Black);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.mousePosition.x, this.mousePosition.y);
+        ctx.lineTo(this.mousePosition.x + w, this.mousePosition.y + w);
+        ctx.lineTo(this.mousePosition.x, this.mousePosition.y + w * 1.4142);
+        ctx.closePath();
+        ctx.stroke();
     }
 }
 
