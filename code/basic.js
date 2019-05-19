@@ -6,69 +6,65 @@ class Vector {
         this.y = y;
     }
 
-    add(vector) {
-        this.x += vector.x;
-        this.y += vector.y;
-        return this;
+    static add(a, b) {
+        a.x += b.x;
+        a.y += b.y;
+        return a;
     }
 
-    substract(vector) {
-        this.x -= vector.x;
-        this.y -= vector.y;
-        return this;
+    static substract(a, b) {
+        a.x -= b.x;
+        a.y -= b.y;
+        return a;
     }
 
-    multiply(vector) {
-        this.x *= vector.x;
-        this.y *= vector.y;
-        return this;
+    static multiply(a, b) {
+        a.x *= b.x;
+        a.y *= b.y;
+        return a;
     }
 
-    divide(vector) {
-        this.x /= vector.x;
-        this.y /= vector.y;
-        return this;
+    static divide(a, b) {
+        a.x /= b.x;
+        a.y /= b.y;
+        return a;
     }
 
-    rotate(angle) {
-        var newX = this.x * Math.cos(angle) - this.y * Math.sin(angle);
-        var newY = this.y * Math.cos(angle) + this.x * Math.sin(angle);
-        this.x = newX;
-        this.y = newY;
-        return this;
+    static rotate(v, angle) {
+        var newX = v.x * Math.cos(angle) - v.y * Math.sin(angle);
+        var newY = v.y * Math.cos(angle) + v.x * Math.sin(angle);
+        v.x = newX;
+        v.y = newY;
+        return v;
     }
 
-    dot(vector) {
-        return this.x * vector.x + this.y * vector.y;
+    static dot(a, b) {
+        return a.x * b.x + a.y * b.y;
     }
 
-    reflect(start, end) {
+    static reflect(v, start, end) {
         var n = Vector.normal(start, end);
-        return this.substract(new Vector(2 * this.dot(n), 2 * this.dot(n)).multiply(n));
+        return Vector.substract(v, new Vector(2 * v.dot(n), 2 * v.dot(n)).multiply(n));
     }
 
-    get angle() {
-        return Math.atan2(this.y, this.x);
+    static angle(v) {
+        return Math.atan2(v.y, v.x);
     }
 
-    get magnitude() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
+    static magnitude(v) {
+        return Math.sqrt(v.x * v.x + v.y * v.y);
     }
 
-    get normalize() {
-        var m = this.magnitude;
+    static normalize(v) {
+        var m = Vector.magnitude(v);
         if (m > 0) {
-            this.divide(new Vector(m, m));
+            Vector.divide(v, new Vector(m, m));
         }
-        return this;
+        return v;
     }
 
-    get copy() {
-        return new Vector(this.x, this.y);
-    }
-
-    get toString() {
-        return this.x + "," + this.y + " (" + this.angle + "," + this.magnitude + ")";
+    static copy(v) {
+        return new Vector(v.x, v.y);
     }
 
     static fromAngleAndMagnitude(angle, magnitude) {
@@ -102,56 +98,71 @@ class Color {
         this.a = a;
     }
 
-    get style() {
-        return "hsla(" + this.h + ", " + this.s + "%, " + this.l + "%, " + this.a + ")";
+    static style(color) {
+        return "hsla(" + color.h + ", " + color.s + "%, " + color.l + "%, " + color.a + ")";
     }
 
-    get copy() {
-        return new Color(this.h, this.s, this.l, this.a);
+    static copy(color) {
+        return new Color(color.h, color.s, color.l, color.a);
     }
 
-    hue(h) {
+    static hue(color, h) {
         if (h < 0)
             h = 0;
         if (h > 360)
             h = 360;
-        this.h = h;
-        return this;
+        color.h = h;
+        return color;
     }
 
-    saturation(s) {
+    static saturation(color, s) {
         if (s < 0)
             s = 0;
         if (s > 100)
             s = 100;
-        this.s = s;
-        return this;
+        color.s = s;
+        return color;
     }
 
-    lightness(l) {
+    static lightness(color, l) {
         if (l < 0)
             l = 0;
         if (l > 100)
             l = 100;
-        this.l = l;
-        return this;
+        color.l = l;
+        return color;
     }
 
-    alpha(a) {
+    static alpha(color, a) {
         if (a < 0)
             a = 0;
         if (a > 1)
             a = 1;
-        this.a = a;
-        return this;
+        color.a = a;
+        return color;
     }
 
-    blend(startColor, endColor, total, step) {
-        this.hue(endColor.h + ((startColor.h - endColor.h) / total) * step);
-        this.saturation(endColor.s + ((startColor.s - endColor.s) / total) * step);
-        this.lightness(endColor.l + ((startColor.l - endColor.l) / total) * step);
-        this.alpha(endColor.a + ((startColor.a - endColor.a) / total) * step);
-        return this;
+    static gradient(startColor, endColor, percentage) {
+        if (percentage > 1)
+            percentage = 1;
+        if (percentage < 0)
+            percentage = 0;
+        var color = new Color();
+        Color.hue(color, startColor.h + (endColor.h - startColor.h) * percentage);
+        Color.saturation(color, startColor.s + (endColor.s - startColor.s) * percentage);
+        Color.lightness(color, startColor.l + (endColor.l - startColor.l) * percentage);
+        Color.alpha(color, startColor.a + (endColor.a - startColor.a) * percentage);
+        return color;
+    }
+
+    // TODO: deprecate
+    static blend(startColor, endColor, total, step) {
+        var color = new Color();
+        Color.hue(color, endColor.h + ((startColor.h - endColor.h) / total) * step);
+        Color.saturation(color, endColor.s + ((startColor.s - endColor.s) / total) * step);
+        Color.lightness(color, endColor.l + ((startColor.l - endColor.l) / total) * step);
+        Color.alpha(color, endColor.a + ((startColor.a - endColor.a) / total) * step);
+        return color;
     }
 
     static fixedStyle(h, s, l, a) {
@@ -161,7 +172,7 @@ class Color {
     static get White() {
         return Color.fixedStyle(0, 0, 100, 1);
     }
-    
+
     static get Black() {
         return Color.fixedStyle(0, 0, 0, 1);
     }
@@ -198,175 +209,6 @@ class UUID {
             return v.toString(16);
         });
     }
-}
-
-class GameEntity {
-    constructor() {
-        this.id = UUID.new;
-        this.position = Vector.Zero;
-        this.velocity = Vector.Zero;
-        this.angle = 0;
-        this.angularVelocity = 0;
-        this.visible = true;
-        this.deleted = false;
-    }
-}
-
-class Box extends GameEntity {
-    constructor() {
-        super();
-        this.width = 0;
-        this.height = 0;
-        this.color = new Color(0, 0, 0, 0);
-        this.trailEmitter = null;
-    }
-
-    static get random() {
-        var box = new Box();
-        // TODO: Basic doesnt have to know world
-        box.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
-        box.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
-        box.angle = Random.int(0, Math.PI * 2);
-        box.angularVelocity = Random.float(-Math.PI / 500, Math.PI / 500);
-        box.width = Random.int(10, 100);
-        box.height = Random.int(10, 100);
-        box.color = new Color(Random.int(0, 360), 100, 50, 1);
-        return box;
-    }
-
-    get area() {
-        return this.width * this.height;
-    }
-
-    get points() {
-        return [
-            new Vector(this.width / 2, this.height / 2).rotate(this.angle).add(this.position),
-            new Vector(this.width / 2 * -1, this.height / 2).rotate(this.angle).add(this.position),
-            new Vector(this.width / 2 * -1, this.height / 2 * -1).rotate(this.angle).add(this.position),
-            new Vector(this.width / 2, this.height / 2 * -1).rotate(this.angle).add(this.position)
-        ];
-    }
-
-    get lines() {
-        var points = this.points;
-        return [
-            { v0: points[0], v1: points[1] },
-            { v0: points[1], v1: points[2] },
-            { v0: points[2], v1: points[3] },
-            { v0: points[3], v1: points[0] },
-        ];
-    }
-
-    get minMax() {
-        var points = this.points;
-        var minX = Math.min(points[0].x, points[1].x, points[2].x, points[3].x);
-        var maxX = Math.max(points[0].x, points[1].x, points[2].x, points[3].x);
-        var minY = Math.min(points[0].y, points[1].y, points[2].y, points[3].y);
-        var maxY = Math.max(points[0].y, points[1].y, points[2].y, points[3].y);
-        return [
-            new Vector(minX, minY),
-            new Vector(maxX, maxY),
-        ];
-    }
-
-    get boundingBox() {
-        var minMax = this.minMax;
-        return [
-            new Vector(minMax[0].x, minMax[0].y),
-            new Vector(minMax[1].x, minMax[0].y),
-            new Vector(minMax[1].x, minMax[1].y),
-            new Vector(minMax[0].x, minMax[1].y)
-        ];
-    }
-
-    intersects(box) {
-        if (this.intersectsBoundingBox(box)) {
-            return this.intersectsEdges(box) != null;
-        }
-        return false;
-    }
-
-    intersectsEdges(box) {
-        for (var i = 0; i < this.lines.length; i++) {
-            for (var j = 0; j < box.lines.length; j++) {
-                var point = Collisions.lineLineIntersectionPoint(this.lines[i].v0, this.lines[i].v1, box.lines[j].v0, box.lines[j].v1);
-                if (point != null) {
-                    return point;
-                }
-            }
-        }
-        return null;
-    }
-
-    intersectsBoundingBox(box) {
-        var thisMinMax = this.minMax;
-        var otherMinMax = box.minMax;
-        return thisMinMax[0].x < otherMinMax[1].x && thisMinMax[1].x > otherMinMax[0].x && thisMinMax[0].y < otherMinMax[1].y && thisMinMax[1].y > otherMinMax[0].y;
-    }
-}
-
-// http://www.jeffreythompson.org/collision-detection/index.php
-
-class Collisions {
-    static pointCircle(point, circleCenter, circleRadius) {
-        var distance = point.copy.substract(circleCenter);
-        if (distance.magnitude <= circleRadius) {
-            return true;
-        }
-        return false;
-    }
-
-    static lineLine(lineStartA, lineEndA, lineStartB, lineEndB) {
-        return Collisions.lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) != null;
-    }
-
-    static lineLineIntersectionPoint(lineStartA, lineEndA, lineStartB, lineEndB) {
-        var s1 = lineEndA.copy.substract(lineStartA);
-        var s2 = lineEndB.copy.substract(lineStartB);
-        var s = (-s1.y * (lineStartA.x - lineStartB.x) + s1.x * (lineStartA.y - lineStartB.y)) / (-s2.x * s1.y + s1.x * s2.y);
-        var t = (s2.x * (lineStartA.y - lineStartB.y) - s2.y * (lineStartA.x - lineStartB.x)) / (-s2.x * s1.y + s1.x * s2.y);
-        if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-            return new Vector(lineStartA.x + (t * s1.x), lineStartA.y + (t * s1.y));
-        }
-        return null;
-    }
-
-    static linePoint(lineStart, lineEnd, point) {
-        var pointToStart = point.copy.substract(lineStart).magnitude;
-        var pointToEnd = point.copy.substract(lineEnd).magnitude;
-        var lineLength = lineEnd.copy.substract(lineStart).magnitude;
-        var buffer = 0.1;
-        if (pointToStart + pointToEnd >= lineLength - buffer && pointToStart + pointToEnd <= lineLength + buffer) {
-            return true;
-        }
-        return false;
-    }
-
-    static lineCircle(lineStart, lineEnd, circleCenter, circleRadius) {
-        var isStartInside = Collisions.pointCircle(lineStart, circleCenter, circleRadius);
-        var isEndInside = Collisions.pointCircle(lineEnd, circleCenter, circleRadius);
-        if (isStartInside || isEndInside)
-            return true;
-        var lineLength = lineEnd.copy.substract(lineStart).magnitude;
-        var dot = (((circleCenter.x - lineStart.x) * (lineEnd.x - lineStart.x)) + ((circleCenter.y - lineStart.y) * (lineEnd.y - lineStart.y))) / Math.pow(lineLength, 2);
-        var closestPoint = lineStart.copy.add(lineEnd.copy.substract(lineStart).multiply(new Vector(dot, dot)));
-        var onSegment = Collisions.linePoint(lineStart, lineEnd, closestPoint);
-        if (!onSegment)
-            return false;
-        var distance = closestPoint.substract(circleCenter).magnitude;
-        if (distance <= circleRadius) {
-            return true;
-        }
-        return false;
-    }
-
-    static boundigBoxes(boundingBoxStartA, boundingBoxEndA, boundingBoxStartB, boundingBoxEndB) {
-        return boundingBoxStartA.x < boundingBoxEndB.x &&
-            boundingBoxEndA.x > boundingBoxStartB.x &&
-            boundingBoxStartA.y < boundingBoxEndB.y &&
-            boundingBoxEndA.y > boundingBoxStartB.y;
-    }
-
 }
 
 // https://gist.github.com/gre/1650294
@@ -441,205 +283,4 @@ class Easing {
     static easeInOutQuint(t) {
         return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t
     }
-}
-
-class ParticleSystem {
-    constructor() {
-        this.emitters = [];
-    }
-
-    countParticles() {
-        var count = 0;
-        for (var i = 0; i < this.emitters.length; i++) {
-            count += this.emitters[i].particles.length;
-        }
-        return count;
-    }
-
-    update(step) {
-        for (var i = this.emitters.length - 1; i >= 0; i--) {
-            var emitter = this.emitters[i];
-            emitter.update(step);
-            if (emitter.lifespan != null) {
-                emitter.lifespan -= step;
-                if (emitter.lifespan <= 0) {
-                    emitter.enabled = false;
-                }
-            }
-            if (!emitter.enabled && emitter.particles.length == 0) {
-                this.emitters.splice(i, 1);
-            }
-        }
-    }
-
-    draw(ctx, interp, foreground) {
-        for (var i = 0; i < this.emitters.length; i++) {
-            if (this.emitters[i].foreground == foreground)
-                this.emitters[i].draw(ctx, interp);
-        }
-    }
-}
-
-class Emitter {
-    constructor() {
-        this.id = UUID.new;
-        this.position = Vector.Zero;
-        this.velocity = Vector.Zero;
-        this.spread = Math.PI * 2;
-        this.velocityRandomness = 1;
-        this.size = 1;
-        this.width = 1;
-        this.height = 1;
-        this.color = new Color(0, 0, 0, 0);
-        this.colorEnd = new Color(0, 0, 0, 0);
-        this.lifespan = 1;
-        this.emissionRate = 1;
-        this.particleSize = 1;
-        this.particleSizeRandomness = 1;
-        this.maxParticles = 1;
-        this.particleLifespan = 1;
-        this.particleLifespanRandomness = 1;
-        this.enabled = true;
-        this.emissionTimer = 0;
-        this.foreground = true;
-        this.fields = [];
-        this.particles = [];
-    }
-
-    update(step) {
-        if (this.enabled) {
-            this.addParticles(step);
-        }
-        this.moveParticles(step);
-    }
-
-    draw(ctx, interp) {
-        for (var i = 0; i < this.particles.length; i++) {
-            this.particles[i].draw(ctx, interp);
-        }
-    }
-
-    addParticles(step) {
-        if (this.particles.length > this.maxParticles) return;
-        var particlesToEmit = 0;
-        this.emissionTimer += step;
-        var emissionRateInv = 1 / this.emissionRate
-        if (this.emissionTimer > emissionRateInv) {
-            particlesToEmit = parseInt(this.emissionTimer / emissionRateInv);
-            this.emissionTimer = this.emissionTimer % emissionRateInv;
-        }
-        for (var j = 0; j < particlesToEmit; j++) {
-            var angle = this.velocity.angle + this.spread - Random.float(0, this.spread * 2);
-            var segment = Vector.fromAngleAndMagnitude(this.velocity.angle + Math.PI / 2, this.size);
-            var randomSegment = Vector.fromAngleAndMagnitude(this.velocity.angle - Math.PI / 2, Random.float(0, this.size * 2));
-            segment.add(randomSegment);
-            segment.add(this.position);
-            var position = segment;
-            var velocity = Vector.fromAngleAndMagnitude(angle, Random.float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
-            var life = Random.int(this.particleLifespan, this.particleLifespan * this.particleLifespanRandomness);
-            var size = Random.int(this.particleSize, this.particleSize * this.particleSizeRandomness);
-            var particle = new Particle(position, velocity, Vector.Zero, this.color.copy, size, life);
-            this.particles.push(particle);
-        }
-    }
-
-    moveParticles(step) {
-        var updatedParticles = [];
-        for (var i = 0; i < this.particles.length; i++) {
-            var particle = this.particles[i];
-            particle.submitToFields(this.fields);
-            particle.update(step);
-            particle.lifespan -= step;
-            if (particle.lifespan > 0) {
-                particle.color = particle.color.blend(this.color, this.colorEnd, particle.totalLifespan, particle.lifespan);
-                updatedParticles.push(particle);
-            }
-        }
-        this.particles = updatedParticles;
-    }
-
-    move(position) {
-        var delta = position.copy.substract(this.position);
-        this.position = position;
-        for (var i = 0; i < this.fields.length; i++) {
-            this.fields[i].position.add(delta);
-        }
-    }
-
-    static fromJson(json) {
-        var emitter = JSON.parse(json);
-        return fromObject(emitter);
-    }
-
-    static fromObject(emitter) {
-        emitter.__proto__ = Emitter.prototype;
-        emitter.position.__proto__ = Vector.prototype;
-        emitter.velocity.__proto__ = Vector.prototype;    
-        emitter.color.__proto__ = Color.prototype;
-        emitter.colorEnd.__proto__ = Color.prototype;
-        for(var i = 0; i < emitter.particles.length; i++) {
-            emitter.particles[i].__proto__ = Particle.prototype;
-            emitter.particles[i].position.__proto__ = Vector.prototype;
-            emitter.particles[i].velocity.__proto__ = Vector.prototype;    
-            emitter.particles[i].color.__proto__ = Color.prototype;
-        }
-        for(var i = 0; i < emitter.fields.length; i++) {
-            emitter.fields[i].__proto__ = Field.prototype;
-            emitter.fields[i].position.__proto__ = Vector.prototype;
-        }
-        return emitter;
-    }
-}
-
-class Particle {
-    constructor(position, velocity, acceleration, color, size, lifespan) {
-        this.position = position;
-        this.velocity = velocity;
-        this.acceleration = acceleration;
-        this.color = color;
-        this.size = size;
-        this.lifespan = lifespan;
-        this.totalLifespan = lifespan;
-    }
-
-    submitToFields(fields) {
-        var totalAcceleration = Vector.Zero;
-        for (var i = 0; i < fields.length; i++) {
-            var field = fields[i];
-            if (field.enabled) {
-                var vector = field.position.copy.substract(this.position);
-                var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
-                totalAcceleration.add(vector.multiply(new Vector(force, force)));
-                if (field.destructive) {
-                    if (Math.pow(this.position.x - field.position.x, 2) + Math.pow(this.position.y - field.position.y, 2) < Math.pow(field.radius, 2)) {
-                        this.lifespan = 0;
-                    }
-                }
-            }
-        }
-        this.acceleration = totalAcceleration;
-    }
-
-    update(delta) {
-        this.velocity.add(this.acceleration);
-        this.position.add(this.velocity);
-    }
-
-    draw(ctx, interp) {
-        ctx.fillStyle = this.color.style;
-        ctx.fillRect(this.position.x, this.position.y, this.size, this.size);
-    }
-}
-
-class Field {
-    constructor() {
-        this.id = UUID.new;
-        this.position = Vector.Zero;
-        this.mass = 1;
-        this.destructive = true;
-        this.radius = 1;
-        this.enabled = true;
-        this.visible = true;
-    }
-
 }

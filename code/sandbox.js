@@ -43,8 +43,8 @@ class Scene {
         this.traceRendererSystem = new TraceRendererSystem();
         this.selectionSystem = new SelectionSystem();
         this.expirationSystem = new ExpirationSystem();
-        this.particleSystem = new ParticleSystem();
-        this.particleSystemECS = new ParticleSystemECS();
+        this.particleEmissionSystem = new ParticleEmissionSystem();
+        this.forceFieldSystem = new ForceFieldSystem();
         this.colorMutationSystem = new ColorMutationSystem();
         this.soundManager = new SoundManager();
         this.input = new Input();
@@ -53,10 +53,10 @@ class Scene {
     }
 
     update(delta) {
-
+        lastUpdate = delta;
         // Save & Load
-        this.keyHandler.keyStarted("KeyC")
-        this.keyHandler.keyStarted("KeyV")
+        this.keyHandler.keyStarted("KeyC");
+        this.keyHandler.keyStarted("KeyV");
         if (this.keyHandler.keyEnded("KeyC")) {
             var json = JSON.stringify(this.entities);
             window.localStorage.setItem("entities", json);
@@ -72,16 +72,18 @@ class Scene {
         if (this.runUpdate) {
             this.expirationSystem.update(delta, this.entities);
             this.movementSystem.update(delta, this.entities);
+            this.forceFieldSystem.update(delta, this.entities);
             this.colorMutationSystem.update(delta, this.entities);
             this.traceRendererSystem.update(delta, this.entities);
-            this.particleSystemECS.update(delta, this.entities);
-            this.particleSystem.update(delta);
+            this.particleEmissionSystem.update(delta, this.entities);
         }
 
         this.camera.update(delta);
 
-        if (Input.instance.isKeyDown("Space"))
+        this.keyHandler.keyStarted("Space")
+        if (this.keyHandler.keyEnded("Space")) {
             this.runUpdate = !this.runUpdate;
+        }
     }
 
     draw(interp) {
@@ -123,8 +125,6 @@ class Scene {
         ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
         ctx.stroke();
 
-        this.particleSystem.draw(ctx, interp, false);
-
         this.shapeRendererSystem.draw(interp, ctx, this.entities);
         this.traceRendererSystem.draw(interp, ctx, this.entities);
         this.selectionSystem.draw(interp, ctx, this.entities);
@@ -137,7 +137,8 @@ class Scene {
         ctx.font = "12px monospace";
         ctx.textBaseline = "top";
         ctx.textAlign = "right";
-        ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 20, 20);
+        ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 15, 15);
+        ctx.fillText("Last Update: " + lastUpdate.toFixed(2), canvas.width - 15, 30);
 
         debug(ctx, scene.camera.toString(), 15, 15);
 
@@ -153,6 +154,7 @@ function draw(interp) {
     scene.draw(interp);
 }
 
+var lastUpdate = 0;
 var scene = new Scene();
 var loop = new Loop().setUpdate(update).setDraw(draw).start();
 resizeCanvas();
@@ -160,7 +162,7 @@ resizeCanvas();
 scene.soundManager.sequencer.start();
 
 // Random entities
-for (var i = 0; i < 50; i++) {
+for (var i = 0; i < 1; i++) {
     var entity = new Entity();
     var position = new Vector(Random.float(-100, 100), Random.float(-100, 100));
     Entity.addComponent(entity, new TransformComponent(position));
@@ -178,40 +180,36 @@ for (var i = 0; i < 50; i++) {
 // Emitter ECS
 
 var emitterEntity = new Entity();
-Entity.addComponent(emitterEntity, new TransformComponent(new Vector(400, 0)));
+Entity.addComponent(emitterEntity, new TransformComponent(new Vector(200, 200)));
 var emitterComponent = new ParticleEmitterComponent();
 emitterComponent.particleVelocity = new Vector(0.05, 0.05);
 emitterComponent.velocityRandomness = 1.5;
 emitterComponent.spread = Math.PI * 2;
 emitterComponent.size = 1;
-emitterComponent.color = new Color(0, 100, 90, 1);
-emitterComponent.colorEnd = new Color(0, 100, 0, 0);
+emitterComponent.color = new Color(100, 100, 90, 1);
+emitterComponent.colorEnd = new Color(100, 100, 0, 0);
 emitterComponent.particleSize = 2;
-emitterComponent.emissionRate = 0.08;
+emitterComponent.emissionRate = 0.05;
 emitterComponent.maxParticles = 500;
 emitterComponent.particleLifespan = 5000;
 emitterComponent.particleLifespanRandomness = 1.5;
 emitterComponent.foreground = false;
 Entity.addComponent(emitterEntity, emitterComponent);
+Entity.addComponent(emitterEntity, new MotionComponent(new Vector(0, -0.1), 1, Vector.Zero));
 scene.entities.push(emitterEntity);
 
-// Emitter OLD
-var emitter = new Emitter();
-emitter.position = Vector.Zero;
-emitter.velocity = new Vector(1, 1);
-emitter.velocityRandomness = 1.5;
-emitter.spread = Math.PI * 2;
-emitter.size = 1;
-emitter.color = new Color(0, 100, 90, 1);
-emitter.colorEnd = new Color(0, 100, 0, 0);
-emitter.lifespan = null;
-emitter.particleSize = 2;
-emitter.emissionRate = 0.1;
-emitter.maxParticles = 500;
-emitter.particleLifespan = 5000;
-emitter.particleLifespanRandomness = 1.5;
-emitter.foreground = false;
-scene.particleSystem.emitters.push(emitter);
+var fieldEntity = new Entity();
+Entity.addComponent(fieldEntity, new TransformComponent(new Vector(200, 0)));
+var fieldComponent = new ForceFieldComponent();
+fieldComponent.mass = 3;
+fieldComponent.destructive = true;
+fieldComponent.radius = 50;
+fieldComponent.enabled = true;
+Entity.addComponent(fieldEntity, fieldComponent);
+Entity.addComponent(fieldEntity, new MotionComponent(new Vector(0, -0.1), 1, Vector.Zero));
+scene.entities.push(fieldEntity);
+
+emitterComponent.fieldIds.push(fieldEntity.id);
 
 function debug(ctx, text, x, y, baseline = "top", align = "left") {
     ctx.fillStyle = Color.fixedStyle(0, 0, 100, 0.5);

@@ -1,155 +1,4 @@
-// https://medium.com/@savas/nomad-game-engine-part-2-ecs-9132829188e5
-// http://vasir.net/blog/game-development/how-to-build-entity-component-system-in-javascript
-// https://github.com/sosolimited/Entity-Component-Samples
 
-class Entity {
-    constructor() {
-        this.id = UUID.new;
-        this.components = {};
-    }
-
-    static getComponent(entity, name) {
-        return entity.components[name];
-    }
-
-    static hasComponents(entity, names) {
-        var hasAll = true;
-        for (var i = 0; i < names.length; i++) {
-            hasAll &= entity.components[names[i]] != null;
-        }
-        return hasAll;
-    }
-
-    static addComponent(entity, component) {
-        entity.components[component.name] = component;
-    }
-
-    static removeComponent(entity, name) {
-        entity.components[name] = null;
-    }
-}
-
-class TransformComponent {
-    constructor(position, angle) {
-        this.name = "Transform";
-        this.position = position;
-        this.angle = angle;
-    }
-}
-
-class MotionComponent {
-    constructor(velocity, maxVelocity, acceleration, angularVelocity, angularAcceleration) {
-        this.name = "Motion";
-        this.velocity = velocity;
-        this.maxVelocity = maxVelocity;
-        this.acceleration = acceleration;
-        this.angularVelocity = angularVelocity;
-        this.angularAcceleration = angularAcceleration;
-        this.wraparound = true;
-    }
-}
-
-class CollisionDetectionComponent {
-    constructor(boundingBox) {
-        this.name = "CollisionDetection";
-        this.boundingBox = boundingBox;
-    }
-}
-
-class CollisionHandlingComponent {
-    constructor(collided) {
-        this.name = "CollisionHandling";
-        this.collided = collided;
-    }
-}
-
-// TODO: Maybe change name?
-class ShapeComponent {
-    constructor(width, height, color) {
-        this.name = "Shape";
-        this.width = width;
-        this.height = height;
-        this.color = color;
-    }
-}
-
-class TraceComponent {
-    constructor(width, color) {
-        this.name = "Trace";
-        this.width = width;
-        this.color = color;
-        this.points = [];
-        this.maxPoints = 25;
-    }
-}
-
-class SelectableComponent {
-    constructor() {
-        this.name = "Selectable";
-        this.threshold = 20;
-        this.highlight = false;
-    }
-}
-
-class ExpirationComponent {
-    constructor(created, duration) {
-        this.name = "Expiration";
-        this.created = created;
-        this.duration = duration;
-    }
-}
-
-class ColorGradientComponent {
-    constructor(colorStart, colorEnd, created, duration) {
-        this.name = "ColorGradient";
-        this.colorStart = colorStart;
-        this.colorEnd = colorEnd;
-        this.created = created;
-        this.duration = duration;
-    }
-}
-
-class ParticleEmitterComponent {
-    constructor() {
-        this.name = "ParticleEmitter";
-        this.spread = Math.PI * 2;
-        this.particleVelocity = Vector.Zero;
-        this.velocityRandomness = 1;
-        this.size = 1;
-        this.width = 1;
-        this.height = 1;
-        this.color = new Color(0, 0, 0, 0);
-        this.colorEnd = new Color(0, 0, 0, 0);
-        this.emissionRate = 1;
-        this.particleSize = 1;
-        this.particleSizeRandomness = 1;
-        this.maxParticles = 1;
-        this.particleLifespan = 1;
-        this.particleLifespanRandomness = 1;
-        this.enabled = true;
-        this.emissionTimer = 0;
-        this.foreground = true;
-        this.fields = [];
-        this.particles = [];
-    }
-}
-
-class ForceFieldSubjectComponent {
-    constructor() {
-        this.name = "ForceFieldSubject";
-        this.fieldIds = [];
-    }
-}
-
-class ForceFieldComponent {
-    constructor() {
-        this.name = "ForceField";
-        this.mass = 1;
-        this.radius = 1;
-        this.destructive = true;
-        this.enabled = true;
-    }
-}
 
 class ColorMutationSystem {
     update(delta, entities) {
@@ -158,7 +7,8 @@ class ColorMutationSystem {
             if (Entity.hasComponents(entity, ["ColorGradient", "Shape"])) {
                 var gradient = Entity.getComponent(entity, "ColorGradient");
                 var shape = Entity.getComponent(entity, "Shape");
-                shape.color = Color.gradient(gradient.colorStart, gradient.colorEnd, (Date.now() - gradient.created) / gradient.duration);
+                gradient.elapsed += delta;
+                shape.color = Color.gradient(gradient.colorStart, gradient.colorEnd, gradient.elapsed / gradient.duration);
             }
         }
     }
@@ -177,18 +27,18 @@ class ForceFieldSystem {
                 for (var j = 0; j < entities.length; j++) {
                     if (Entity.hasComponents(entities[j], ["ForceField", "Transform"])) {
                         var field = Entity.getComponent(entities[j], "ForceField");
-                        if (subject.fieldIds.includes(field.id) && field.enabled) {
+                        if (subject.fieldIds.includes(entities[j].id) && field.enabled) {
                             var fieldTransform = Entity.getComponent(entities[j], "Transform");
                             var vector = Vector.substract(Vector.copy(fieldTransform.position), subjectTransform.position);
                             // TODO: Magic number?
                             var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
                             Vector.add(totalAcceleration, Vector.multiply(vector, new Vector(force, force)));
                             if (field.destructive) {
-                                if (Math.pow(this.position.x - field.position.x, 2) + Math.pow(this.position.y - field.position.y, 2) < Math.pow(field.radius, 2)) {
+                                if (Math.pow(subjectTransform.position.x - fieldTransform.position.x, 2) + Math.pow(subjectTransform.position.y - fieldTransform.position.y, 2) < Math.pow(field.radius, 2)) {
                                     if (Entity.hasComponents(entity, ["Expiration"]))
                                         Entity.getComponent(entity, "Expiration").duration = 0;
                                     else
-                                        Entity.addComponent(entity, new ExpirationComponent(Date.now(), 0));
+                                        Entity.addComponent(entity, new ExpirationComponent(0));
                                 }
                             }
                         }
@@ -200,7 +50,7 @@ class ForceFieldSystem {
     }
 }
 
-class ParticleSystemECS {
+class ParticleEmissionSystem {
     update(delta, entities) {
         var particles = [];
         for (var i = 0; i < entities.length; i++) {
@@ -227,15 +77,16 @@ class ParticleSystemECS {
                         var life = Random.int(emitter.particleLifespan, emitter.particleLifespan * emitter.particleLifespanRandomness);
                         var size = Random.int(emitter.particleSize, emitter.particleSize * emitter.particleSizeRandomness);
 
-                        //var particle = new Particle(position, velocity, Vector.Zero, Color.copy(emitter.color), size, life);
-
                         var particle = new Entity();
                         Entity.addComponent(particle, new TransformComponent(position));
                         Entity.addComponent(particle, new MotionComponent(velocity, Number.MAX_SAFE_INTEGER, Vector.Zero));
                         Entity.addComponent(particle, new ShapeComponent(size, size, Color.copy(emitter.color)));
-                        //Entity.addComponent(entity, new TraceComponent(2, color));
-                        Entity.addComponent(particle, new ExpirationComponent(Date.now(), life));
-                        Entity.addComponent(particle, new ColorGradientComponent(Color.copy(emitter.color), Color.copy(emitter.colorEnd), Date.now(), life));
+                        //Entity.addComponent(particle, new TraceComponent(1, Color.copy(emitter.color)));
+                        Entity.addComponent(particle, new ExpirationComponent(life));
+                        Entity.addComponent(particle, new ColorGradientComponent(Color.copy(emitter.color), Color.copy(emitter.colorEnd), life));
+
+                        if (emitter.fieldIds.length > 0)
+                            Entity.addComponent(particle, new ForceFieldSubjectComponent(emitter.fieldIds));
 
                         particles.push(particle);
                     }
@@ -249,15 +100,14 @@ class ParticleSystemECS {
 
 }
 
-// TODO: Pausing loop doesnt prevent expiration
 class ExpirationSystem {
     update(delta, entities) {
         for (var i = entities.length - 1; i >= 0; i--) {
             var entity = entities[i];
             if (Entity.hasComponents(entity, ["Expiration"])) {
                 var expiration = Entity.getComponent(entity, "Expiration");
-                var elapsed = Date.now() - expiration.created;
-                if (elapsed >= expiration.duration)
+                expiration.elapsed += delta;
+                if (expiration.elapsed >= expiration.duration)
                     entities.splice(i, 1);
             }
         }
@@ -410,6 +260,7 @@ class TraceRendererSystem {
                     }
                     ctx.stroke();
 
+                    /*
                     var acc = Vector.multiply(Vector.normalize(Vector.copy(motion.acceleration)), new Vector(20, 20));
                     ctx.beginPath();
                     ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 1);
@@ -417,6 +268,7 @@ class TraceRendererSystem {
                     ctx.moveTo(Math.round(pos.x), Math.round(pos.y));
                     ctx.lineTo(Math.round(pos.x + acc.x), Math.round(pos.y + acc.y));
                     ctx.stroke();
+                    */
                 }
             }
         }
