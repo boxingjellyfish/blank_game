@@ -1,4 +1,9 @@
+/*
+* Shifts from start and end colors according to duration.
+*/
 class ColorMutationSystem {
+
+    // Loop update function.
     update(delta, entities) {
         Entity.iterate(entities, ["ColorGradient", "Shape"], (entity) => {
             var gradient = Entity.getComponent(entity, "ColorGradient");
@@ -9,7 +14,12 @@ class ColorMutationSystem {
     }
 }
 
+/*
+* Applies force fields to to subjects.
+*/
 class ForceFieldSystem {
+
+    // Loop update function.
     update(delta, entities) {
         Entity.iterate(entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
             var subject = Entity.getComponent(entity, "ForceFieldSubject");
@@ -40,7 +50,12 @@ class ForceFieldSystem {
     }
 }
 
+/*
+* Creates particles from emitters.
+*/
 class ParticleEmissionSystem {
+
+    // Loop update function.
     update(delta, entities) {
         var particles = [];
         Entity.iterate(entities, ["ParticleEmitter", "Transform"], (entity) => {
@@ -87,7 +102,12 @@ class ParticleEmissionSystem {
 
 }
 
+/*
+* Destroys the entity after Duration milliseconds.
+*/
 class ExpirationSystem {
+
+    // Loop update function.
     update(delta, entities) {
         Entity.iterateBackwards(entities, ["Expiration"], (entity, index) => {
             var expiration = Entity.getComponent(entity, "Expiration");
@@ -98,7 +118,12 @@ class ExpirationSystem {
     }
 }
 
+/*
+* Moves entities according to velocity and acceleration.
+*/
 class MovementSystem {
+
+    // Stores world limits.
     constructor(width, height) {
         this.width = width;
         this.height = height;
@@ -106,6 +131,7 @@ class MovementSystem {
         this.halfHeight = height / 2;
     }
 
+    // Loop update function.
     update(delta, entities) {
         Entity.iterate(entities, ["Transform", "Motion"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
@@ -142,7 +168,12 @@ class MovementSystem {
     }
 }
 
+/*
+* Checks all collidable entities adding collisions handlers on the fly.
+*/
 class CollisionDetectionSystem {
+
+    // Loop update function.
     update(delta, entities) {
         Entity.iterate(entities, ["Transform", "Motion", "CollisionDetection"], (collider) => {
             var collisionHandling = null;
@@ -158,6 +189,7 @@ class CollisionDetectionSystem {
         });
     }
 
+    // Returns true if entities bounding boxes are overlapping.
     areBoundingBoxesIntersecting(collider, collided) {
         var colliderPosition = Entity.getComponent(collider, "Transform").position;
         var collidedPosition = Entity.getComponent(collided, "Transform").position;
@@ -174,7 +206,12 @@ class CollisionDetectionSystem {
     }
 }
 
+/*
+* For testing purposes, reverses direction after collision.
+*/
 class CollisionHandlingSystem {
+
+    // Loop update function.
     update(delta, entities) {
         Entity.iterate(entities, ["Motion", "CollisionHandling"], (collider) => {
             Entity.removeComponent(collider, "CollisionHandling");
@@ -185,7 +222,12 @@ class CollisionHandlingSystem {
     }
 }
 
+/*
+* Simple square renderer.
+*/
 class ShapeRendererSystem {
+
+    // Loop render function.
     draw(interp, ctx, entities) {
         Entity.iterate(entities, ["Transform", "Shape"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
@@ -196,7 +238,12 @@ class ShapeRendererSystem {
     }
 }
 
+/*
+* Renders the last N positions of an entity.
+*/
 class TraceRendererSystem {
+
+    // Loop update function.
     update(delta, entities) {
         Entity.iterate(entities, ["Transform", "Trace"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
@@ -207,6 +254,7 @@ class TraceRendererSystem {
         });
     }
 
+    // Loop render function.
     draw(interp, ctx, entities) {
         Entity.iterate(entities, ["Trace"], (entity) => {
             var trace = Entity.getComponent(entity, "Trace");
@@ -229,12 +277,18 @@ class TraceRendererSystem {
     }
 }
 
+/*
+* Enables an entity to be selected with mouse cursor and be highlighted.
+*/
 class SelectionSystem {
+
+    // Handles mouse button click.
     constructor() {
         this.position = null;
         this.clickHandler = new ClickHandler();
     }
 
+    // Loop update function.
     update(delta, entities, camera) {
         if (this.clickHandler.clickStarted(0)) {
             this.position = camera.screenToWorldPoint(Input.Instance.mousePosition);
@@ -257,6 +311,7 @@ class SelectionSystem {
         }
     }
 
+    // Loop render function.
     draw(interp, ctx, entities) {
         Entity.iterate(entities, ["Transform", "Selectable"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");

@@ -13,11 +13,11 @@ function resizeCanvas() {
 window.addEventListener("visibilitychange", function () {
     if (loop.isRunning()) {
         loop.stop();
-        soundManager.sequencer.stop();
+        scene.soundManager.sequencer.stop();
     }
     else {
         loop.start();
-        soundManager.sequencer.start();
+        scene.soundManager.sequencer.start();
     }
 });
 

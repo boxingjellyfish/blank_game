@@ -1,7 +1,9 @@
-// http://marcgg.com/blog/2016/11/01/javascript-audio/
-// https://dev.opera.com/articles/drum-sounds-webaudio/
-// https://sonoport.github.io/synthesising-sounds-webaudio.html
-
+/*
+* Generates and controls audio/music.
+* http://marcgg.com/blog/2016/11/01/javascript-audio/
+* https://dev.opera.com/articles/drum-sounds-webaudio/
+* https://sonoport.github.io/synthesising-sounds-webaudio.html
+*/
 class SoundManager {
     constructor() {
         this.context = new AudioContext();
@@ -26,6 +28,9 @@ class SoundManager {
 
 }
 
+/*
+* Triggers synchronized samples.
+*/
 class Sequencer {
     constructor(context) {
         this.context = context;
@@ -96,6 +101,9 @@ class Sequencer {
     }
 }
 
+/*
+* Kick drum sample generator.
+*/
 class Kick {
     constructor(context, masterGain) {
         this.context = context;
@@ -144,6 +152,9 @@ class Kick {
 
 }
 
+/*
+* Snare drum sample generator.
+*/
 class Snare {
     constructor(context, masterGain) {
         this.context = context;
@@ -207,6 +218,9 @@ class Snare {
     }
 }
 
+/*
+* HiHat sample generator.
+*/
 class HiHat {
     constructor(context, masterGain) {
         this.context = context;
@@ -249,6 +263,9 @@ class HiHat {
     }
 }
 
+/*
+* Bass sample generator.
+*/
 class Bass {
     constructor(context) {
         this.context = context;
@@ -271,6 +288,9 @@ class Bass {
     }
 }
 
+/*
+* Music notes generation.
+*/
 class Notes {
     static randomNote(octave) {
         return Notes.notes[Random.Int(octave * 7 - 7, octave * 7)];

@@ -1,17 +1,21 @@
-// https://medium.com/@savas/nomad-game-engine-part-2-ecs-9132829188e5
-// http://vasir.net/blog/game-development/how-to-build-entity-component-system-in-javascript
-// https://github.com/sosolimited/Entity-Component-Samples
-
+/*
+* An Entity is just a bag of Components with an ID
+* https://medium.com/@savas/nomad-game-engine-part-2-ecs-9132829188e5
+* http://vasir.net/blog/game-development/how-to-build-entity-component-system-in-javascript
+* https://github.com/sosolimited/Entity-Component-Samples
+*/
 class Entity {
     constructor() {
         this.id = Random.UUID();
         this.components = {};
     }
 
+    // Returns a component of Entity by Name.
     static getComponent(entity, name) {
         return entity.components[name];
     }
 
+    // Retruns true if Entity has all components in Names.
     static hasComponents(entity, names) {
         var hasAll = true;
         for (var i = 0; i < names.length; i++) {
@@ -20,14 +24,17 @@ class Entity {
         return hasAll;
     }
 
+    // Adds Component to Entity.
     static addComponent(entity, component) {
         entity.components[component.name] = component;
     }
 
+    // Removes component from Entity by Name.
     static removeComponent(entity, name) {
         entity.components[name] = null;
     }
 
+    // Iterates an array of Entities with given Components, invoking Action.
     static iterate(entities, components, action) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
@@ -37,6 +44,7 @@ class Entity {
         }
     }
 
+    // Iterates an array of Entities with given Components backwards, invoking Action.
     static iterateBackwards(entities, components, action) {
         for (var i = entities.length - 1; i >= 0; i--) {
             var entity = entities[i];
@@ -47,6 +55,9 @@ class Entity {
     }
 }
 
+/*
+* Position, Scale and Angle in 2D.
+*/
 class TransformComponent {
     constructor(position = Vector.Zero, scale = Vector.One, angle = 0) {
         this.name = "Transform";
@@ -56,6 +67,9 @@ class TransformComponent {
     }
 }
 
+/*
+* Stores Velocity and Acceleration in 2D.
+*/
 class MotionComponent {
     constructor(velocity, maxVelocity, acceleration, angularVelocity, angularAcceleration) {
         this.name = "Motion";
@@ -68,6 +82,9 @@ class MotionComponent {
     }
 }
 
+/*
+* Stores the collision bounding box.
+*/
 class CollisionDetectionComponent {
     constructor(boundingBox) {
         this.name = "CollisionDetection";
@@ -75,6 +92,9 @@ class CollisionDetectionComponent {
     }
 }
 
+/*
+* Stores collided object after a detection.
+*/
 class CollisionHandlingComponent {
     constructor(collided) {
         this.name = "CollisionHandling";
@@ -82,7 +102,9 @@ class CollisionHandlingComponent {
     }
 }
 
-// TODO: Maybe change name?
+/*
+* Apperance of a shape to be rendered on screen.
+*/
 class ShapeComponent {
     constructor(color) {
         this.name = "Shape";
@@ -90,6 +112,9 @@ class ShapeComponent {
     }
 }
 
+/*
+* Stores the last N positions of an entity to render a trace.
+*/
 class TraceComponent {
     constructor(width, color) {
         this.name = "Trace";
@@ -100,6 +125,9 @@ class TraceComponent {
     }
 }
 
+/*
+* Select and highlight an Entity with mouse cursor.
+*/
 class SelectableComponent {
     constructor() {
         this.name = "Selectable";
@@ -109,6 +137,9 @@ class SelectableComponent {
     }
 }
 
+/*
+* Destroys the entity after Duration milliseconds.
+*/
 class ExpirationComponent {
     constructor(duration) {
         this.name = "Expiration";
@@ -117,6 +148,9 @@ class ExpirationComponent {
     }
 }
 
+/*
+* Shifts from start and end colors according to duration.
+*/
 class ColorGradientComponent {
     constructor(colorStart, colorEnd, duration) {
         this.name = "ColorGradient";
@@ -127,6 +161,9 @@ class ColorGradientComponent {
     }
 }
 
+/*
+* Source of particle entities.
+*/
 class ParticleEmitterComponent {
     constructor() {
         this.name = "ParticleEmitter";
@@ -151,13 +188,9 @@ class ParticleEmitterComponent {
     }
 }
 
-class ForceFieldSubjectComponent {
-    constructor(fieldIds) {
-        this.name = "ForceFieldSubject";
-        this.fieldIds = fieldIds;
-    }
-}
-
+/*
+* Force field to be applyed to subjects.
+*/
 class ForceFieldComponent {
     constructor() {
         this.name = "ForceField";
@@ -167,3 +200,14 @@ class ForceFieldComponent {
         this.enabled = true;
     }
 }
+
+/*
+* Is affected by fields.
+*/
+class ForceFieldSubjectComponent {
+    constructor(fieldIds) {
+        this.name = "ForceFieldSubject";
+        this.fieldIds = fieldIds;
+    }
+}
+

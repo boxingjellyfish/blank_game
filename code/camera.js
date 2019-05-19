@@ -1,5 +1,5 @@
 /*
-* Basic 2D camera with panning, zooming and following.
+* 2D camera with panning, zooming and following.
 */
 class Camera {
 
