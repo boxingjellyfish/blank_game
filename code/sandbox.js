@@ -42,7 +42,10 @@ class Scene {
         this.shapeRendererSystem = new ShapeRendererSystem();
         this.traceRendererSystem = new TraceRendererSystem();
         this.selectionSystem = new SelectionSystem();
+        this.expirationSystem = new ExpirationSystem();
         this.particleSystem = new ParticleSystem();
+        this.particleSystemECS = new ParticleSystemECS();
+        this.colorMutationSystem = new ColorMutationSystem();
         this.soundManager = new SoundManager();
         this.input = new Input();
         this.keyHandler = new KeyHandler();
@@ -67,8 +70,11 @@ class Scene {
         this.selectionSystem.update(delta, this.entities, this.camera);
 
         if (this.runUpdate) {
+            this.expirationSystem.update(delta, this.entities);
             this.movementSystem.update(delta, this.entities);
+            this.colorMutationSystem.update(delta, this.entities);
             this.traceRendererSystem.update(delta, this.entities);
+            this.particleSystemECS.update(delta, this.entities);
             this.particleSystem.update(delta);
         }
 
@@ -121,6 +127,7 @@ class Scene {
 
         this.shapeRendererSystem.draw(interp, ctx, this.entities);
         this.traceRendererSystem.draw(interp, ctx, this.entities);
+        this.selectionSystem.draw(interp, ctx, this.entities);
 
         // Restore to draw relative to window edges
         ctx.restore();
@@ -161,14 +168,34 @@ for (var i = 0; i < 50; i++) {
     var maxVelocity = Random.float(0.05, 1.5);
     var acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
     Entity.addComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
-    var color = Color.fixedStyle(Random.value([0, 60, 100, 250]), 100, 60, 1);
+    var color = new Color(Random.value([0, 60, 100, 250]), 100, 60, 1);
     Entity.addComponent(entity, new ShapeComponent(6, 6, color));
     Entity.addComponent(entity, new TraceComponent(2, color));
     Entity.addComponent(entity, new SelectableComponent());
     scene.entities.push(entity);
 }
 
-// Emitter
+// Emitter ECS
+
+var emitterEntity = new Entity();
+Entity.addComponent(emitterEntity, new TransformComponent(new Vector(400, 0)));
+var emitterComponent = new ParticleEmitterComponent();
+emitterComponent.particleVelocity = new Vector(0.05, 0.05);
+emitterComponent.velocityRandomness = 1.5;
+emitterComponent.spread = Math.PI * 2;
+emitterComponent.size = 1;
+emitterComponent.color = new Color(0, 100, 90, 1);
+emitterComponent.colorEnd = new Color(0, 100, 0, 0);
+emitterComponent.particleSize = 2;
+emitterComponent.emissionRate = 0.08;
+emitterComponent.maxParticles = 500;
+emitterComponent.particleLifespan = 5000;
+emitterComponent.particleLifespanRandomness = 1.5;
+emitterComponent.foreground = false;
+Entity.addComponent(emitterEntity, emitterComponent);
+scene.entities.push(emitterEntity);
+
+// Emitter OLD
 var emitter = new Emitter();
 emitter.position = Vector.Zero;
 emitter.velocity = new Vector(1, 1);

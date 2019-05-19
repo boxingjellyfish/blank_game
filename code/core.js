@@ -142,6 +142,20 @@ class Color {
         return color;
     }
 
+    static gradient(startColor, endColor, percentage) {
+        if (percentage > 1)
+            percentage = 1;
+        if (percentage < 0)
+            percentage = 0;
+        var color = new Color();
+        Color.hue(color, startColor.h + (endColor.h - startColor.h) * percentage);
+        Color.saturation(color, startColor.s + (endColor.s - startColor.s) * percentage);
+        Color.lightness(color, startColor.l + (endColor.l - startColor.l) * percentage);
+        Color.alpha(color, startColor.a + (endColor.a - startColor.a) * percentage);
+        return color;
+    }
+
+    // TODO: deprecate
     static blend(startColor, endColor, total, step) {
         var color = new Color();
         Color.hue(color, endColor.h + ((startColor.h - endColor.h) / total) * step);

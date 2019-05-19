@@ -63,13 +63,13 @@ class CollisionHandlingComponent {
     }
 }
 
+// TODO: Maybe change name?
 class ShapeComponent {
     constructor(width, height, color) {
         this.name = "Shape";
         this.width = width;
         this.height = height;
         this.color = color;
-        this.highlight = false;
     }
 }
 
@@ -87,6 +87,180 @@ class SelectableComponent {
     constructor() {
         this.name = "Selectable";
         this.threshold = 20;
+        this.highlight = false;
+    }
+}
+
+class ExpirationComponent {
+    constructor(created, duration) {
+        this.name = "Expiration";
+        this.created = created;
+        this.duration = duration;
+    }
+}
+
+class ColorGradientComponent {
+    constructor(colorStart, colorEnd, created, duration) {
+        this.name = "ColorGradient";
+        this.colorStart = colorStart;
+        this.colorEnd = colorEnd;
+        this.created = created;
+        this.duration = duration;
+    }
+}
+
+class ParticleEmitterComponent {
+    constructor() {
+        this.name = "ParticleEmitter";
+        this.spread = Math.PI * 2;
+        this.particleVelocity = Vector.Zero;
+        this.velocityRandomness = 1;
+        this.size = 1;
+        this.width = 1;
+        this.height = 1;
+        this.color = new Color(0, 0, 0, 0);
+        this.colorEnd = new Color(0, 0, 0, 0);
+        this.emissionRate = 1;
+        this.particleSize = 1;
+        this.particleSizeRandomness = 1;
+        this.maxParticles = 1;
+        this.particleLifespan = 1;
+        this.particleLifespanRandomness = 1;
+        this.enabled = true;
+        this.emissionTimer = 0;
+        this.foreground = true;
+        this.fields = [];
+        this.particles = [];
+    }
+}
+
+class ForceFieldSubjectComponent {
+    constructor() {
+        this.name = "ForceFieldSubject";
+        this.fieldIds = [];
+    }
+}
+
+class ForceFieldComponent {
+    constructor() {
+        this.name = "ForceField";
+        this.mass = 1;
+        this.radius = 1;
+        this.destructive = true;
+        this.enabled = true;
+    }
+}
+
+class ColorMutationSystem {
+    update(delta, entities) {
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (Entity.hasComponents(entity, ["ColorGradient", "Shape"])) {
+                var gradient = Entity.getComponent(entity, "ColorGradient");
+                var shape = Entity.getComponent(entity, "Shape");
+                shape.color = Color.gradient(gradient.colorStart, gradient.colorEnd, (Date.now() - gradient.created) / gradient.duration);
+            }
+        }
+    }
+}
+
+class ForceFieldSystem {
+    update(delta, entities) {
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (Entity.hasComponents(entity, ["ForceFieldSubject", "Transform", "Motion"])) {
+                var subject = Entity.getComponent(entity, "ForceFieldSubject");
+                var subjectTransform = Entity.getComponent(entity, "Transform");
+                var subjectMotion = Entity.getComponent(entity, "Motion");
+                // TODO: why is this zero? Why not entity accel?
+                var totalAcceleration = Vector.Zero;
+                for (var j = 0; j < entities.length; j++) {
+                    if (Entity.hasComponents(entities[j], ["ForceField", "Transform"])) {
+                        var field = Entity.getComponent(entities[j], "ForceField");
+                        if (subject.fieldIds.includes(field.id) && field.enabled) {
+                            var fieldTransform = Entity.getComponent(entities[j], "Transform");
+                            var vector = Vector.substract(Vector.copy(fieldTransform.position), subjectTransform.position);
+                            // TODO: Magic number?
+                            var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
+                            Vector.add(totalAcceleration, Vector.multiply(vector, new Vector(force, force)));
+                            if (field.destructive) {
+                                if (Math.pow(this.position.x - field.position.x, 2) + Math.pow(this.position.y - field.position.y, 2) < Math.pow(field.radius, 2)) {
+                                    if (Entity.hasComponents(entity, ["Expiration"]))
+                                        Entity.getComponent(entity, "Expiration").duration = 0;
+                                    else
+                                        Entity.addComponent(entity, new ExpirationComponent(Date.now(), 0));
+                                }
+                            }
+                        }
+                    }
+                }
+                subjectMotion.acceleration = totalAcceleration;
+            }
+        }
+    }
+}
+
+class ParticleSystemECS {
+    update(delta, entities) {
+        var particles = [];
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (Entity.hasComponents(entity, ["ParticleEmitter", "Transform"])) {
+                var emitter = Entity.getComponent(entity, "ParticleEmitter");
+                var emitterTransform = Entity.getComponent(entity, "Transform");
+                if (emitter.enabled) {
+                    var particlesToEmit = 0;
+                    emitter.emissionTimer += delta;
+                    var emissionRateInv = 1 / emitter.emissionRate
+                    if (emitter.emissionTimer > emissionRateInv) {
+                        particlesToEmit = Math.round(emitter.emissionTimer / emissionRateInv);
+                        emitter.emissionTimer = emitter.emissionTimer % emissionRateInv;
+                    }
+                    for (var j = 0; j < particlesToEmit; j++) {
+                        var angle = Vector.angle(emitter.particleVelocity) + emitter.spread - Random.float(0, emitter.spread * 2);
+                        var segment = Vector.fromAngleAndMagnitude(Vector.angle(emitter.particleVelocity) + Math.PI / 2, emitter.size);
+                        var randomSegment = Vector.fromAngleAndMagnitude(Vector.angle(emitter.particleVelocity) - Math.PI / 2, Random.float(0, emitter.size * 2));
+                        Vector.add(segment, randomSegment);
+                        Vector.add(segment, emitterTransform.position);
+                        var position = segment;
+                        var velocity = Vector.fromAngleAndMagnitude(angle, Random.float(Vector.magnitude(emitter.particleVelocity), Vector.magnitude(emitter.particleVelocity) * emitter.velocityRandomness));
+                        var life = Random.int(emitter.particleLifespan, emitter.particleLifespan * emitter.particleLifespanRandomness);
+                        var size = Random.int(emitter.particleSize, emitter.particleSize * emitter.particleSizeRandomness);
+
+                        //var particle = new Particle(position, velocity, Vector.Zero, Color.copy(emitter.color), size, life);
+
+                        var particle = new Entity();
+                        Entity.addComponent(particle, new TransformComponent(position));
+                        Entity.addComponent(particle, new MotionComponent(velocity, Number.MAX_SAFE_INTEGER, Vector.Zero));
+                        Entity.addComponent(particle, new ShapeComponent(size, size, Color.copy(emitter.color)));
+                        //Entity.addComponent(entity, new TraceComponent(2, color));
+                        Entity.addComponent(particle, new ExpirationComponent(Date.now(), life));
+                        Entity.addComponent(particle, new ColorGradientComponent(Color.copy(emitter.color), Color.copy(emitter.colorEnd), Date.now(), life));
+
+                        particles.push(particle);
+                    }
+                }
+            }
+        }
+        for (var i = 0; i < particles.length; i++) {
+            entities.push(particles[i]);
+        }
+    }
+
+}
+
+// TODO: Pausing loop doesnt prevent expiration
+class ExpirationSystem {
+    update(delta, entities) {
+        for (var i = entities.length - 1; i >= 0; i--) {
+            var entity = entities[i];
+            if (Entity.hasComponents(entity, ["Expiration"])) {
+                var expiration = Entity.getComponent(entity, "Expiration");
+                var elapsed = Date.now() - expiration.created;
+                if (elapsed >= expiration.duration)
+                    entities.splice(i, 1);
+            }
+        }
     }
 }
 
@@ -194,15 +368,8 @@ class ShapeRendererSystem {
             if (Entity.hasComponents(entity, ["Transform", "Shape"])) {
                 var transform = Entity.getComponent(entity, "Transform");
                 var shape = Entity.getComponent(entity, "Shape");
-                ctx.fillStyle = shape.color;
+                ctx.fillStyle = Color.style(shape.color);
                 ctx.fillRect(Math.round(transform.position.x) - shape.width / 2, Math.round(transform.position.y) - shape.height / 2, shape.width, shape.height);
-                if (shape.highlight) {
-                    ctx.beginPath();
-                    ctx.strokeStyle = shape.color;
-                    ctx.lineWidth = 1;
-                    ctx.rect(Math.round(transform.position.x) - shape.width / 2 - 4, Math.round(transform.position.y) - shape.height / 2 - 4, shape.width + 8, shape.height + 8);
-                    ctx.stroke();
-                }
             }
         }
     }
@@ -231,7 +398,7 @@ class TraceRendererSystem {
                 if (trace.points.length > 0) {
                     var pos = trace.points[0];
                     ctx.beginPath();
-                    ctx.strokeStyle = trace.color;
+                    ctx.strokeStyle = Color.style(trace.color);
                     ctx.lineWidth = trace.width;
                     ctx.moveTo(Math.round(pos.x), Math.round(pos.y));
                     for (var j = 1; j < trace.points.length; j++) {
@@ -271,20 +438,37 @@ class SelectionSystem {
             var found = false;
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
-                if (Entity.hasComponents(entity, ["Transform", "Selectable", "Shape"])) {
+                if (Entity.hasComponents(entity, ["Transform", "Selectable"])) {
                     var transform = Entity.getComponent(entity, "Transform");
                     var selectable = Entity.getComponent(entity, "Selectable");
-                    var shape = Entity.getComponent(entity, "Shape");
-                    shape.highlight = false;
+                    selectable.highlight = false;
                     if (!found && Math.abs(transform.position.x - this.position.x) <= selectable.threshold
                         && Math.abs(transform.position.y - this.position.y) <= selectable.threshold) {
-                        shape.highlight = true;
+                        selectable.highlight = true;
                         target = transform.position;
                         found = true;
                     }
                 }
             }
             camera.targetPosition = target;
+        }
+    }
+
+    draw(interp, ctx, entities) {
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (Entity.hasComponents(entity, ["Transform", "Selectable", "Shape"])) {
+                var transform = Entity.getComponent(entity, "Transform");
+                var selectable = Entity.getComponent(entity, "Selectable");
+                var shape = Entity.getComponent(entity, "Shape");
+                if (selectable.highlight) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = Color.style(shape.color);
+                    ctx.lineWidth = 1;
+                    ctx.rect(Math.round(transform.position.x) - shape.width / 2 - 4, Math.round(transform.position.y) - shape.height / 2 - 4, shape.width + 8, shape.height + 8);
+                    ctx.stroke();
+                }
+            }
         }
     }
 }
