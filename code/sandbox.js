@@ -26,7 +26,7 @@ window.addEventListener("keypress", doKeyDown, false);
 function doKeyDown(e) {
     if (e.keyCode == 47) {
         for (var i = 0; i < scene.entities.length; i++) {
-            Vector.rotate(Entity.getComponent(scene.entities[i], "Motion").acceleration, Random.float(0, Math.PI * 2));
+            Vector.Rotate(Entity.getComponent(scene.entities[i], "Motion").acceleration, Random.Float(0, Math.PI * 2));
         }
     }
 }
@@ -53,14 +53,13 @@ class Scene {
     }
 
     update(delta) {
-        lastUpdate = delta;
         // Save & Load
         this.keyHandler.keyStarted("KeyC");
-        this.keyHandler.keyStarted("KeyV");
         if (this.keyHandler.keyEnded("KeyC")) {
             var json = JSON.stringify(this.entities);
             window.localStorage.setItem("entities", json);
         }
+        this.keyHandler.keyStarted("KeyV");
         if (this.keyHandler.keyEnded("KeyV")) {
             var json = window.localStorage.getItem("entities");
             if (json)
@@ -101,9 +100,11 @@ class Scene {
         ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
 
         // Reference points
+        var axisStyle = Color.Style(new Color(0, 100, 50, 0.5));        
+        var guideStyle = Color.Style(new Color(0, 0, 100, 0.2));
         for (var i = this.width / -2; i < this.width / 2; i += 100) {
             ctx.beginPath();
-            ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5) : Color.fixedStyle(0, 0, 100, 0.2);
+            ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
             ctx.lineWidth = 1;
             ctx.moveTo(i, this.height / -2);
             ctx.lineTo(i, this.height / 2);
@@ -111,7 +112,7 @@ class Scene {
         }
         for (var i = this.height / -2; i < this.height / 2; i += 100) {
             ctx.beginPath();
-            ctx.strokeStyle = i == 0 ? Color.fixedStyle(0, 100, 50, 0.5) : Color.fixedStyle(0, 0, 100, 0.2);
+            ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
             ctx.lineWidth = 1;
             ctx.moveTo(this.width / -2, i);
             ctx.lineTo(this.width / 2, i);
@@ -120,7 +121,7 @@ class Scene {
 
         // World edges
         ctx.beginPath();
-        ctx.strokeStyle = Color.fixedStyle(0, 0, 100, 1);
+        ctx.strokeStyle = Color.Style(Color.White);
         ctx.lineWidth = 4;
         ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
         ctx.stroke();
@@ -133,14 +134,13 @@ class Scene {
         ctx.restore();
 
         // FPS
-        ctx.fillStyle = Color.fixedStyle(0, 0, 100, 0.5);
+        ctx.fillStyle = Color.Style(Color.White50);
         ctx.font = "12px monospace";
         ctx.textBaseline = "top";
         ctx.textAlign = "right";
         ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 15, 15);
-        ctx.fillText("Last Update: " + lastUpdate.toFixed(2), canvas.width - 15, 30);
 
-        debug(ctx, scene.camera.toString(), 15, 15);
+        debug(ctx, 15, 15);
 
         drawCursor(ctx);
     }
@@ -154,7 +154,6 @@ function draw(interp) {
     scene.draw(interp);
 }
 
-var lastUpdate = 0;
 var scene = new Scene();
 var loop = new Loop().setUpdate(update).setDraw(draw).start();
 resizeCanvas();
@@ -162,25 +161,26 @@ resizeCanvas();
 scene.soundManager.sequencer.start();
 
 // Random entities
-for (var i = 0; i < 1; i++) {
+for (var i = 0; i < 50; i++) {
     var entity = new Entity();
-    var position = new Vector(Random.float(-100, 100), Random.float(-100, 100));
-    Entity.addComponent(entity, new TransformComponent(position));
-    var velocity = new Vector(Random.float(-0.1, 0.1), Random.float(-0.1, 0.1));
-    var maxVelocity = Random.float(0.05, 1.5);
-    var acceleration = new Vector(Random.float(-0.0001, 0.0001), Random.float(-0.0001, 0.0001));
+    var scale = new Vector(Random.Int(5, 10), Random.Int(2, 10));
+    var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
+    Entity.addComponent(entity, new TransformComponent(position, scale));
+    var velocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
+    var maxVelocity = Random.Float(0.05, 1.5);
+    var acceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
     Entity.addComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
-    var color = new Color(Random.value([0, 60, 100, 250]), 100, 60, 1);
-    Entity.addComponent(entity, new ShapeComponent(6, 6, color));
+    var color = new Color(Random.Int(0, 360), 75, 60, 1);
+    Entity.addComponent(entity, new ShapeComponent(color));
     Entity.addComponent(entity, new TraceComponent(2, color));
     Entity.addComponent(entity, new SelectableComponent());
     scene.entities.push(entity);
 }
 
-// Emitter ECS
-
+// Emitter 
 var emitterEntity = new Entity();
-Entity.addComponent(emitterEntity, new TransformComponent(new Vector(200, 200)));
+var emitterPosition = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
+Entity.addComponent(emitterEntity, new TransformComponent(emitterPosition));
 var emitterComponent = new ParticleEmitterComponent();
 emitterComponent.particleVelocity = new Vector(0.05, 0.05);
 emitterComponent.velocityRandomness = 1.5;
@@ -189,30 +189,35 @@ emitterComponent.size = 1;
 emitterComponent.color = new Color(100, 100, 90, 1);
 emitterComponent.colorEnd = new Color(100, 100, 0, 0);
 emitterComponent.particleSize = 2;
+emitterComponent.particleSizeRandomness = 2;
 emitterComponent.emissionRate = 0.05;
-emitterComponent.maxParticles = 500;
-emitterComponent.particleLifespan = 5000;
+emitterComponent.particleLifespan = 3000;
 emitterComponent.particleLifespanRandomness = 1.5;
 emitterComponent.foreground = false;
 Entity.addComponent(emitterEntity, emitterComponent);
-Entity.addComponent(emitterEntity, new MotionComponent(new Vector(0, -0.1), 1, Vector.Zero));
+var emitterVelocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
+Entity.addComponent(emitterEntity, new MotionComponent(emitterVelocity, 1, Vector.Zero));
+Entity.addComponent(emitterEntity, new SelectableComponent());
 scene.entities.push(emitterEntity);
 
 var fieldEntity = new Entity();
-Entity.addComponent(fieldEntity, new TransformComponent(new Vector(200, 0)));
+Entity.addComponent(fieldEntity, new TransformComponent(new Vector(emitterPosition.x, emitterPosition.y - 100)));
 var fieldComponent = new ForceFieldComponent();
 fieldComponent.mass = 3;
 fieldComponent.destructive = true;
 fieldComponent.radius = 50;
 fieldComponent.enabled = true;
 Entity.addComponent(fieldEntity, fieldComponent);
-Entity.addComponent(fieldEntity, new MotionComponent(new Vector(0, -0.1), 1, Vector.Zero));
+Entity.addComponent(fieldEntity, new MotionComponent(Vector.Copy(emitterVelocity), 1, Vector.Zero));
+Entity.addComponent(fieldEntity, new SelectableComponent());
 scene.entities.push(fieldEntity);
 
 emitterComponent.fieldIds.push(fieldEntity.id);
 
-function debug(ctx, text, x, y, baseline = "top", align = "left") {
-    ctx.fillStyle = Color.fixedStyle(0, 0, 100, 0.5);
+function debug(ctx, x, y, baseline = "top", align = "left") {
+    var text = scene.camera.toString();
+    text += "\n" + "Entities count:   " + scene.entities.length;
+    ctx.fillStyle = Color.Style(Color.White50);
     ctx.font = "12px monospace";
     ctx.textBaseline = baseline;
     ctx.textAlign = align;
@@ -226,7 +231,7 @@ function debug(ctx, text, x, y, baseline = "top", align = "left") {
 function drawCursor(ctx) {
     var cursor = Input.Instance.mousePosition;
     var w = 12;
-    ctx.fillStyle = Color.fixedStyle(0, 0, 100, 0.8);
+    ctx.fillStyle = Color.Style(new Color(0, 0, 100, 0.8));
     ctx.beginPath();
     ctx.moveTo(cursor.x, cursor.y);
     ctx.lineTo(cursor.x + w, cursor.y + w);
@@ -234,7 +239,7 @@ function drawCursor(ctx) {
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = Color.fixedStyle(0, 0, 0, 1);
+    ctx.strokeStyle = Color.Style(Color.Black);
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(cursor.x, cursor.y);

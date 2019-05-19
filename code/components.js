@@ -4,7 +4,7 @@
 
 class Entity {
     constructor() {
-        this.id = UUID.new;
+        this.id = Random.UUID();
         this.components = {};
     }
 
@@ -27,12 +27,31 @@ class Entity {
     static removeComponent(entity, name) {
         entity.components[name] = null;
     }
+
+    static iterate(entities, components, action) {
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+            if (Entity.hasComponents(entity, components)) {
+                action(entity, i);
+            }
+        }
+    }
+
+    static iterateBackwards(entities, components, action) {
+        for (var i = entities.length - 1; i >= 0; i--) {
+            var entity = entities[i];
+            if (Entity.hasComponents(entity, components)) {
+                action(entity, i);
+            }
+        }
+    }
 }
 
 class TransformComponent {
-    constructor(position, angle) {
+    constructor(position = Vector.Zero, scale = Vector.One, angle = 0) {
         this.name = "Transform";
         this.position = position;
+        this.scale = scale;
         this.angle = angle;
     }
 }
@@ -65,10 +84,8 @@ class CollisionHandlingComponent {
 
 // TODO: Maybe change name?
 class ShapeComponent {
-    constructor(width, height, color) {
+    constructor(color) {
         this.name = "Shape";
-        this.width = width;
-        this.height = height;
         this.color = color;
     }
 }
@@ -88,6 +105,7 @@ class SelectableComponent {
         this.name = "Selectable";
         this.threshold = 20;
         this.highlight = false;
+        this.highlightColor = new Color(0, 100, 100, 1);
     }
 }
 
@@ -123,11 +141,11 @@ class ParticleEmitterComponent {
         this.emissionRate = 1;
         this.particleSize = 1;
         this.particleSizeRandomness = 1;
-        this.maxParticles = 1;
         this.particleLifespan = 1;
         this.particleLifespanRandomness = 1;
         this.enabled = true;
         this.emissionTimer = 0;
+        //TODO: resolve drawing Z
         this.foreground = true;
         this.fieldIds = [];
     }

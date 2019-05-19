@@ -1,36 +1,45 @@
-// https://www.khanacademy.org/computing/computer-programming/programming-natural-simulations/programming-vectors/a/intro-to-vectors
-
+/*
+* 2D vector implementation.
+* https://www.khanacademy.org/computing/computer-programming/programming-natural-simulations/programming-vectors/a/intro-to-vectors
+*/
 class Vector {
+
+    // X and Y axis coordinates.
     constructor(x, y) {
         this.x = x;
         this.y = y;
     }
 
-    static add(a, b) {
+    // Adds vectors A and B, modifiyng and returning A.
+    static Add(a, b) {
         a.x += b.x;
         a.y += b.y;
         return a;
     }
 
-    static substract(a, b) {
+    // Substracts vector B from A, modifiyng and returning A.
+    static Substract(a, b) {
         a.x -= b.x;
         a.y -= b.y;
         return a;
     }
 
-    static multiply(a, b) {
+    // Multiplies vectors A and B, modifiyng and returning A.
+    static Multiply(a, b) {
         a.x *= b.x;
         a.y *= b.y;
         return a;
     }
 
-    static divide(a, b) {
+    // Divides vector B by A, modifiyng and returning A.
+    static Divide(a, b) {
         a.x /= b.x;
         a.y /= b.y;
         return a;
     }
 
-    static rotate(v, angle) {
+    // Rotates vector V by Angle radians, modifiyng and returning A.
+    static Rotate(v, angle) {
         var newX = v.x * Math.cos(angle) - v.y * Math.sin(angle);
         var newY = v.y * Math.cos(angle) + v.x * Math.sin(angle);
         v.x = newX;
@@ -38,59 +47,79 @@ class Vector {
         return v;
     }
 
-    static dot(a, b) {
+    // Returns the dot product of A and B
+    static Dot(a, b) {
         return a.x * b.x + a.y * b.y;
     }
 
-    static reflect(v, start, end) {
-        var n = Vector.normal(start, end);
-        return Vector.substract(v, new Vector(2 * v.dot(n), 2 * v.dot(n)).multiply(n));
+    // Reflects vector V based on line segment Start-End.
+    static Reflect(v, start, end) {
+        var n = Vector.Normal(start, end);
+        return Vector.Substract(v, new Vector(2 * v.dot(n), 2 * v.dot(n)).multiply(n));
     }
 
-    static angle(v) {
+    // Returns the angle in radians of vector V.
+    static Angle(v) {
         return Math.atan2(v.y, v.x);
     }
 
-    static magnitude(v) {
+    // Returns the magnitude of vector V.
+    static Magnitude(v) {
         return Math.sqrt(v.x * v.x + v.y * v.y);
     }
 
-    static normalize(v) {
-        var m = Vector.magnitude(v);
+    // Normalizes and returns vector V.
+    static Normalize(v) {
+        var m = Vector.Magnitude(v);
         if (m > 0) {
-            Vector.divide(v, new Vector(m, m));
+            Vector.Divide(v, new Vector(m, m));
         }
         return v;
     }
 
-    static copy(v) {
+    // Returns a copy of vector V.
+    static Copy(v) {
         return new Vector(v.x, v.y);
     }
 
-    static fromAngleAndMagnitude(angle, magnitude) {
+    // Returns a new vector with Angle and Magnitude.
+    static FromAngleAndMagnitude(angle, magnitude) {
         return new Vector(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
     }
 
-    static normal(start, end) {
+    // Returns the normal of line segment Start-End.
+    static Normal(start, end) {
         return end.copy.substract(start).rotate(Math.PI / 2).normalize;
     }
 
+    // Returns a new (0,0) vector.
     static get Zero() {
         return new Vector(0, 0);
     }
 
+    // Returns a new (1,1) vector.
     static get One() {
         return new Vector(1, 1);
     }
 
+    // Returns a new (-1,-1) vector.
     static get MinusOne() {
         return new Vector(-1, -1);
     }
+
+    // Returns string representation of vector V.
+    static Print(v, decimals = 2) {
+        return v.x.toFixed(decimals) + ";" + v.y.toFixed(decimals);
+    }
 }
 
-// http://hslpicker.com/
-
+/*
+* Color represented in HSLA space.
+* http://hslpicker.com/
+*/
 class Color {
+
+    // Hue, Saturation, Luminosity and Alpha values.
     constructor(h, s, l, a) {
         this.h = h;
         this.s = s;
@@ -98,15 +127,18 @@ class Color {
         this.a = a;
     }
 
-    static style(color) {
+    // Returns HSLA string of Color.
+    static Style(color) {
         return "hsla(" + color.h + ", " + color.s + "%, " + color.l + "%, " + color.a + ")";
     }
 
-    static copy(color) {
+    // Returns a copy of Color.
+    static Copy(color) {
         return new Color(color.h, color.s, color.l, color.a);
     }
 
-    static hue(color, h) {
+    // Sets a valid Hue, modifiyng and returning Color.
+    static Hue(color, h) {
         if (h < 0)
             h = 0;
         if (h > 360)
@@ -115,7 +147,8 @@ class Color {
         return color;
     }
 
-    static saturation(color, s) {
+    // Sets a valid Saturation, modifiyng and returning Color.
+    static Saturation(color, s) {
         if (s < 0)
             s = 0;
         if (s > 100)
@@ -124,7 +157,8 @@ class Color {
         return color;
     }
 
-    static lightness(color, l) {
+    // Sets a valid Luminosity, modifiyng and returning Color.
+    static Luminosity(color, l) {
         if (l < 0)
             l = 0;
         if (l > 100)
@@ -133,7 +167,8 @@ class Color {
         return color;
     }
 
-    static alpha(color, a) {
+    // Sets a valid Alpha, modifiyng and returning Color.
+    static Alpha(color, a) {
         if (a < 0)
             a = 0;
         if (a > 1)
@@ -142,68 +177,69 @@ class Color {
         return color;
     }
 
-    static gradient(startColor, endColor, percentage) {
+    // Returns a new color between StartColor and EndColor, according to Percentage.
+    static Gradient(startColor, endColor, percentage) {
         if (percentage > 1)
             percentage = 1;
         if (percentage < 0)
             percentage = 0;
         var color = new Color();
-        Color.hue(color, startColor.h + (endColor.h - startColor.h) * percentage);
-        Color.saturation(color, startColor.s + (endColor.s - startColor.s) * percentage);
-        Color.lightness(color, startColor.l + (endColor.l - startColor.l) * percentage);
-        Color.alpha(color, startColor.a + (endColor.a - startColor.a) * percentage);
+        Color.Hue(color, startColor.h + (endColor.h - startColor.h) * percentage);
+        Color.Saturation(color, startColor.s + (endColor.s - startColor.s) * percentage);
+        Color.Luminosity(color, startColor.l + (endColor.l - startColor.l) * percentage);
+        Color.Alpha(color, startColor.a + (endColor.a - startColor.a) * percentage);
         return color;
     }
 
-    // TODO: deprecate
-    static blend(startColor, endColor, total, step) {
-        var color = new Color();
-        Color.hue(color, endColor.h + ((startColor.h - endColor.h) / total) * step);
-        Color.saturation(color, endColor.s + ((startColor.s - endColor.s) / total) * step);
-        Color.lightness(color, endColor.l + ((startColor.l - endColor.l) / total) * step);
-        Color.alpha(color, endColor.a + ((startColor.a - endColor.a) / total) * step);
-        return color;
-    }
-
-    static fixedStyle(h, s, l, a) {
-        return "hsla(" + h + ", " + s + "%, " + l + "%, " + a + ")";
-    }
-
+    // Named color: White
     static get White() {
-        return Color.fixedStyle(0, 0, 100, 1);
+        return new Color(0, 0, 100, 1);
     }
 
+    // Named color: Black
     static get Black() {
-        return Color.fixedStyle(0, 0, 0, 1);
+        return new Color(0, 0, 0, 1);
     }
 
+    // Named color: Gray
     static get Gray() {
-        return Color.fixedStyle(0, 0, 50, 1);
+        return new Color(0, 0, 50, 1);
+    }
+
+    // Named color: White50
+    static get White50() {
+        return new Color(0, 0, 100, 0.5);
     }
 }
 
-// https://www.redblobgames.com/articles/probability/damage-rolls.html
-
+/*
+* Random number utilities.
+* https://www.redblobgames.com/articles/probability/damage-rolls.html
+*/
 class Random {
-    static int(min, max) {
+
+    // Returns random integer between Min and Max.
+    static Int(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
 
-    static float(min, max) {
+    // Returns random float between Min and Max.
+    static Float(min, max) {
         return (Math.random() * (max - min)) + min;
     }
 
-    static value(array) {
-        return array[Random.int(0, array.length)];
+    // Returns random value from Array.
+    static Value(array) {
+        return array[Random.Int(0, array.length)];
     }
 
-    static bool() {
+    // Returns random boolean.
+    static Bool() {
         return Math.random() < 0.5;
     }
-}
 
-class UUID {
-    static get new() {
+    // Returns a random UUID
+    static UUID() {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0, v = c == "x" ? r : (r & 0x3 | 0x8);
             return v.toString(16);
@@ -211,76 +247,79 @@ class UUID {
     }
 }
 
-// https://gist.github.com/gre/1650294
-
+/*
+* Easing functions.
+* https://gist.github.com/gre/1650294
+*/
 class Easing {
 
-    static lerp(value, target, factor) {
+    // Returns a number approaching Target from Value, according to Factor.
+    static Lerp(value, target, factor) {
         return value + (target - value) * factor;
     }
 
-    // no easing, no acceleration
-    static linear(t) {
+    // No easing, no acceleration.
+    static Linear(t) {
         return t
     }
 
-    // accelerating from zero velocity
-    static easeInQuad(t) {
+    // Accelerating from zero velocity.
+    static EaseInQuad(t) {
         return t * t
     }
 
-    // decelerating to zero velocity
-    static easeOutQuad(t) {
+    // Decelerating to zero velocity.
+    static EaseOutQuad(t) {
         return t * (2 - t)
     }
 
-    // acceleration until halfway, then deceleration
-    static easeInOutQuad(t) {
+    // Acceleration until halfway, then deceleration.
+    static EaseInOutQuad(t) {
         return t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t
     }
 
-    // accelerating from zero velocity 
-    static easeInCubic(t) {
+    // Accelerating from zero velocity.
+    static EaseInCubic(t) {
         return t * t * t
     }
 
-    // decelerating to zero velocity 
-    static easeOutCubic(t) {
+    // Decelerating to zero velocity.
+    static EaseOutCubic(t) {
         return (--t) * t * t + 1
     }
 
-    // acceleration until halfway, then deceleration 
-    static easeInOutCubic(t) {
+    // Acceleration until halfway, then deceleration.
+    static EaseInOutCubic(t) {
         return t < .5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
     }
 
-    // accelerating from zero velocity 
-    static easeInQuart(t) {
+    // Accelerating from zero velocity.
+    static EaseInQuart(t) {
         return t * t * t * t
     }
 
-    // decelerating to zero velocity 
-    static easeOutQuart(t) {
+    // Decelerating to zero velocity.
+    static EaseOutQuart(t) {
         return 1 - (--t) * t * t * t
     }
 
-    // acceleration until halfway, then deceleration
-    static easeInOutQuart(t) {
+    // Acceleration until halfway, then deceleration.
+    static EaseInOutQuart(t) {
         return t < .5 ? 8 * t * t * t * t : 1 - 8 * (--t) * t * t * t
     }
 
-    // accelerating from zero velocity
-    static easeInQuint(t) {
+    // Accelerating from zero velocity.
+    static EaseInQuint(t) {
         return t * t * t * t * t
     }
 
-    // decelerating to zero velocity
-    static easeOutQuint(t) {
+    // Decelerating to zero velocity.
+    static EaseOutQuint(t) {
         return 1 + (--t) * t * t * t * t
     }
 
-    // acceleration until halfway, then deceleration 
-    static easeInOutQuint(t) {
+    // Acceleration until halfway, then deceleration.
+    static EaseInOutQuint(t) {
         return t < .5 ? 16 * t * t * t * t * t : 1 + 16 * (--t) * t * t * t * t
     }
 }

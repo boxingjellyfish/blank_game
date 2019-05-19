@@ -1,5 +1,7 @@
-// https://github.com/IceCreamYou/MainLoop.js/blob/gh-pages/src/mainloop.js
-
+/*
+ * A main loop useful for games and other animated applications.
+ * https://github.com/IceCreamYou/MainLoop.js/blob/gh-pages/src/mainloop.js
+ */
 class Loop {
     constructor() {
         this.simulationTimestep = 1000 / 60;
@@ -23,67 +25,41 @@ class Loop {
         this.frameHandle = null;
     }
 
-    getSimulationTimestep() {
-        return this.simulationTimestep;
-    }
-
-    setSimulationTimestep(timestep) {
-        this.simulationTimestep = timestep;
-        return this;
-    }
-
+    // Returns Frames per Second.
     getFPS() {
         return this.fps;
     }
 
+    // Returns last 100 FPS.
     getFPSHistogram() {
         return this.fpsHistogram;
     }
 
-    getMaxAllowedFPS() {
-        return 1000 / this.minFrameDelay;
-    }
-
-    setMaxAllowedFPS(fps) {
-        if (typeof fps === 'undefined') {
-            this.fps = Infinity;
-        }
-        if (fps === 0) {
-            this.stop();
-        }
-        else {
-            // Dividing by Infinity returns zero.
-            minFrameDelay = 1000 / this.fps;
-        }
-        return this;
-    }
-
-    resetFrameDelta() {
-        var oldFrameDelta = this.frameDelta;
-        this.frameDelta = 0;
-        return oldFrameDelta;
-    }
-
+    // Sets the function that runs at the beginning of the main loop.
     setBegin(fun) {
         this.begin = fun || this.begin;
         return this;
     }
 
+    // Sets the function that runs updates (e.g. AI and physics).
     setUpdate(fun) {
         this.update = fun || this.update;
         return this;
     }
 
+    // Sets the function that draws things on the screen.
     setDraw(fun) {
         this.draw = fun || this.draw;
         return this;
     }
 
+    // Sets the function that runs at the end of the main loop.
     setEnd(fun) {
         this.end = fun || this.end;
         return this;
     }
 
+    // Starts the main loop.
     start() {
         if (!this.started) {
             this.started = true;
@@ -99,6 +75,7 @@ class Loop {
         return this;
     }
 
+    // Stops the main loop.
     stop() {
         this.running = false;
         this.started = false;
@@ -106,10 +83,12 @@ class Loop {
         return this;
     }
 
+    // Returns true if loop is running.
     isRunning() {
         return this.running;
     }
 
+    // The main loop that runs updates and rendering.
     animate(timestamp) {
         this.frameHandle = requestAnimationFrame(this.animate.bind(this));
         if (timestamp < this.lastFrameTimeMs + this.minFrameDelay) { return; }

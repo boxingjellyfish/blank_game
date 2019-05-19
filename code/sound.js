@@ -75,12 +75,12 @@ class Sequencer {
     }
 
     get kickTrack() {
-        var rand = Random.value(["X", "-"]);
+        var rand = Random.Value(["X", "-"]);
         return "X---X---X---X-" + rand + "-";
     }
 
     get snareTrack() {
-        var rand = Random.value(["X", "-", "-", "-"]);
+        var rand = Random.Value(["X", "-", "-", "-"]);
         return "----X-------X-------X-----" + rand + "-X---";
     }
 
@@ -89,8 +89,8 @@ class Sequencer {
     }
 
     get bassTrack() {
-        var rand1 = Random.value(["D2", "D#2", "F2", "G2", "-", "-"]);
-        var rand2 = Random.value(["D#2", "F2", "G2"]);
+        var rand1 = Random.Value(["D2", "D#2", "F2", "G2", "-", "-"]);
+        var rand2 = Random.Value(["D#2", "F2", "G2"]);
         return ["C2", "-", rand1, "-", "C2", "-", rand1, "-", "C2", "-", rand1, "-", "C2", "-", rand1, "-",
         rand2, "-", "-", "-", rand2, "-", "-", "-", rand2, "-", "-", "-", rand2, "-", "-", "-"];
     }
@@ -273,12 +273,12 @@ class Bass {
 
 class Notes {
     static randomNote(octave) {
-        return Notes.notes[Random.int(octave * 7 - 7, octave * 7)];
+        return Notes.notes[Random.Int(octave * 7 - 7, octave * 7)];
     }
 
     static randomPentatonic(octave) {
         var scale = ["A" + octave, "C" + octave, "D" + octave, "E" + octave, "G" + octave];
-        return Notes.findNote(Random.value(scale));
+        return Notes.findNote(Random.Value(scale));
     }
 
     static findNote(note) {

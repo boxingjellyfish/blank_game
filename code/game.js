@@ -1,7 +1,7 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
-class Vector {
+class Vector2D {
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -44,8 +44,8 @@ class Vector {
     }
 
     reflect(start, end) {
-        var n = Vector.normal(start, end);
-        return this.substract(new Vector(2 * this.dot(n), 2 * this.dot(n)).multiply(n));
+        var n = Vector2D.Normal(start, end);
+        return this.substract(new Vector2D(2 * this.dot(n), 2 * this.dot(n)).multiply(n));
     }
 
     get angle() {
@@ -59,37 +59,37 @@ class Vector {
     get normalize() {
         var m = this.magnitude;
         if (m > 0) {
-            this.divide(new Vector(m, m));
+            this.divide(new Vector2D(m, m));
         }
         return this;
     }
 
     get copy() {
-        return new Vector(this.x, this.y);
+        return new Vector2D(this.x, this.y);
     }
 
     get toString() {
         return this.x + "," + this.y + " (" + this.angle + "," + this.magnitude + ")";
     }
 
-    static fromAngleAndMagnitude(angle, magnitude) {
-        return new Vector(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
+    static FromAngleAndMagnitude(angle, magnitude) {
+        return new Vector2D(magnitude * Math.cos(angle), magnitude * Math.sin(angle));
     }
 
-    static normal(start, end) {
+    static Normal(start, end) {
         return end.copy.substract(start).rotate(Math.PI / 2).normalize;
     }
 
     static get Zero() {
-        return new Vector(0, 0);
+        return new Vector2D(0, 0);
     }
 
     static get One() {
-        return new Vector(1, 1);
+        return new Vector2D(1, 1);
     }
 
     static get MinusOne() {
-        return new Vector(-1, -1);
+        return new Vector2D(-1, -1);
     }
 }
 
@@ -160,40 +160,38 @@ class Color {
     }
 
     static get White() {
-        return Color.fixedStyle(0, 0, 100, 1);
+        return Color.FixedStyle(0, 0, 100, 1);
     }
     
     static get Black() {
-        return Color.fixedStyle(0, 0, 0, 1);
+        return Color.FixedStyle(0, 0, 0, 1);
     }
 
     static get Gray() {
-        return Color.fixedStyle(0, 0, 50, 1);
+        return Color.FixedStyle(0, 0, 50, 1);
     }
 }
 
 // https://www.redblobgames.com/articles/probability/damage-rolls.html
 
 class Random {
-    static int(min, max) {
+    static Int(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
 
-    static float(min, max) {
+    static Float(min, max) {
         return (Math.random() * (max - min)) + min;
     }
 
-    static value(array) {
-        return array[Random.int(0, array.length)];
+    static Value(array) {
+        return array[Random.Int(0, array.length)];
     }
 
-    static bool() {
+    static Bool() {
         return Math.random() < 0.5;
     }
-}
 
-class UUID {
-    static get new() {
+    static UUID() {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
             var r = Math.random() * 16 | 0, v = c == "x" ? r : (r & 0x3 | 0x8);
             return v.toString(16);
@@ -203,9 +201,9 @@ class UUID {
 
 class GameEntity {
     constructor() {
-        this.id = UUID.new;
-        this.position = Vector.Zero;
-        this.velocity = Vector.Zero;
+        this.id = Random.UUID();
+        this.position = Vector2D.Zero;
+        this.velocity = Vector2D.Zero;
         this.angle = 0;
         this.angularVelocity = 0;
         this.visible = true;
@@ -225,13 +223,13 @@ class Box extends GameEntity {
     static get random() {
         var box = new Box();
         // TODO: Basic doesnt have to know world
-        box.position = new Vector(Random.float(0, world.width), Random.float(0, world.height));
-        box.velocity = new Vector(Random.float(-0.5, 0.5), Random.float(-0.5, 0.5));
-        box.angle = Random.int(0, Math.PI * 2);
-        box.angularVelocity = Random.float(-Math.PI / 500, Math.PI / 500);
-        box.width = Random.int(10, 100);
-        box.height = Random.int(10, 100);
-        box.color = new Color(Random.int(0, 360), 100, 50, 1);
+        box.position = new Vector2D(Random.Float(0, world.width), Random.Float(0, world.height));
+        box.velocity = new Vector2D(Random.Float(-0.5, 0.5), Random.Float(-0.5, 0.5));
+        box.angle = Random.Int(0, Math.PI * 2);
+        box.angularVelocity = Random.Float(-Math.PI / 500, Math.PI / 500);
+        box.width = Random.Int(10, 100);
+        box.height = Random.Int(10, 100);
+        box.color = new Color(Random.Int(0, 360), 100, 50, 1);
         return box;
     }
 
@@ -241,10 +239,10 @@ class Box extends GameEntity {
 
     get points() {
         return [
-            new Vector(this.width / 2, this.height / 2).rotate(this.angle).add(this.position),
-            new Vector(this.width / 2 * -1, this.height / 2).rotate(this.angle).add(this.position),
-            new Vector(this.width / 2 * -1, this.height / 2 * -1).rotate(this.angle).add(this.position),
-            new Vector(this.width / 2, this.height / 2 * -1).rotate(this.angle).add(this.position)
+            new Vector2D(this.width / 2, this.height / 2).rotate(this.angle).add(this.position),
+            new Vector2D(this.width / 2 * -1, this.height / 2).rotate(this.angle).add(this.position),
+            new Vector2D(this.width / 2 * -1, this.height / 2 * -1).rotate(this.angle).add(this.position),
+            new Vector2D(this.width / 2, this.height / 2 * -1).rotate(this.angle).add(this.position)
         ];
     }
 
@@ -265,18 +263,18 @@ class Box extends GameEntity {
         var minY = Math.min(points[0].y, points[1].y, points[2].y, points[3].y);
         var maxY = Math.max(points[0].y, points[1].y, points[2].y, points[3].y);
         return [
-            new Vector(minX, minY),
-            new Vector(maxX, maxY),
+            new Vector2D(minX, minY),
+            new Vector2D(maxX, maxY),
         ];
     }
 
     get boundingBox() {
         var minMax = this.minMax;
         return [
-            new Vector(minMax[0].x, minMax[0].y),
-            new Vector(minMax[1].x, minMax[0].y),
-            new Vector(minMax[1].x, minMax[1].y),
-            new Vector(minMax[0].x, minMax[1].y)
+            new Vector2D(minMax[0].x, minMax[0].y),
+            new Vector2D(minMax[1].x, minMax[0].y),
+            new Vector2D(minMax[1].x, minMax[1].y),
+            new Vector2D(minMax[0].x, minMax[1].y)
         ];
     }
 
@@ -327,7 +325,7 @@ class Collisions {
         var s = (-s1.y * (lineStartA.x - lineStartB.x) + s1.x * (lineStartA.y - lineStartB.y)) / (-s2.x * s1.y + s1.x * s2.y);
         var t = (s2.x * (lineStartA.y - lineStartB.y) - s2.y * (lineStartA.x - lineStartB.x)) / (-s2.x * s1.y + s1.x * s2.y);
         if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-            return new Vector(lineStartA.x + (t * s1.x), lineStartA.y + (t * s1.y));
+            return new Vector2D(lineStartA.x + (t * s1.x), lineStartA.y + (t * s1.y));
         }
         return null;
     }
@@ -350,7 +348,7 @@ class Collisions {
             return true;
         var lineLength = lineEnd.copy.substract(lineStart).magnitude;
         var dot = (((circleCenter.x - lineStart.x) * (lineEnd.x - lineStart.x)) + ((circleCenter.y - lineStart.y) * (lineEnd.y - lineStart.y))) / Math.pow(lineLength, 2);
-        var closestPoint = lineStart.copy.add(lineEnd.copy.substract(lineStart).multiply(new Vector(dot, dot)));
+        var closestPoint = lineStart.copy.add(lineEnd.copy.substract(lineStart).multiply(new Vector2D(dot, dot)));
         var onSegment = Collisions.linePoint(lineStart, lineEnd, closestPoint);
         if (!onSegment)
             return false;
@@ -483,9 +481,9 @@ class ParticleSystem {
 
 class Emitter {
     constructor() {
-        this.id = UUID.new;
-        this.position = Vector.Zero;
-        this.velocity = Vector.Zero;
+        this.id = Random.UUID();
+        this.position = Vector2D.Zero;
+        this.velocity = Vector2D.Zero;
         this.spread = Math.PI * 2;
         this.velocityRandomness = 1;
         this.size = 1;
@@ -530,16 +528,16 @@ class Emitter {
             this.emissionTimer = this.emissionTimer % emissionRateInv;
         }
         for (var j = 0; j < particlesToEmit; j++) {
-            var angle = this.velocity.angle + this.spread - Random.float(0, this.spread * 2);
-            var segment = Vector.fromAngleAndMagnitude(this.velocity.angle + Math.PI / 2, this.size);
-            var randomSegment = Vector.fromAngleAndMagnitude(this.velocity.angle - Math.PI / 2, Random.float(0, this.size * 2));
+            var angle = this.velocity.angle + this.spread - Random.Float(0, this.spread * 2);
+            var segment = Vector2D.FromAngleAndMagnitude(this.velocity.angle + Math.PI / 2, this.size);
+            var randomSegment = Vector2D.FromAngleAndMagnitude(this.velocity.angle - Math.PI / 2, Random.Float(0, this.size * 2));
             segment.add(randomSegment);
             segment.add(this.position);
             var position = segment;
-            var velocity = Vector.fromAngleAndMagnitude(angle, Random.float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
-            var life = Random.int(this.particleLifespan, this.particleLifespan * this.particleLifespanRandomness);
-            var size = Random.int(this.particleSize, this.particleSize * this.particleSizeRandomness);
-            var particle = new Particle(position, velocity, Vector.Zero, this.color.copy, size, life);
+            var velocity = Vector2D.FromAngleAndMagnitude(angle, Random.Float(this.velocity.magnitude, this.velocity.magnitude * this.velocityRandomness));
+            var life = Random.Int(this.particleLifespan, this.particleLifespan * this.particleLifespanRandomness);
+            var size = Random.Int(this.particleSize, this.particleSize * this.particleSizeRandomness);
+            var particle = new Particle(position, velocity, Vector2D.Zero, this.color.copy, size, life);
             this.particles.push(particle);
         }
     }
@@ -574,19 +572,19 @@ class Emitter {
 
     static fromObject(emitter) {
         emitter.__proto__ = Emitter.prototype;
-        emitter.position.__proto__ = Vector.prototype;
-        emitter.velocity.__proto__ = Vector.prototype;    
+        emitter.position.__proto__ = Vector2D.prototype;
+        emitter.velocity.__proto__ = Vector2D.prototype;    
         emitter.color.__proto__ = Color.prototype;
         emitter.colorEnd.__proto__ = Color.prototype;
         for(var i = 0; i < emitter.particles.length; i++) {
             emitter.particles[i].__proto__ = Particle.prototype;
-            emitter.particles[i].position.__proto__ = Vector.prototype;
-            emitter.particles[i].velocity.__proto__ = Vector.prototype;    
+            emitter.particles[i].position.__proto__ = Vector2D.prototype;
+            emitter.particles[i].velocity.__proto__ = Vector2D.prototype;    
             emitter.particles[i].color.__proto__ = Color.prototype;
         }
         for(var i = 0; i < emitter.fields.length; i++) {
             emitter.fields[i].__proto__ = Field.prototype;
-            emitter.fields[i].position.__proto__ = Vector.prototype;
+            emitter.fields[i].position.__proto__ = Vector2D.prototype;
         }
         return emitter;
     }
@@ -604,13 +602,13 @@ class Particle {
     }
 
     submitToFields(fields) {
-        var totalAcceleration = Vector.Zero;
+        var totalAcceleration = Vector2D.Zero;
         for (var i = 0; i < fields.length; i++) {
             var field = fields[i];
             if (field.enabled) {
                 var vector = field.position.copy.substract(this.position);
                 var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
-                totalAcceleration.add(vector.multiply(new Vector(force, force)));
+                totalAcceleration.add(vector.multiply(new Vector2D(force, force)));
                 if (field.destructive) {
                     if (Math.pow(this.position.x - field.position.x, 2) + Math.pow(this.position.y - field.position.y, 2) < Math.pow(field.radius, 2)) {
                         this.lifespan = 0;
@@ -634,8 +632,8 @@ class Particle {
 
 class Field {
     constructor() {
-        this.id = UUID.new;
-        this.position = Vector.Zero;
+        this.id = Random.UUID();
+        this.position = Vector2D.Zero;
         this.mass = 1;
         this.destructive = true;
         this.radius = 1;
@@ -651,7 +649,7 @@ class GameWorld {
         this.height = canvas.height;
         this.particleSystem = new ParticleSystem();
         this.input = {
-            mousePosition: Vector.Zero,
+            mousePosition: Vector2D.Zero,
             mouseDown: false
         };
         this.soundManager = new SoundManager();
@@ -705,17 +703,17 @@ class Ball extends GameEntity {
 
     get minMax() {
         return [
-            new Vector(this.position.x - this.radius, this.position.y - this.radius),
-            new Vector(this.position.x + this.radius, this.position.y + this.radius),
+            new Vector2D(this.position.x - this.radius, this.position.y - this.radius),
+            new Vector2D(this.position.x + this.radius, this.position.y + this.radius),
         ];
     }
 
     get boundingBox() {
         return [
-            new Vector(minMax[0].x, minMax[0].y),
-            new Vector(minMax[1].x, minMax[0].y),
-            new Vector(minMax[1].x, minMax[1].y),
-            new Vector(minMax[0].x, minMax[1].y)
+            new Vector2D(minMax[0].x, minMax[0].y),
+            new Vector2D(minMax[1].x, minMax[0].y),
+            new Vector2D(minMax[1].x, minMax[1].y),
+            new Vector2D(minMax[0].x, minMax[1].y)
         ];
     }
 
@@ -757,8 +755,8 @@ function update(delta) {
             }
             if (ballCollisionSegment != null) {
                 if (!brick.visible) {
-                    brick.velocity = world.ball.velocity.copy.multiply(new Vector(Random.float(0.1, 0.4), Random.float(0.1, 0.4)));
-                    brick.angularVelocity = Random.float(-Math.PI / 2000, Math.PI / 2000);
+                    brick.velocity = world.ball.velocity.copy.multiply(new Vector2D(Random.Float(0.1, 0.4), Random.Float(0.1, 0.4)));
+                    brick.angularVelocity = Random.Float(-Math.PI / 2000, Math.PI / 2000);
                     brick.visible = true;
                     world.bricks.splice(i, 1);
                     world.bricks.push(brick);
@@ -790,31 +788,31 @@ function update(delta) {
 
     if (!world.ball.captured && world.ball.position.x + world.ball.radius > world.width && world.ball.velocity.x > 0) {
         world.ball.velocity.x *= -1;
-        ballWallCollision(new Vector(world.width, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
+        ballWallCollision(new Vector2D(world.width, world.ball.position.y), new Vector2D(world.ball.velocity.copy.normalize.x, 0));
         world.soundManager.wallCollision();
     }
     if (!world.ball.captured && world.ball.position.x - world.ball.radius < 0 && world.ball.velocity.x < 0) {
         world.ball.velocity.x *= -1;
-        ballWallCollision(new Vector(0, world.ball.position.y), new Vector(world.ball.velocity.copy.normalize.x, 0));
+        ballWallCollision(new Vector2D(0, world.ball.position.y), new Vector2D(world.ball.velocity.copy.normalize.x, 0));
         world.soundManager.wallCollision();
     }
     if (!world.ball.captured && world.ball.position.y - world.ball.radius < 0 && world.ball.velocity.y < 0) {
         world.ball.velocity.y *= -1;
-        ballWallCollision(new Vector(world.ball.position.x, 0), new Vector(0, world.ball.velocity.copy.normalize.y));
+        ballWallCollision(new Vector2D(world.ball.position.x, 0), new Vector2D(0, world.ball.velocity.copy.normalize.y));
         world.soundManager.wallCollision();
     }
 
     if (!world.ball.captured && Collisions.lineCircle(world.pad.boundingBox[0], world.pad.boundingBox[1], world.ball.position, world.ball.radius) && world.ball.velocity.y > 0) {
         var magnitude = world.ball.velocity.magnitude;
         var percentage = world.ball.position.copy.substract(world.pad.position).x / world.pad.width / 2;
-        world.ball.velocity = Vector.fromAngleAndMagnitude(Math.PI * percentage - (Math.PI / 2), magnitude);
-        ballPadCollision(new Vector(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector(0, world.ball.velocity.copy.normalize.y));
+        world.ball.velocity = Vector2D.FromAngleAndMagnitude(Math.PI * percentage - (Math.PI / 2), magnitude);
+        ballPadCollision(new Vector2D(world.ball.position.x, world.ball.position.y + world.ball.radius), new Vector2D(0, world.ball.velocity.copy.normalize.y));
         world.soundManager.padCollision();
     }
 
     if (!world.ball.captured && world.ball.position.y + world.ball.radius > world.height && world.ball.velocity.y > 0) {
         world.ball.captured = true;
-        world.ball.velocity = new Vector(0.2, -0.8);
+        world.ball.velocity = new Vector2D(0.2, -0.8);
         world.soundManager.floorCollision();
     }
 
@@ -971,27 +969,27 @@ window.addEventListener("gamepadconnected", function (e) {
 var world = new GameWorld();
 
 function initStage() {
-    world.pad.position = new Vector(world.width / 2, world.height - 30);
-    world.pad.width = Random.int(100, 300);
+    world.pad.position = new Vector2D(world.width / 2, world.height - 30);
+    world.pad.width = Random.Int(100, 300);
     world.pad.height = 20;
     world.pad.color = new Color(0, 0, 30, 1);
 
-    world.ball.position = new Vector(world.pad.position.x, world.pad.position.y - world.pad.height / 2 - world.ball.radius - 1);
-    world.ball.velocity = new Vector(0.2, -0.8);
-    world.ball.radius = Random.int(10, 30);
+    world.ball.position = new Vector2D(world.pad.position.x, world.pad.position.y - world.pad.height / 2 - world.ball.radius - 1);
+    world.ball.velocity = new Vector2D(0.2, -0.8);
+    world.ball.radius = Random.Int(10, 30);
     world.ball.color = new Color(0, 0, 30, 1);
     world.ball.captured = true;
 
-    var brickRows = Random.int(6, 15);
-    var brickColumns = Random.int(6, 15);
+    var brickRows = Random.Int(6, 15);
+    var brickColumns = Random.Int(6, 15);
     for (var i = 1; i < brickRows; i++) {
         for (var j = 1; j < brickColumns - 1; j++) {
             var brick = new Box();
             brick.width = world.width / brickColumns - 1;
-            brick.height = Random.int(30, 50);
-            brick.position = new Vector(world.width / brickColumns * j + 1, i * 51);
-            brick.color = new Color(Random.int(0, 360), 100, 50, 1);
-            brick.visible = Random.int(0, 5) > 0;
+            brick.height = Random.Int(30, 50);
+            brick.position = new Vector2D(world.width / brickColumns * j + 1, i * 51);
+            brick.color = new Color(Random.Int(0, 360), 100, 50, 1);
+            brick.visible = Random.Int(0, 5) > 0;
             world.bricks.push(brick);
         }
     }

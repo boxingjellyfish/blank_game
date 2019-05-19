@@ -1,7 +1,7 @@
 class Data {
   static get ballWallCollision() {
     return {
-      "id": UUID.new,
+      "id": Random.UUID(),
       "position": {
         "x": 0,
         "y": 0
@@ -42,7 +42,7 @@ class Data {
 
   static get boxWithWallCollisionParticles() {
     return {
-      "id": UUID.new,
+      "id": Random.UUID(),
       "position": {
         "x": 0,
         "y": 0
@@ -83,7 +83,7 @@ class Data {
 
   static get boxWithBoxCollisionParticles() {
     return {
-      "id": UUID.new,
+      "id": Random.UUID(),
       "position": {
         "x": 0,
         "y": 0
@@ -124,7 +124,7 @@ class Data {
 
   static get boxDestructionParticles() {
     return {
-      "id": UUID.new,
+      "id": Random.UUID(),
       "position": {
         "x": 0,
         "y": 0
@@ -165,7 +165,7 @@ class Data {
 
   static get boxTrailParticles() {
     return {
-      "id": UUID.new,
+      "id": Random.UUID(),
       "position": {
         "x": 0,
         "y": 0
@@ -206,7 +206,7 @@ class Data {
 
   static get background() {
     return {
-      "id": UUID.new,
+      "id": Random.UUID(),
       "position": {
         "x": 0,
         "y": 432
@@ -242,7 +242,7 @@ class Data {
       "foreground": false,
       "fields": [
         {
-          "id": UUID.new,
+          "id": Random.UUID(),
           "position": {
             "x": 0,
             "y": 0
