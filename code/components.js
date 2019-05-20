@@ -195,7 +195,6 @@ class ParticleEmitterComponent {
         this.particleLifespanRandomness = 1;
         this.enabled = true;
         this.emissionTimer = 0;
-        //TODO: resolve drawing Z
         this.foreground = true;
         this.fieldIds = [];
     }

@@ -57,7 +57,8 @@ class ParticleEmissionSystem {
 
     // Loop update function.
     update(delta, entities) {
-        var particles = [];
+        var foregroundParticles = [];
+        var backgroundParticles = [];
         Entity.iterate(entities, ["ParticleEmitter", "Transform"], (entity) => {
             var emitter = Entity.getComponent(entity, "ParticleEmitter");
             var emitterTransform = Entity.getComponent(entity, "Transform");
@@ -91,12 +92,18 @@ class ParticleEmissionSystem {
                     if (emitter.fieldIds.length > 0)
                         Entity.addComponent(particle, new ForceFieldSubjectComponent(emitter.fieldIds));
 
-                    particles.push(particle);
+                    if (emitter.foreground)
+                        foregroundParticles.push(particle);
+                    else
+                        backgroundParticles.push(particle);
                 }
             }
         });
-        for (var i = 0; i < particles.length; i++) {
-            entities.push(particles[i]);
+        for (var i = 0; i < foregroundParticles.length; i++) {
+            entities.push(foregroundParticles[i]);
+        }
+        for (var i = 0; i < backgroundParticles.length; i++) {
+            entities.unshift(backgroundParticles[i]);
         }
     }
 

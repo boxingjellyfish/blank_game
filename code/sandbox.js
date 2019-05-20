@@ -70,7 +70,7 @@ class Scene {
                 Vector.Rotate(Entity.getComponent(entity, "Motion").acceleration, Random.Float(0, Math.PI * 2));
             });
         }
-        
+
         // Play/Pause Gameplay
         this.keyHandler.keyStarted("Space")
         if (this.keyHandler.keyEnded("Space")) {
@@ -112,7 +112,7 @@ class Scene {
         ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
 
         // Reference grid
-        var axisStyle = Color.Style(new Color(0, 100, 50, 0.5));        
+        var axisStyle = Color.Style(new Color(0, 100, 50, 0.5));
         var guideStyle = Color.Style(new Color(0, 0, 100, 0.2));
         for (var i = this.width / -2; i < this.width / 2; i += 100) {
             ctx.beginPath();
@@ -174,8 +174,15 @@ resizeCanvas();
 
 scene.soundManager.sequencer.start();
 
+// Animation example
+var animated = new Entity();
+Entity.addComponent(animated, new TransformComponent(Vector.Zero, new Vector(50, 50)));
+Entity.addComponent(animated, new ShapeComponent(new Color(Random.Int(0, 360), 75, 60, 1)));
+Entity.addComponent(animated, new SelectableComponent());
+scene.entities.push(animated);
+
 // Random entities
-for (var i = 0; i < 50; i++) {
+for (var i = 0; i < 1; i++) {
     var entity = new Entity();
     var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
     var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
