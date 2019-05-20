@@ -233,7 +233,22 @@ class ShapeRendererSystem {
             var transform = Entity.getComponent(entity, "Transform");
             var shape = Entity.getComponent(entity, "Shape");
             ctx.fillStyle = Color.Style(shape.color);
-            ctx.fillRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
+            if (shape.type == ShapeComponent.Ellipse) {
+                ctx.beginPath();
+                ctx.ellipse(Math.round(transform.position.x), Math.round(transform.position.y), Math.round(transform.scale.x / 2), Math.round(transform.scale.y / 2), 0, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            else if (shape.type == ShapeComponent.Triangle) {
+                ctx.beginPath();
+                ctx.moveTo(Math.round(transform.position.x - transform.scale.x / 2), Math.round(transform.position.y - transform.scale.y / 2));
+                ctx.lineTo(Math.round(transform.position.x), Math.round(transform.position.y + transform.scale.y / 2));
+                ctx.lineTo(Math.round(transform.position.x + transform.scale.x / 2), Math.round(transform.position.y - transform.scale.y / 2));
+                ctx.closePath();
+                ctx.fill();
+            }
+            else {
+                ctx.fillRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
+            }
         });
     }
 }

@@ -71,7 +71,7 @@ class TransformComponent {
 * Stores Velocity and Acceleration in 2D.
 */
 class MotionComponent {
-    constructor(velocity, maxVelocity, acceleration, angularVelocity, angularAcceleration) {
+    constructor(velocity, maxVelocity, acceleration, angularVelocity = 0, angularAcceleration = 0) {
         this.name = "Motion";
         this.velocity = velocity;
         this.maxVelocity = maxVelocity;
@@ -106,9 +106,22 @@ class CollisionHandlingComponent {
 * Apperance of a shape to be rendered on screen.
 */
 class ShapeComponent {
-    constructor(color) {
+    constructor(color, type = ShapeComponent.Rectangle) {
         this.name = "Shape";
         this.color = color;
+        this.type = type;
+    }
+
+    static get Rectangle() {
+        return "Rectangle";
+    }
+
+    static get Ellipse() {
+        return "Ellipse";
+    }
+
+    static get Triangle() {
+        return "Triangle";
     }
 }
 

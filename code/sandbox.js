@@ -185,7 +185,7 @@ for (var i = 0; i < 50; i++) {
     var acceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
     Entity.addComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
     var color = new Color(Random.Int(0, 360), 75, 60, 1);
-    Entity.addComponent(entity, new ShapeComponent(color));
+    Entity.addComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
     Entity.addComponent(entity, new TraceComponent(2, color));
     Entity.addComponent(entity, new SelectableComponent());
     scene.entities.push(entity);
