@@ -184,6 +184,7 @@ Entity.addComponent(animated, new SelectableComponent());
 Entity.addComponent(animated, new AnimationComponent());
 scene.entities.push(animated);
 
+/*
 // Random entities
 for (var i = 0; i < 1; i++) {
     var entity = new Entity();
@@ -239,6 +240,7 @@ Entity.addComponent(fieldEntity, new SelectableComponent());
 scene.entities.push(fieldEntity);
 
 emitterComponent.fieldIds.push(fieldEntity.id);
+*/
 
 function debug(ctx, x, y, baseline = "top", align = "left") {
     var text = scene.camera.toString();

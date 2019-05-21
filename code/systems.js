@@ -352,19 +352,37 @@ class SelectionSystem {
 class AnimationSystem {
 
     constructor() {
-        this.keyframes = [0, 1000, 2000, 3000];
+        this.keyframes = [0, 300, 600];
         this.keyframe = 0;
         this.elapsed = 0;
+        this.enabled = true;
+        this.values = [new Vector(50, 50), new Vector(60, 60), new Vector(50, 50)];
+        this.component = "Transform";
+        this.property = "scale";
     }
 
     // Loop update function.
     update(delta, entities, camera) {
-        Entity.iterate(entities, ["Animation"], (entity) => {
-            this.elapsed += delta;
-            var nextKeyframe = this.keyframe >= this.keyframes.length - 1 ? 0 : this.keyframe + 1;
-            if (this.elapsed < this.keyframes[nextKeyframe]) {
-                var perc = (this.elapsed - this.keyframes[this.keyframe]) / (this.keyframes[this.nextKeyframe] - this.keyframes[this.keyframe]);
-                //console.log(perc.toFixed(1));
+        Entity.iterate(entities, ["Animation", "Transform"], (entity) => {
+            if (this.enabled) {
+                this.elapsed += delta;
+                var nextKeyframe = this.keyframe >= this.keyframes.length - 1 ? 0 : this.keyframe + 1;
+                if (this.elapsed < this.keyframes[nextKeyframe]) {
+                    var perc = (this.elapsed - this.keyframes[this.keyframe]) / (this.keyframes[nextKeyframe] - this.keyframes[this.keyframe]);
+                    var comp = Entity.getComponent(entity, this.component);
+                    var e = Easing.EaseInOutQuad(perc);
+
+                    comp[this.property].x = Easing.Lerp(this.values[this.keyframe].x, this.values[nextKeyframe].x, e);
+                    comp[this.property].y = Easing.Lerp(this.values[this.keyframe].y, this.values[nextKeyframe].y, e);
+
+                }
+                else {
+                    this.keyframe = nextKeyframe;
+                    if (this.keyframe == this.keyframes.length - 1) {
+                        this.keyframe = 0;
+                        this.elapsed = 0;
+                    }
+                }
             }
         });
     }
