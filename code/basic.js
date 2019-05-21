@@ -258,6 +258,26 @@ class Easing {
         return value + (target - value) * factor;
     }
 
+    // Returns a vector approaching Target from Value, according to Factor.
+    static VectorLerp(value, target, factor) {
+        return Vector.Add(Vector.Copy(value), Vector.Multiply(Vector.Substract(Vector.Copy(target), Vector.Copy(value)), new Vector(factor, factor)));
+    }
+
+    // Returns a color approaching Target from Value, according to Factor.
+    static ColorLerp(value, target, factor) {
+        var color = new Color();
+        Color.Hue(color, value.h + (target.h - value.h) * factor);
+        Color.Saturation(color, value.s + (target.s - value.s) * factor);
+        Color.Luminosity(color, value.l + (target.l - value.l) * factor);
+        Color.Alpha(color, value.a + (target.a - value.a) * factor);
+        return color;
+    }
+
+    // Returns a number approaching Target from Value, according to Factor.
+    static Lerp(value, target, factor) {
+        return value + (target - value) * factor;
+    }
+
     // No easing, no acceleration.
     static Linear(t) {
         return t

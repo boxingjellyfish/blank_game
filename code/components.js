@@ -163,6 +163,7 @@ class ExpirationComponent {
 
 /*
 * Shifts from start and end colors according to duration.
+* TODO: Should be an animation?
 */
 class ColorGradientComponent {
     constructor(colorStart, colorEnd, duration) {
@@ -227,15 +228,20 @@ class ForceFieldSubjectComponent {
 class AnimationComponent {
     constructor() {
         this.name = "Animation";
-        /*
-        this.keyframes = [0, 1000, 2000, 3000];
-        this.keyframesData = [
-            {
-                component: "Movement",
-                property: "position",
+        this.sequences = []; // Array of AnimationSequence
+    }
+}
 
-            }
-        ];
-        */
+class AnimationSequence {
+    constructor() {
+        this.keyframes = [];
+        this.keyframe = 0;
+        this.elapsed = 0;
+        this.values = [];
+        this.component = "";
+        this.property = "";
+        this.easing = "";
+        this.loop = true;
+        this.playing = true;
     }
 }

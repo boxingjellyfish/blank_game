@@ -1,5 +1,6 @@
 /*
 * Shifts from start and end colors according to duration.
+* TODO: Should be an animation?
 */
 class ColorMutationSystem {
 
@@ -322,6 +323,7 @@ class SelectionSystem {
                 var transform = Entity.getComponent(entity, "Transform");
                 var selectable = Entity.getComponent(entity, "Selectable");
                 selectable.highlight = false;
+                // TODO: use transform.scale instead of threshold
                 if (!found && Math.abs(transform.position.x - this.position.x) <= selectable.threshold
                     && Math.abs(transform.position.y - this.position.y) <= selectable.threshold) {
                     selectable.highlight = true;
@@ -355,16 +357,20 @@ class AnimationSystem {
         this.keyframes = [0, 300, 600];
         this.keyframe = 0;
         this.elapsed = 0;
-        this.enabled = true;
-        this.values = [new Vector(50, 50), new Vector(60, 60), new Vector(50, 50)];
-        this.component = "Transform";
-        this.property = "scale";
+        this.playing = true;
+        //this.values = [new Vector(50, 50), new Vector(60, 60), new Vector(50, 50)];
+        //this.component = "Transform";
+        //this.property = "scale";
+        this.values = [new Color(0, 100, 20, 1), new Color(0, 100, 70, 1), new Color(0, 100, 20, 1)];
+        this.component = "Shape";
+        this.property = "color";
+        this.loop = true;
     }
 
     // Loop update function.
     update(delta, entities, camera) {
-        Entity.iterate(entities, ["Animation", "Transform"], (entity) => {
-            if (this.enabled) {
+        Entity.iterate(entities, ["Animation"], (entity) => {
+            if (this.playing) {
                 this.elapsed += delta;
                 var nextKeyframe = this.keyframe >= this.keyframes.length - 1 ? 0 : this.keyframe + 1;
                 if (this.elapsed < this.keyframes[nextKeyframe]) {
@@ -372,8 +378,12 @@ class AnimationSystem {
                     var comp = Entity.getComponent(entity, this.component);
                     var e = Easing.EaseInOutQuad(perc);
 
-                    comp[this.property].x = Easing.Lerp(this.values[this.keyframe].x, this.values[nextKeyframe].x, e);
-                    comp[this.property].y = Easing.Lerp(this.values[this.keyframe].y, this.values[nextKeyframe].y, e);
+                    if (comp[this.property] instanceof Vector)
+                        comp[this.property] = Easing.VectorLerp(this.values[this.keyframe], this.values[nextKeyframe], e);
+                    else if (comp[this.property] instanceof Color)
+                        comp[this.property] = Easing.ColorLerp(this.values[this.keyframe], this.values[nextKeyframe], e);
+                    else
+                        comp[this.property] = Easing.Lerp(this.values[this.keyframe], this.values[nextKeyframe], e);
 
                 }
                 else {
@@ -381,6 +391,8 @@ class AnimationSystem {
                     if (this.keyframe == this.keyframes.length - 1) {
                         this.keyframe = 0;
                         this.elapsed = 0;
+                        if (!this.loop)
+                            this.playing = false;
                     }
                 }
             }
