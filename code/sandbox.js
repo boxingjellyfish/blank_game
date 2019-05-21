@@ -39,6 +39,7 @@ class Scene {
         this.particleEmissionSystem = new ParticleEmissionSystem();
         this.forceFieldSystem = new ForceFieldSystem();
         this.colorMutationSystem = new ColorMutationSystem();
+        this.animationSystem = new AnimationSystem();
         this.soundManager = new SoundManager();
         this.input = new Input();
         this.keyHandler = new KeyHandler();
@@ -91,6 +92,7 @@ class Scene {
             this.colorMutationSystem.update(delta, this.entities);
             this.traceRendererSystem.update(delta, this.entities);
             this.particleEmissionSystem.update(delta, this.entities);
+            this.animationSystem.update(delta, this.entities);
         }
 
     }
@@ -179,6 +181,7 @@ var animated = new Entity();
 Entity.addComponent(animated, new TransformComponent(Vector.Zero, new Vector(50, 50)));
 Entity.addComponent(animated, new ShapeComponent(new Color(Random.Int(0, 360), 75, 60, 1)));
 Entity.addComponent(animated, new SelectableComponent());
+Entity.addComponent(animated, new AnimationComponent());
 scene.entities.push(animated);
 
 // Random entities

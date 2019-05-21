@@ -348,3 +348,24 @@ class SelectionSystem {
         });
     }
 }
+
+class AnimationSystem {
+
+    constructor() {
+        this.keyframes = [0, 1000, 2000, 3000];
+        this.keyframe = 0;
+        this.elapsed = 0;
+    }
+
+    // Loop update function.
+    update(delta, entities, camera) {
+        Entity.iterate(entities, ["Animation"], (entity) => {
+            this.elapsed += delta;
+            var nextKeyframe = this.keyframe >= this.keyframes.length - 1 ? 0 : this.keyframe + 1;
+            if (this.elapsed < this.keyframes[nextKeyframe]) {
+                var perc = (this.elapsed - this.keyframes[this.keyframe]) / (this.keyframes[this.nextKeyframe] - this.keyframes[this.keyframe]);
+                //console.log(perc.toFixed(1));
+            }
+        });
+    }
+}

@@ -223,3 +223,19 @@ class ForceFieldSubjectComponent {
     }
 }
 
+
+class AnimationComponent {
+    constructor() {
+        this.name = "Animation";
+        /*
+        this.keyframes = [0, 1000, 2000, 3000];
+        this.keyframesData = [
+            {
+                component: "Movement",
+                property: "position",
+
+            }
+        ];
+        */
+    }
+}
