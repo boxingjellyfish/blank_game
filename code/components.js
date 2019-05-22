@@ -162,20 +162,6 @@ class ExpirationComponent {
 }
 
 /*
-* Shifts from start and end colors according to duration.
-* TODO: Should be an animation?
-*/
-class ColorGradientComponent {
-    constructor(colorStart, colorEnd, duration) {
-        this.name = "ColorGradient";
-        this.colorStart = colorStart;
-        this.colorEnd = colorEnd;
-        this.duration = duration;
-        this.elapsed = 0;
-    }
-}
-
-/*
 * Source of particle entities.
 */
 class ParticleEmitterComponent {
@@ -224,7 +210,9 @@ class ForceFieldSubjectComponent {
     }
 }
 
-
+/*
+* Stores a sequence of independent animations to be applied.
+*/
 class AnimationComponent {
     constructor() {
         this.name = "Animation";
@@ -232,15 +220,19 @@ class AnimationComponent {
     }
 }
 
+/*
+* A sequence of values to interpolate each keyframe.
+*/
 class AnimationSequence {
     constructor() {
         this.keyframes = [];
-        this.keyframe = 0;
-        this.elapsed = 0;
         this.values = [];
         this.component = "";
         this.property = "";
-        this.easing = "";
+        this.keyframe = 0;
+        this.elapsed = 0;
+        this.easing = "EaseInOutQuad";
+        this.type = "Number"; // Number, Vector, Color
         this.loop = true;
         this.playing = true;
     }

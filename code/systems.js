@@ -1,114 +1,4 @@
-/*
-* Shifts from start and end colors according to duration.
-* TODO: Should be an animation?
-*/
-class ColorMutationSystem {
 
-    // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["ColorGradient", "Shape"], (entity) => {
-            var gradient = Entity.getComponent(entity, "ColorGradient");
-            var shape = Entity.getComponent(entity, "Shape");
-            gradient.elapsed += delta;
-            shape.color = Color.Gradient(gradient.colorStart, gradient.colorEnd, gradient.elapsed / gradient.duration);
-        });
-    }
-}
-
-/*
-* Applies force fields to to subjects.
-*/
-class ForceFieldSystem {
-
-    // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
-            var subject = Entity.getComponent(entity, "ForceFieldSubject");
-            var subjectTransform = Entity.getComponent(entity, "Transform");
-            var subjectMotion = Entity.getComponent(entity, "Motion");
-            // TODO: why is this zero? Why not entity accel?
-            var totalAcceleration = Vector.Zero;
-            Entity.iterate(entities, ["ForceField", "Transform"], (fieldEntity) => {
-                var field = Entity.getComponent(fieldEntity, "ForceField");
-                if (subject.fieldIds.includes(fieldEntity.id) && field.enabled) {
-                    var fieldTransform = Entity.getComponent(fieldEntity, "Transform");
-                    var vector = Vector.Substract(Vector.Copy(fieldTransform.position), subjectTransform.position);
-                    // TODO: 1.5 Magic number?
-                    var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
-                    Vector.Add(totalAcceleration, Vector.Multiply(vector, new Vector(force, force)));
-                    if (field.destructive) {
-                        if (Math.pow(subjectTransform.position.x - fieldTransform.position.x, 2) + Math.pow(subjectTransform.position.y - fieldTransform.position.y, 2) < Math.pow(field.radius, 2)) {
-                            if (Entity.hasComponents(entity, ["Expiration"]))
-                                Entity.getComponent(entity, "Expiration").duration = 0;
-                            else
-                                Entity.addComponent(entity, new ExpirationComponent(0));
-                        }
-                    }
-                }
-            });
-            subjectMotion.acceleration = totalAcceleration;
-        });
-    }
-}
-
-/*
-* Creates particles from emitters.
-*/
-class ParticleEmissionSystem {
-
-    // Loop update function.
-    update(delta, entities) {
-        var foregroundParticles = [];
-        var backgroundParticles = [];
-        Entity.iterate(entities, ["ParticleEmitter", "Transform"], (entity) => {
-            var emitter = Entity.getComponent(entity, "ParticleEmitter");
-            var emitterTransform = Entity.getComponent(entity, "Transform");
-            if (emitter.enabled) {
-                var particlesToEmit = 0;
-                emitter.emissionTimer += delta;
-                var emissionRateInv = 1 / emitter.emissionRate
-                if (emitter.emissionTimer > emissionRateInv) {
-                    particlesToEmit = Math.round(emitter.emissionTimer / emissionRateInv);
-                    emitter.emissionTimer = emitter.emissionTimer % emissionRateInv;
-                }
-                for (var i = 0; i < particlesToEmit; i++) {
-                    var angle = Vector.Angle(emitter.particleVelocity) + emitter.spread - Random.Float(0, emitter.spread * 2);
-                    var segment = Vector.FromAngleAndMagnitude(Vector.Angle(emitter.particleVelocity) + Math.PI / 2, emitter.size);
-                    var randomSegment = Vector.FromAngleAndMagnitude(Vector.Angle(emitter.particleVelocity) - Math.PI / 2, Random.Float(0, emitter.size * 2));
-                    Vector.Add(segment, randomSegment);
-                    Vector.Add(segment, emitterTransform.position);
-                    var position = segment;
-                    var velocity = Vector.FromAngleAndMagnitude(angle, Random.Float(Vector.Magnitude(emitter.particleVelocity), Vector.Magnitude(emitter.particleVelocity) * emitter.velocityRandomness));
-                    var life = Random.Int(emitter.particleLifespan, emitter.particleLifespan * emitter.particleLifespanRandomness);
-                    var size = Random.Int(emitter.particleSize, emitter.particleSize * emitter.particleSizeRandomness);
-
-                    var particle = new Entity();
-                    Entity.addComponent(particle, new TransformComponent(position, new Vector(size, size)));
-                    Entity.addComponent(particle, new MotionComponent(velocity, Number.MAX_SAFE_INTEGER, Vector.Zero));
-                    Entity.addComponent(particle, new ShapeComponent(Color.Copy(emitter.color)));
-                    //Entity.addComponent(particle, new TraceComponent(1, Color.copy(emitter.color)));
-                    Entity.addComponent(particle, new ExpirationComponent(life));
-                    Entity.addComponent(particle, new ColorGradientComponent(Color.Copy(emitter.color), Color.Copy(emitter.colorEnd), life));
-
-                    if (emitter.fieldIds.length > 0)
-                        Entity.addComponent(particle, new ForceFieldSubjectComponent(emitter.fieldIds));
-
-                    if (emitter.foreground)
-                        foregroundParticles.push(particle);
-                    else
-                        backgroundParticles.push(particle);
-                }
-            }
-        });
-        for (var i = 0; i < foregroundParticles.length; i++) {
-            entities.push(foregroundParticles[i]);
-        }
-        for (var i = 0; i < backgroundParticles.length; i++) {
-            entities.unshift(backgroundParticles[i]);
-        }
-    }
-
-}
 
 /*
 * Destroys the entity after Duration milliseconds.
@@ -351,48 +241,146 @@ class SelectionSystem {
     }
 }
 
-class AnimationSystem {
 
-    constructor() {
-        this.keyframes = [0, 300, 600];
-        this.keyframe = 0;
-        this.elapsed = 0;
-        this.playing = true;
-        //this.values = [new Vector(50, 50), new Vector(60, 60), new Vector(50, 50)];
-        //this.component = "Transform";
-        //this.property = "scale";
-        this.values = [new Color(0, 100, 20, 1), new Color(0, 100, 70, 1), new Color(0, 100, 20, 1)];
-        this.component = "Shape";
-        this.property = "color";
-        this.loop = true;
-    }
+/*
+* Applies force fields to to subjects.
+*/
+class ForceFieldSystem {
 
     // Loop update function.
-    update(delta, entities, camera) {
-        Entity.iterate(entities, ["Animation"], (entity) => {
-            if (this.playing) {
-                this.elapsed += delta;
-                var nextKeyframe = this.keyframe >= this.keyframes.length - 1 ? 0 : this.keyframe + 1;
-                if (this.elapsed < this.keyframes[nextKeyframe]) {
-                    var perc = (this.elapsed - this.keyframes[this.keyframe]) / (this.keyframes[nextKeyframe] - this.keyframes[this.keyframe]);
-                    var comp = Entity.getComponent(entity, this.component);
-                    var e = Easing.EaseInOutQuad(perc);
-
-                    if (comp[this.property] instanceof Vector)
-                        comp[this.property] = Easing.VectorLerp(this.values[this.keyframe], this.values[nextKeyframe], e);
-                    else if (comp[this.property] instanceof Color)
-                        comp[this.property] = Easing.ColorLerp(this.values[this.keyframe], this.values[nextKeyframe], e);
-                    else
-                        comp[this.property] = Easing.Lerp(this.values[this.keyframe], this.values[nextKeyframe], e);
-
+    update(delta, entities) {
+        Entity.iterate(entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
+            var subject = Entity.getComponent(entity, "ForceFieldSubject");
+            var subjectTransform = Entity.getComponent(entity, "Transform");
+            var subjectMotion = Entity.getComponent(entity, "Motion");
+            // TODO: why is this zero? Why not entity accel?
+            var totalAcceleration = Vector.Zero;
+            Entity.iterate(entities, ["ForceField", "Transform"], (fieldEntity) => {
+                var field = Entity.getComponent(fieldEntity, "ForceField");
+                if (subject.fieldIds.includes(fieldEntity.id) && field.enabled) {
+                    var fieldTransform = Entity.getComponent(fieldEntity, "Transform");
+                    var vector = Vector.Substract(Vector.Copy(fieldTransform.position), subjectTransform.position);
+                    // TODO: 1.5 Magic number?
+                    var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
+                    Vector.Add(totalAcceleration, Vector.Multiply(vector, new Vector(force, force)));
+                    if (field.destructive) {
+                        if (Math.pow(subjectTransform.position.x - fieldTransform.position.x, 2) + Math.pow(subjectTransform.position.y - fieldTransform.position.y, 2) < Math.pow(field.radius, 2)) {
+                            if (Entity.hasComponents(entity, ["Expiration"]))
+                                Entity.getComponent(entity, "Expiration").duration = 0;
+                            else
+                                Entity.addComponent(entity, new ExpirationComponent(0));
+                        }
+                    }
                 }
-                else {
-                    this.keyframe = nextKeyframe;
-                    if (this.keyframe == this.keyframes.length - 1) {
-                        this.keyframe = 0;
-                        this.elapsed = 0;
-                        if (!this.loop)
-                            this.playing = false;
+            });
+            subjectMotion.acceleration = totalAcceleration;
+        });
+    }
+}
+
+/*
+* Creates particles from emitters.
+*/
+class ParticleEmissionSystem {
+
+    // Loop update function.
+    update(delta, entities) {
+        var foregroundParticles = [];
+        var backgroundParticles = [];
+        Entity.iterate(entities, ["ParticleEmitter", "Transform"], (entity) => {
+            var emitter = Entity.getComponent(entity, "ParticleEmitter");
+            var emitterTransform = Entity.getComponent(entity, "Transform");
+            if (emitter.enabled) {
+                var particlesToEmit = 0;
+                emitter.emissionTimer += delta;
+                var emissionRateInv = 1 / emitter.emissionRate
+                if (emitter.emissionTimer > emissionRateInv) {
+                    particlesToEmit = Math.round(emitter.emissionTimer / emissionRateInv);
+                    emitter.emissionTimer = emitter.emissionTimer % emissionRateInv;
+                }
+                for (var i = 0; i < particlesToEmit; i++) {
+                    var angle = Vector.Angle(emitter.particleVelocity) + emitter.spread - Random.Float(0, emitter.spread * 2);
+                    var segment = Vector.FromAngleAndMagnitude(Vector.Angle(emitter.particleVelocity) + Math.PI / 2, emitter.size);
+                    var randomSegment = Vector.FromAngleAndMagnitude(Vector.Angle(emitter.particleVelocity) - Math.PI / 2, Random.Float(0, emitter.size * 2));
+                    Vector.Add(segment, randomSegment);
+                    Vector.Add(segment, emitterTransform.position);
+                    var position = segment;
+                    var velocity = Vector.FromAngleAndMagnitude(angle, Random.Float(Vector.Magnitude(emitter.particleVelocity), Vector.Magnitude(emitter.particleVelocity) * emitter.velocityRandomness));
+                    var life = Random.Int(emitter.particleLifespan, emitter.particleLifespan * emitter.particleLifespanRandomness);
+                    var size = Random.Int(emitter.particleSize, emitter.particleSize * emitter.particleSizeRandomness);
+
+                    var particle = new Entity();
+                    Entity.addComponent(particle, new TransformComponent(position, new Vector(size, size)));
+                    Entity.addComponent(particle, new MotionComponent(velocity, Number.MAX_SAFE_INTEGER, Vector.Zero));
+                    Entity.addComponent(particle, new ShapeComponent(Color.Copy(emitter.color)));
+                    //Entity.addComponent(particle, new TraceComponent(1, Color.copy(emitter.color)));
+                    Entity.addComponent(particle, new ExpirationComponent(life));
+
+                    var animation = new AnimationComponent();
+                    var colorAnimation = new AnimationSequence();
+                    colorAnimation.keyframes = [0, life];
+                    colorAnimation.values = [Color.Copy(emitter.color), Color.Copy(emitter.colorEnd)];
+                    colorAnimation.component = "Shape";
+                    colorAnimation.property = "color";
+                    colorAnimation.type = "Color";
+                    colorAnimation.easing = "EaseInOutQuad";
+                    animation.sequences.push(colorAnimation);
+                    Entity.addComponent(particle, animation);
+
+                    if (emitter.fieldIds.length > 0)
+                        Entity.addComponent(particle, new ForceFieldSubjectComponent(emitter.fieldIds));
+
+                    if (emitter.foreground)
+                        foregroundParticles.push(particle);
+                    else
+                        backgroundParticles.push(particle);
+                }
+            }
+        });
+        for (var i = 0; i < foregroundParticles.length; i++) {
+            entities.push(foregroundParticles[i]);
+        }
+        for (var i = 0; i < backgroundParticles.length; i++) {
+            entities.unshift(backgroundParticles[i]);
+        }
+    }
+
+}
+
+/*
+* Interpolates between values defined in each AnimationSequence.
+*/
+class AnimationSystem {
+
+    // Loop update function.
+    update(delta, entities) {
+        Entity.iterate(entities, ["Animation"], (entity) => {
+            var animation = Entity.getComponent(entity, "Animation");
+            for (var sequence of animation.sequences) {
+                if (sequence.playing) {
+                    sequence.elapsed += delta;
+                    var nextKeyframe = sequence.keyframe >= sequence.keyframes.length - 1 ? 0 : sequence.keyframe + 1;
+                    if (sequence.elapsed < sequence.keyframes[nextKeyframe]) {
+                        var perc = (sequence.elapsed - sequence.keyframes[sequence.keyframe]) / (sequence.keyframes[nextKeyframe] - sequence.keyframes[sequence.keyframe]);
+                        var comp = Entity.getComponent(entity, sequence.component);
+                        var e = Easing[sequence.easing](perc);
+
+                        if (sequence.type == "Vector")
+                            comp[sequence.property] = Easing.VectorLerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
+                        else if (sequence.type == "Color")
+                            comp[sequence.property] = Easing.ColorLerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
+                        else
+                            comp[sequence.property] = Easing.Lerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
+
+                    }
+                    else {
+                        sequence.keyframe = nextKeyframe;
+                        if (sequence.keyframe == sequence.keyframes.length - 1) {
+                            sequence.keyframe = 0;
+                            sequence.elapsed = 0;
+                            if (!sequence.loop)
+                                sequence.playing = false;
+                        }
                     }
                 }
             }

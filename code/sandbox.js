@@ -38,7 +38,6 @@ class Scene {
         this.expirationSystem = new ExpirationSystem();
         this.particleEmissionSystem = new ParticleEmissionSystem();
         this.forceFieldSystem = new ForceFieldSystem();
-        this.colorMutationSystem = new ColorMutationSystem();
         this.animationSystem = new AnimationSystem();
         this.soundManager = new SoundManager();
         this.input = new Input();
@@ -89,7 +88,6 @@ class Scene {
             this.expirationSystem.update(delta, this.entities);
             this.movementSystem.update(delta, this.entities);
             this.forceFieldSystem.update(delta, this.entities);
-            this.colorMutationSystem.update(delta, this.entities);
             this.traceRendererSystem.update(delta, this.entities);
             this.particleEmissionSystem.update(delta, this.entities);
             this.animationSystem.update(delta, this.entities);
@@ -141,8 +139,8 @@ class Scene {
         ctx.stroke();
 
         // Systems with render logic
-        this.shapeRendererSystem.draw(interp, ctx, this.entities);
         this.traceRendererSystem.draw(interp, ctx, this.entities);
+        this.shapeRendererSystem.draw(interp, ctx, this.entities);
         this.selectionSystem.draw(interp, ctx, this.entities);
 
         // Restore to draw relative to window edges
@@ -176,17 +174,8 @@ resizeCanvas();
 
 scene.soundManager.sequencer.start();
 
-// Animation example
-var animated = new Entity();
-Entity.addComponent(animated, new TransformComponent(Vector.Zero, new Vector(50, 50)));
-Entity.addComponent(animated, new ShapeComponent(new Color(Random.Int(0, 360), 75, 60, 1)));
-Entity.addComponent(animated, new SelectableComponent());
-Entity.addComponent(animated, new AnimationComponent());
-scene.entities.push(animated);
-
-/*
 // Random entities
-for (var i = 0; i < 1; i++) {
+for (var i = 0; i < 50; i++) {
     var entity = new Entity();
     var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
     var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
@@ -199,6 +188,26 @@ for (var i = 0; i < 1; i++) {
     Entity.addComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
     Entity.addComponent(entity, new TraceComponent(2, color));
     Entity.addComponent(entity, new SelectableComponent());
+
+    var animation = new AnimationComponent();
+    var colorAnimation = new AnimationSequence();
+    colorAnimation.keyframes = [0, Random.Int(1000, 2000), Random.Int(3000, 4000)];
+    colorAnimation.values = [Color.Copy(color), Color.Saturation(Color.Copy(color), 0), Color.Copy(color)];
+    colorAnimation.component = "Shape";
+    colorAnimation.property = "color";
+    colorAnimation.type = "Color";
+    colorAnimation.easing = "EaseInOutQuad";
+    animation.sequences.push(colorAnimation);
+    var scaleAnimation = new AnimationSequence();
+    scaleAnimation.keyframes = [0, Random.Int(200, 500), Random.Int(800, 1000), Random.Int(1200, 1500)];
+    scaleAnimation.values = [Vector.Copy(scale), Vector.Multiply(Vector.Copy(scale), new Vector(2, 2)), Vector.Zero, Vector.Copy(scale)];
+    scaleAnimation.component = "Transform";
+    scaleAnimation.property = "scale";
+    scaleAnimation.type = "Vector";
+    scaleAnimation.easing = "EaseInOutQuad";
+    animation.sequences.push(scaleAnimation);
+    Entity.addComponent(entity, animation);
+
     scene.entities.push(entity);
 }
 
@@ -240,7 +249,7 @@ Entity.addComponent(fieldEntity, new SelectableComponent());
 scene.entities.push(fieldEntity);
 
 emitterComponent.fieldIds.push(fieldEntity.id);
-*/
+
 
 function debug(ctx, x, y, baseline = "top", align = "left") {
     var text = scene.camera.toString();
