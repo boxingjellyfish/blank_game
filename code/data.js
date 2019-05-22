@@ -1,4 +1,124 @@
 class Data {
+
+  static get Intro() {
+    return [
+      {
+        "id": Random.UUID(),
+        "components": {
+          "Transform": {
+            "name": "Transform",
+            "position": { "x": -150, "y": 0 },
+            "scale": { "x": 100, "y": 100 },
+            "angle": 0
+          },
+          "Shape": {
+            "name": "Shape",
+            "color": { "h": 0, "s": 80, "l": 50, "a": 1 },
+            "type": "Ellipse"
+          },
+          "Expiration": {
+            "name": "Expiration",
+            "duration": 3000,
+            "elapsed": 0
+          },
+          "Animation": {
+            "name": "Animation",
+            "sequences": [
+              {
+                "keyframes": [0, 1000, 2000, 3000],
+                "values": [{ "h": 0, "s": 80, "l": 50, "a": 0 }, { "h": 0, "s": 80, "l": 50, "a": 1 }, { "h": 0, "s": 80, "l": 50, "a": 1 }, { "h": 0, "s": 80, "l": 50, "a": 0 }],
+                "component": "Shape",
+                "property": "color",
+                "keyframe": 0,
+                "elapsed": 0,
+                "easing": "EaseInOutQuad",
+                "type": "Color",
+                "loop": false,
+                "playing": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": Random.UUID(),
+        "components": {
+          "Transform": {
+            "name": "Transform",
+            "position": { "x": 0, "y": 0 },
+            "scale": { "x": 100, "y": 100 },
+            "angle": 0
+          },
+          "Shape": {
+            "name": "Shape",
+            "color": { "h": 100, "s": 80, "l": 50, "a": 1 },
+            "type": "Rectagle"
+          },
+          "Expiration": {
+            "name": "Expiration",
+            "duration": 3500,
+            "elapsed": 0
+          },
+          "Animation": {
+            "name": "Animation",
+            "sequences": [
+              {
+                "keyframes": [0, 500, 1500, 2500, 3500],
+                "values": [{ "h": 100, "s": 80, "l": 50, "a": 0 }, { "h": 100, "s": 80, "l": 50, "a": 0 }, { "h": 100, "s": 80, "l": 50, "a": 1 }, { "h": 100, "s": 80, "l": 50, "a": 1 }, { "h": 100, "s": 80, "l": 50, "a": 0 }],
+                "component": "Shape",
+                "property": "color",
+                "keyframe": 0,
+                "elapsed": 0,
+                "easing": "EaseInOutQuad",
+                "type": "Color",
+                "loop": false,
+                "playing": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": Random.UUID(),
+        "components": {
+          "Transform": {
+            "name": "Transform",
+            "position": { "x": 150, "y": 0 },
+            "scale": { "x": 100, "y": 100 },
+            "angle": 0
+          },
+          "Shape": {
+            "name": "Shape",
+            "color": { "h": 200, "s": 80, "l": 50, "a": 1 },
+            "type": "Triangle"
+          },
+          "Expiration": {
+            "name": "Expiration",
+            "duration": 4000,
+            "elapsed": 0
+          },
+          "Animation": {
+            "name": "Animation",
+            "sequences": [
+              {
+                "keyframes": [0, 1000, 2000, 3000, 4000],
+                "values": [{ "h": 200, "s": 80, "l": 50, "a": 0 }, { "h": 200, "s": 80, "l": 50, "a": 0 }, { "h": 200, "s": 80, "l": 50, "a": 1 }, { "h": 200, "s": 80, "l": 50, "a": 1 }, { "h": 200, "s": 80, "l": 50, "a": 0 }],
+                "component": "Shape",
+                "property": "color",
+                "keyframe": 0,
+                "elapsed": 0,
+                "easing": "EaseInOutQuad",
+                "type": "Color",
+                "loop": false,
+                "playing": true
+              }
+            ]
+          }
+        }
+      }
+    ];
+  }
+
   static get ballWallCollision() {
     return {
       "id": Random.UUID(),

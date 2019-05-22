@@ -29,7 +29,6 @@ class Scene {
         this.width = 5000;
         this.height = 2400;
         this.entities = [];
-        this.entityToFollow = null;
         this.movementSystem = new MovementSystem(this.width, this.height);
         this.camera = new Camera(canvas.width, canvas.height);
         this.shapeRendererSystem = new ShapeRendererSystem();
@@ -75,6 +74,24 @@ class Scene {
         this.keyHandler.keyStarted("Space")
         if (this.keyHandler.keyEnded("Space")) {
             this.runUpdate = !this.runUpdate;
+            if (this.runUpdate)
+                this.soundManager.sequencer.start();
+            else
+                this.soundManager.sequencer.stop();
+        }
+
+        // Reload Demo 1
+        this.keyHandler.keyStarted("Digit1");
+        if (this.keyHandler.keyEnded("Digit1")) {
+            this.entities.length = 0;
+            this.demo1();
+        }
+
+        // Reload Demo 2
+        this.keyHandler.keyStarted("Digit2");
+        if (this.keyHandler.keyEnded("Digit2")) {
+            this.entities.length = 0;
+            this.demo2();
         }
 
         // Allow selection even on paused game
@@ -146,17 +163,113 @@ class Scene {
         // Restore to draw relative to window edges
         ctx.restore();
 
-        // FPS
+        // Debug
+        this.debug(15, 15);
+
+        Input.Instance.draw(interp, ctx, this.entities);
+
+    }
+
+    debug(x, y, baseline = "top", align = "left") {
         ctx.fillStyle = Color.Style(Color.White50);
         ctx.font = "12px monospace";
         ctx.textBaseline = "top";
         ctx.textAlign = "right";
         ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 15, 15);
 
-        debug(ctx, 15, 15);
+        var text = this.camera.toString();
+        text += "\n" + "Entities count:   " + this.entities.length;
+        ctx.fillStyle = Color.Style(Color.White50);
+        ctx.font = "12px monospace";
+        ctx.textBaseline = baseline;
+        ctx.textAlign = align;
+        var lines = text.split("\n");
+        for (var i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], x, y);
+            y += 15;
+        }
+    }
 
-        Input.Instance.draw(interp, ctx, this.entities);
+    demo1() {
+        // Random entities
+        for (var i = 0; i < 50; i++) {
+            var entity = new Entity();
+            var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
+            var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
+            Entity.addComponent(entity, new TransformComponent(position, scale));
+            var velocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
+            var maxVelocity = Random.Float(0.05, 1.5);
+            var acceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
+            Entity.addComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
+            var color = new Color(Random.Int(0, 360), 75, 60, 1);
+            Entity.addComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
+            Entity.addComponent(entity, new TraceComponent(2, color));
+            Entity.addComponent(entity, new SelectableComponent());
 
+            var animation = new AnimationComponent();
+            var colorAnimation = new AnimationSequence();
+            colorAnimation.keyframes = [0, Random.Int(1000, 2000), Random.Int(3000, 4000)];
+            colorAnimation.values = [Color.Copy(color), Color.Saturation(Color.Copy(color), 0), Color.Copy(color)];
+            colorAnimation.component = "Shape";
+            colorAnimation.property = "color";
+            colorAnimation.type = "Color";
+            colorAnimation.easing = "EaseInOutQuad";
+            animation.sequences.push(colorAnimation);
+            var scaleAnimation = new AnimationSequence();
+            scaleAnimation.keyframes = [0, Random.Int(200, 500), Random.Int(800, 1000), Random.Int(1200, 1500)];
+            scaleAnimation.values = [Vector.Copy(scale), Vector.Multiply(Vector.Copy(scale), new Vector(2, 2)), Vector.Zero, Vector.Copy(scale)];
+            scaleAnimation.component = "Transform";
+            scaleAnimation.property = "scale";
+            scaleAnimation.type = "Vector";
+            scaleAnimation.easing = "EaseInOutQuad";
+            animation.sequences.push(scaleAnimation);
+            Entity.addComponent(entity, animation);
+
+            scene.entities.push(entity);
+        }
+
+        // Emitter 
+        var emitterEntity = new Entity();
+        var emitterPosition = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
+        Entity.addComponent(emitterEntity, new TransformComponent(emitterPosition));
+        var emitterComponent = new ParticleEmitterComponent();
+        emitterComponent.particleVelocity = new Vector(0.05, 0.05);
+        emitterComponent.velocityRandomness = 1.5;
+        emitterComponent.spread = Math.PI * 2;
+        emitterComponent.size = 1;
+        emitterComponent.color = new Color(100, 100, 90, 1);
+        emitterComponent.colorEnd = new Color(100, 100, 0, 0);
+        emitterComponent.particleSize = 2;
+        emitterComponent.particleSizeRandomness = 2;
+        emitterComponent.emissionRate = 0.05;
+        emitterComponent.particleLifespan = 3000;
+        emitterComponent.particleLifespanRandomness = 1.5;
+        emitterComponent.foreground = false;
+        Entity.addComponent(emitterEntity, emitterComponent);
+        var emitterVelocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
+        var emitterMaxVelocity = Random.Float(0.05, 0.5);
+        var emitterAcceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
+        Entity.addComponent(emitterEntity, new MotionComponent(emitterVelocity, emitterMaxVelocity, emitterAcceleration));
+        Entity.addComponent(emitterEntity, new SelectableComponent());
+        scene.entities.push(emitterEntity);
+
+        var fieldEntity = new Entity();
+        Entity.addComponent(fieldEntity, new TransformComponent(new Vector(emitterPosition.x, emitterPosition.y - 100)));
+        var fieldComponent = new ForceFieldComponent();
+        fieldComponent.mass = 3;
+        fieldComponent.destructive = true;
+        fieldComponent.radius = 50;
+        fieldComponent.enabled = true;
+        Entity.addComponent(fieldEntity, fieldComponent);
+        Entity.addComponent(fieldEntity, new MotionComponent(Vector.Copy(emitterVelocity), emitterMaxVelocity, Vector.Copy(emitterAcceleration)));
+        Entity.addComponent(fieldEntity, new SelectableComponent());
+        scene.entities.push(fieldEntity);
+
+        emitterComponent.fieldIds.push(fieldEntity.id);
+    }
+
+    demo2() {
+        this.entities = Data.Intro;
     }
 }
 
@@ -169,98 +282,9 @@ function draw(interp) {
 }
 
 var scene = new Scene();
-var loop = new Loop().setUpdate(update).setDraw(draw).start();
 resizeCanvas();
+var loop = new Loop().setUpdate(update).setDraw(draw).start();
 
 scene.soundManager.sequencer.start();
 
-// Random entities
-for (var i = 0; i < 50; i++) {
-    var entity = new Entity();
-    var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
-    var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
-    Entity.addComponent(entity, new TransformComponent(position, scale));
-    var velocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
-    var maxVelocity = Random.Float(0.05, 1.5);
-    var acceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
-    Entity.addComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
-    var color = new Color(Random.Int(0, 360), 75, 60, 1);
-    Entity.addComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
-    Entity.addComponent(entity, new TraceComponent(2, color));
-    Entity.addComponent(entity, new SelectableComponent());
-
-    var animation = new AnimationComponent();
-    var colorAnimation = new AnimationSequence();
-    colorAnimation.keyframes = [0, Random.Int(1000, 2000), Random.Int(3000, 4000)];
-    colorAnimation.values = [Color.Copy(color), Color.Saturation(Color.Copy(color), 0), Color.Copy(color)];
-    colorAnimation.component = "Shape";
-    colorAnimation.property = "color";
-    colorAnimation.type = "Color";
-    colorAnimation.easing = "EaseInOutQuad";
-    animation.sequences.push(colorAnimation);
-    var scaleAnimation = new AnimationSequence();
-    scaleAnimation.keyframes = [0, Random.Int(200, 500), Random.Int(800, 1000), Random.Int(1200, 1500)];
-    scaleAnimation.values = [Vector.Copy(scale), Vector.Multiply(Vector.Copy(scale), new Vector(2, 2)), Vector.Zero, Vector.Copy(scale)];
-    scaleAnimation.component = "Transform";
-    scaleAnimation.property = "scale";
-    scaleAnimation.type = "Vector";
-    scaleAnimation.easing = "EaseInOutQuad";
-    animation.sequences.push(scaleAnimation);
-    Entity.addComponent(entity, animation);
-
-    scene.entities.push(entity);
-}
-
-// Emitter 
-var emitterEntity = new Entity();
-var emitterPosition = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
-Entity.addComponent(emitterEntity, new TransformComponent(emitterPosition));
-var emitterComponent = new ParticleEmitterComponent();
-emitterComponent.particleVelocity = new Vector(0.05, 0.05);
-emitterComponent.velocityRandomness = 1.5;
-emitterComponent.spread = Math.PI * 2;
-emitterComponent.size = 1;
-emitterComponent.color = new Color(100, 100, 90, 1);
-emitterComponent.colorEnd = new Color(100, 100, 0, 0);
-emitterComponent.particleSize = 2;
-emitterComponent.particleSizeRandomness = 2;
-emitterComponent.emissionRate = 0.05;
-emitterComponent.particleLifespan = 3000;
-emitterComponent.particleLifespanRandomness = 1.5;
-emitterComponent.foreground = false;
-Entity.addComponent(emitterEntity, emitterComponent);
-var emitterVelocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
-var emitterMaxVelocity = Random.Float(0.05, 0.5);
-var emitterAcceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
-Entity.addComponent(emitterEntity, new MotionComponent(emitterVelocity, emitterMaxVelocity, emitterAcceleration));
-Entity.addComponent(emitterEntity, new SelectableComponent());
-scene.entities.push(emitterEntity);
-
-var fieldEntity = new Entity();
-Entity.addComponent(fieldEntity, new TransformComponent(new Vector(emitterPosition.x, emitterPosition.y - 100)));
-var fieldComponent = new ForceFieldComponent();
-fieldComponent.mass = 3;
-fieldComponent.destructive = true;
-fieldComponent.radius = 50;
-fieldComponent.enabled = true;
-Entity.addComponent(fieldEntity, fieldComponent);
-Entity.addComponent(fieldEntity, new MotionComponent(Vector.Copy(emitterVelocity), emitterMaxVelocity, Vector.Copy(emitterAcceleration)));
-Entity.addComponent(fieldEntity, new SelectableComponent());
-scene.entities.push(fieldEntity);
-
-emitterComponent.fieldIds.push(fieldEntity.id);
-
-
-function debug(ctx, x, y, baseline = "top", align = "left") {
-    var text = scene.camera.toString();
-    text += "\n" + "Entities count:   " + scene.entities.length;
-    ctx.fillStyle = Color.Style(Color.White50);
-    ctx.font = "12px monospace";
-    ctx.textBaseline = baseline;
-    ctx.textAlign = align;
-    var lines = text.split("\n");
-    for (var i = 0; i < lines.length; i++) {
-        ctx.fillText(lines[i], x, y);
-        y += 15;
-    }
-}
+scene.demo1();
