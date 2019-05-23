@@ -109,6 +109,8 @@ class ShapeComponent {
     constructor(color, type = ShapeComponent.Rectangle) {
         this.name = "Shape";
         this.color = color;
+        this.outlineColor = null;
+        this.outlineWidth = null;
         this.type = type;
     }
 
@@ -228,6 +230,7 @@ class AnimationSequence {
         this.keyframes = [];
         this.values = [];
         this.component = "";
+        this.path = null;
         this.property = "";
         this.keyframe = 0;
         this.elapsed = 0;

@@ -12,8 +12,10 @@ class Data {
             "angle": 0
           },
           "Shape": {
-            "name": "Shape",
-            "color": { "h": 0, "s": 80, "l": 50, "a": 1 },
+            "name": "Shape",//195, 70%, 22
+            "color": { "h": 195, "s": 70, "l": 22, "a": 0 },
+            "outlineColor": { "h": 195, "s": 70, "l": 0, "a": 0 },
+            "outlineWidth": 5,
             "type": "Ellipse"
           },
           "Expiration": {
@@ -26,13 +28,27 @@ class Data {
             "sequences": [
               {
                 "keyframes": [0, 1000, 2000, 3000],
-                "values": [{ "h": 0, "s": 80, "l": 50, "a": 0 }, { "h": 0, "s": 80, "l": 50, "a": 1 }, { "h": 0, "s": 80, "l": 50, "a": 1 }, { "h": 0, "s": 80, "l": 50, "a": 0 }],
+                "values": [0, 1, 1, 0],
                 "component": "Shape",
-                "property": "color",
+                "path": "color",
+                "property": "a",
                 "keyframe": 0,
                 "elapsed": 0,
                 "easing": "EaseInOutQuad",
-                "type": "Color",
+                "type": "Number",
+                "loop": false,
+                "playing": true
+              },
+              {
+                "keyframes": [0, 1000, 2000, 3000],
+                "values": [0, 1, 1, 0],
+                "component": "Shape",
+                "path": "outlineColor",
+                "property": "a",
+                "keyframe": 0,
+                "elapsed": 0,
+                "easing": "EaseInOutQuad",
+                "type": "Number",
                 "loop": false,
                 "playing": true
               }
@@ -50,9 +66,11 @@ class Data {
             "angle": 0
           },
           "Shape": {
-            "name": "Shape",
-            "color": { "h": 100, "s": 80, "l": 50, "a": 1 },
-            "type": "Rectagle"
+            "name": "Shape",//162, 70%, 34
+            "color": { "h": 162, "s": 70, "l": 34, "a": 0 },
+            "outlineColor": { "h": 162, "s": 70, "l": 0, "a": 0 },
+            "outlineWidth": 5,
+            "type": "Triangle"
           },
           "Expiration": {
             "name": "Expiration",
@@ -64,13 +82,27 @@ class Data {
             "sequences": [
               {
                 "keyframes": [0, 500, 1500, 2500, 3500],
-                "values": [{ "h": 100, "s": 80, "l": 50, "a": 0 }, { "h": 100, "s": 80, "l": 50, "a": 0 }, { "h": 100, "s": 80, "l": 50, "a": 1 }, { "h": 100, "s": 80, "l": 50, "a": 1 }, { "h": 100, "s": 80, "l": 50, "a": 0 }],
+                "values": [0, 0, 1, 1, 0],
                 "component": "Shape",
-                "property": "color",
+                "path": "color",
+                "property": "a",
                 "keyframe": 0,
                 "elapsed": 0,
                 "easing": "EaseInOutQuad",
-                "type": "Color",
+                "type": "Number",
+                "loop": false,
+                "playing": true
+              },
+              {
+                "keyframes": [0, 500, 1500, 2500, 3500],
+                "values": [0, 0, 1, 1, 0],
+                "component": "Shape",
+                "path": "outlineColor",
+                "property": "a",
+                "keyframe": 0,
+                "elapsed": 0,
+                "easing": "EaseInOutQuad",
+                "type": "Number",
                 "loop": false,
                 "playing": true
               }
@@ -88,9 +120,11 @@ class Data {
             "angle": 0
           },
           "Shape": {
-            "name": "Shape",
-            "color": { "h": 200, "s": 80, "l": 50, "a": 1 },
-            "type": "Triangle"
+            "name": "Shape",//133, 47%, 68
+            "color": { "h": 133, "s": 47, "l": 68, "a": 0 },
+            "outlineColor": { "h": 133, "s": 47, "l": 0, "a": 0 },
+            "outlineWidth": 5,
+            "type": "Rectagle"
           },
           "Expiration": {
             "name": "Expiration",
@@ -102,13 +136,27 @@ class Data {
             "sequences": [
               {
                 "keyframes": [0, 1000, 2000, 3000, 4000],
-                "values": [{ "h": 200, "s": 80, "l": 50, "a": 0 }, { "h": 200, "s": 80, "l": 50, "a": 0 }, { "h": 200, "s": 80, "l": 50, "a": 1 }, { "h": 200, "s": 80, "l": 50, "a": 1 }, { "h": 200, "s": 80, "l": 50, "a": 0 }],
+                "values": [0, 0, 1, 1, 0],
                 "component": "Shape",
-                "property": "color",
+                "path": "color",
+                "property": "a",
                 "keyframe": 0,
                 "elapsed": 0,
                 "easing": "EaseInOutQuad",
-                "type": "Color",
+                "type": "Number",
+                "loop": false,
+                "playing": true
+              },
+              {
+                "keyframes": [0, 1000, 2000, 3000, 4000],
+                "values": [0, 0, 1, 1, 0],
+                "component": "Shape",
+                "path": "outlineColor",
+                "property": "a",
+                "keyframe": 0,
+                "elapsed": 0,
+                "easing": "EaseInOutQuad",
+                "type": "Number",
                 "loop": false,
                 "playing": true
               }

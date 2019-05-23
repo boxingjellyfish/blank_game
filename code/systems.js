@@ -130,11 +130,21 @@ class ShapeRendererSystem {
         Entity.iterate(entities, ["Transform", "Shape"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
             var shape = Entity.getComponent(entity, "Shape");
-            ctx.fillStyle = Color.Style(shape.color);
+            if (shape.color) {
+                ctx.fillStyle = Color.Style(shape.color);
+            }
+            if (shape.outlineColor && shape.outlineWidth) {
+                ctx.strokeStyle = Color.Style(shape.outlineColor);
+                ctx.lineWidth = shape.outlineWidth;
+            }
             if (shape.type == ShapeComponent.Ellipse) {
                 ctx.beginPath();
                 ctx.ellipse(Math.round(transform.position.x), Math.round(transform.position.y), Math.round(transform.scale.x / 2), Math.round(transform.scale.y / 2), 0, 0, 2 * Math.PI);
-                ctx.fill();
+
+                if (shape.outlineColor && shape.outlineWidth)
+                    ctx.stroke();
+                if (shape.color)
+                    ctx.fill();
             }
             else if (shape.type == ShapeComponent.Triangle) {
                 ctx.beginPath();
@@ -142,10 +152,18 @@ class ShapeRendererSystem {
                 ctx.lineTo(Math.round(transform.position.x), Math.round(transform.position.y + transform.scale.y / 2));
                 ctx.lineTo(Math.round(transform.position.x + transform.scale.x / 2), Math.round(transform.position.y - transform.scale.y / 2));
                 ctx.closePath();
-                ctx.fill();
+                if (shape.outlineColor && shape.outlineWidth)
+                    ctx.stroke();
+                if (shape.color)
+                    ctx.fill();
+
             }
             else {
-                ctx.fillRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
+                if (shape.outlineColor && shape.outlineWidth)
+                    ctx.strokeRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
+                if (shape.color)
+                    ctx.fillRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
+
             }
         });
     }
@@ -364,13 +382,14 @@ class AnimationSystem {
                         var perc = (sequence.elapsed - sequence.keyframes[sequence.keyframe]) / (sequence.keyframes[nextKeyframe] - sequence.keyframes[sequence.keyframe]);
                         var comp = Entity.getComponent(entity, sequence.component);
                         var e = Easing[sequence.easing](perc);
-
+                        var obj = sequence.path != null ? this.getNestedObject(comp, sequence.path.split(".")) : comp;
+                        
                         if (sequence.type == "Vector")
-                            comp[sequence.property] = Easing.VectorLerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
+                            obj[sequence.property] = Easing.VectorLerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
                         else if (sequence.type == "Color")
-                            comp[sequence.property] = Easing.ColorLerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
+                            obj[sequence.property] = Easing.ColorLerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
                         else
-                            comp[sequence.property] = Easing.Lerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
+                            obj[sequence.property] = Easing.Lerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
 
                     }
                     else {
@@ -385,5 +404,9 @@ class AnimationSystem {
                 }
             }
         });
+    }
+
+    getNestedObject(nestedObj, pathArr) {
+        return pathArr.reduce((obj, key) => (obj && obj[key] !== 'undefined') ? obj[key] : undefined, nestedObj);
     }
 }

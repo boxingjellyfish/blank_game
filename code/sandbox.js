@@ -42,6 +42,7 @@ class Scene {
         this.input = new Input();
         this.keyHandler = new KeyHandler();
         this.runUpdate = true;
+        this.showDebug = false;
     }
 
     // Loop update function.
@@ -74,10 +75,16 @@ class Scene {
         this.keyHandler.keyStarted("Space")
         if (this.keyHandler.keyEnded("Space")) {
             this.runUpdate = !this.runUpdate;
-            if (this.runUpdate)
-                this.soundManager.sequencer.start();
-            else
-                this.soundManager.sequencer.stop();
+            // if (this.runUpdate)
+            //     this.soundManager.sequencer.start();
+            // else
+            //     this.soundManager.sequencer.stop();
+        }
+
+        // Reload Demo 1
+        this.keyHandler.keyStarted("KeyQ");
+        if (this.keyHandler.keyEnded("KeyQ")) {
+            this.showDebug = !this.showDebug;
         }
 
         // Reload Demo 1
@@ -128,32 +135,34 @@ class Scene {
         // Scroll camera center
         ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
 
-        // Reference grid
-        var axisStyle = Color.Style(new Color(0, 100, 50, 0.5));
-        var guideStyle = Color.Style(new Color(0, 0, 100, 0.2));
-        for (var i = this.width / -2; i < this.width / 2; i += 100) {
-            ctx.beginPath();
-            ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
-            ctx.lineWidth = 1;
-            ctx.moveTo(i, this.height / -2);
-            ctx.lineTo(i, this.height / 2);
-            ctx.stroke();
-        }
-        for (var i = this.height / -2; i < this.height / 2; i += 100) {
-            ctx.beginPath();
-            ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
-            ctx.lineWidth = 1;
-            ctx.moveTo(this.width / -2, i);
-            ctx.lineTo(this.width / 2, i);
-            ctx.stroke();
-        }
+        if (this.showDebug) {
+            // Reference grid
+            var axisStyle = Color.Style(new Color(0, 100, 50, 0.5));
+            var guideStyle = Color.Style(new Color(0, 0, 100, 0.2));
+            for (var i = this.width / -2; i < this.width / 2; i += 100) {
+                ctx.beginPath();
+                ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
+                ctx.lineWidth = 1;
+                ctx.moveTo(i, this.height / -2);
+                ctx.lineTo(i, this.height / 2);
+                ctx.stroke();
+            }
+            for (var i = this.height / -2; i < this.height / 2; i += 100) {
+                ctx.beginPath();
+                ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
+                ctx.lineWidth = 1;
+                ctx.moveTo(this.width / -2, i);
+                ctx.lineTo(this.width / 2, i);
+                ctx.stroke();
+            }
 
-        // World edges
-        ctx.beginPath();
-        ctx.strokeStyle = Color.Style(Color.White);
-        ctx.lineWidth = 4;
-        ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
-        ctx.stroke();
+            // World edges
+            ctx.beginPath();
+            ctx.strokeStyle = Color.Style(Color.White);
+            ctx.lineWidth = 4;
+            ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
+            ctx.stroke();
+        }
 
         // Systems with render logic
         this.traceRendererSystem.draw(interp, ctx, this.entities);
@@ -171,28 +180,30 @@ class Scene {
     }
 
     debug(x, y, baseline = "top", align = "left") {
-        ctx.fillStyle = Color.Style(Color.White50);
-        ctx.font = "12px monospace";
-        ctx.textBaseline = "top";
-        ctx.textAlign = "right";
-        ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 15, 15);
+        if (this.showDebug) {
+            ctx.fillStyle = Color.Style(Color.White50);
+            ctx.font = "12px monospace";
+            ctx.textBaseline = "top";
+            ctx.textAlign = "right";
+            ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 15, 15);
 
-        var text = this.camera.toString();
-        text += "\n" + "Entities count:   " + this.entities.length;
-        ctx.fillStyle = Color.Style(Color.White50);
-        ctx.font = "12px monospace";
-        ctx.textBaseline = baseline;
-        ctx.textAlign = align;
-        var lines = text.split("\n");
-        for (var i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i], x, y);
-            y += 15;
+            var text = this.camera.toString();
+            text += "\n" + "Entities count:   " + this.entities.length;
+            ctx.fillStyle = Color.Style(Color.White50);
+            ctx.font = "12px monospace";
+            ctx.textBaseline = baseline;
+            ctx.textAlign = align;
+            var lines = text.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                ctx.fillText(lines[i], x, y);
+                y += 15;
+            }
         }
     }
 
     demo1() {
         // Random entities
-        for (var i = 0; i < 50; i++) {
+        for (var i = 0; i < 20; i++) {
             var entity = new Entity();
             var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
             var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
@@ -285,6 +296,6 @@ var scene = new Scene();
 resizeCanvas();
 var loop = new Loop().setUpdate(update).setDraw(draw).start();
 
-scene.soundManager.sequencer.start();
+//scene.soundManager.sequencer.start();
 
-scene.demo1();
+scene.demo2();
