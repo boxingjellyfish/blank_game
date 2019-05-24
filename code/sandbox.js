@@ -101,6 +101,13 @@ class Scene {
             this.demo2();
         }
 
+        // Reload Demo 3
+        this.keyHandler.keyStarted("Digit3");
+        if (this.keyHandler.keyEnded("Digit3")) {
+            this.entities.length = 0;
+            this.demo3();
+        }
+
         // Allow selection even on paused game
         this.selectionSystem.update(delta, this.entities, this.camera);
 
@@ -134,7 +141,30 @@ class Scene {
 
         // Scroll camera center
         ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
+        
+        // Debug
+        this.drawDebugBackground();
 
+        // Systems with render logic
+        this.traceRendererSystem.draw(interp, ctx, this.entities);
+        this.shapeRendererSystem.draw(interp, ctx, this.entities);
+        this.selectionSystem.draw(interp, ctx, this.entities);
+
+        // Restore to draw relative to window edges
+        ctx.restore();
+
+        // Draw Fog        
+        this.camera.draw(interp, ctx, this.entities);
+
+        // Debug
+        this.drawDebugForeground();
+
+        // Draw cursor
+        Input.Instance.draw(interp, ctx, this.entities);
+
+    }
+
+    drawDebugBackground() {
         if (this.showDebug) {
             // Reference grid
             var axisStyle = Color.Style(new Color(0, 100, 50, 0.5));
@@ -163,24 +193,12 @@ class Scene {
             ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
             ctx.stroke();
         }
-
-        // Systems with render logic
-        this.traceRendererSystem.draw(interp, ctx, this.entities);
-        this.shapeRendererSystem.draw(interp, ctx, this.entities);
-        this.selectionSystem.draw(interp, ctx, this.entities);
-
-        // Restore to draw relative to window edges
-        ctx.restore();
-
-        // Debug
-        this.debug(15, 15);
-
-        Input.Instance.draw(interp, ctx, this.entities);
-
     }
 
-    debug(x, y, baseline = "top", align = "left") {
+    drawDebugForeground() {
         if (this.showDebug) {
+            var x = 15;
+            var y = 15;
             ctx.fillStyle = Color.Style(Color.White50);
             ctx.font = "12px monospace";
             ctx.textBaseline = "top";
@@ -191,8 +209,8 @@ class Scene {
             text += "\n" + "Entities count:   " + this.entities.length;
             ctx.fillStyle = Color.Style(Color.White50);
             ctx.font = "12px monospace";
-            ctx.textBaseline = baseline;
-            ctx.textAlign = align;
+            ctx.textBaseline = "top";
+            ctx.textAlign = "left";
             var lines = text.split("\n");
             for (var i = 0; i < lines.length; i++) {
                 ctx.fillText(lines[i], x, y);
@@ -281,6 +299,29 @@ class Scene {
 
     demo2() {
         this.entities = Data.Intro;
+    }    
+
+    demo3() {
+        this.entities = [
+            {
+              "id": Random.UUID(),
+              "components": {
+                "Transform": {
+                  "name": "Transform",
+                  "position": { "x": 0, "y": 0 },
+                  "scale": { "x": 800, "y": 800 },
+                  "angle": 0
+                },
+                "Shape": {
+                  "name": "Shape",
+                  "color": { "h": 195, "s": 70, "l": 22, "a": 1 },
+                  "outlineColor": { "h": 195, "s": 70, "l": 0, "a": 1 },
+                  "outlineWidth": 5,
+                  "type": "Rectangle"
+                }
+              }
+            }
+        ];
     }
 }
 

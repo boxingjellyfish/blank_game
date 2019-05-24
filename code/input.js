@@ -78,21 +78,25 @@ class Input {
 
     // Loop render function.
     draw(interp, ctx, entities) {
+        var m = this.mousePosition;
+
+        // Draw Cursor Fill
         var w = 12;
         ctx.fillStyle = Color.Style(new Color(0, 0, 100, 0.8));
         ctx.beginPath();
-        ctx.moveTo(this.mousePosition.x, this.mousePosition.y);
-        ctx.lineTo(this.mousePosition.x + w, this.mousePosition.y + w);
-        ctx.lineTo(this.mousePosition.x, this.mousePosition.y + w * 1.4142);
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x + w, m.y + w);
+        ctx.lineTo(m.x, m.y + w * 1.4142);
         ctx.closePath();
         ctx.fill();
-    
+
+        // Draw cursor edge
         ctx.strokeStyle = Color.Style(Color.Black);
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(this.mousePosition.x, this.mousePosition.y);
-        ctx.lineTo(this.mousePosition.x + w, this.mousePosition.y + w);
-        ctx.lineTo(this.mousePosition.x, this.mousePosition.y + w * 1.4142);
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x + w, m.y + w);
+        ctx.lineTo(m.x, m.y + w * 1.4142);
         ctx.closePath();
         ctx.stroke();
     }

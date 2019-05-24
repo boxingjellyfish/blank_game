@@ -12,7 +12,7 @@ class Data {
             "angle": 0
           },
           "Shape": {
-            "name": "Shape",//195, 70%, 22
+            "name": "Shape",
             "color": { "h": 195, "s": 70, "l": 22, "a": 0 },
             "outlineColor": { "h": 195, "s": 70, "l": 0, "a": 0 },
             "outlineWidth": 5,
@@ -66,7 +66,7 @@ class Data {
             "angle": 0
           },
           "Shape": {
-            "name": "Shape",//162, 70%, 34
+            "name": "Shape",
             "color": { "h": 162, "s": 70, "l": 34, "a": 0 },
             "outlineColor": { "h": 162, "s": 70, "l": 0, "a": 0 },
             "outlineWidth": 5,
@@ -120,7 +120,7 @@ class Data {
             "angle": 0
           },
           "Shape": {
-            "name": "Shape",//133, 47%, 68
+            "name": "Shape",
             "color": { "h": 133, "s": 47, "l": 68, "a": 0 },
             "outlineColor": { "h": 133, "s": 47, "l": 0, "a": 0 },
             "outlineWidth": 5,

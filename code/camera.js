@@ -73,6 +73,17 @@ class Camera {
         }
     }
 
+    // Loop render function.
+    draw(interp, ctx, entities) {
+        // Draw Fog
+        var m = Input.Instance.mousePosition;
+        var grd = ctx.createRadialGradient(m.x, m.y, 300, m.x, m.y, 500);
+        grd.addColorStop(0, Color.Style(new Color(0, 0, 0, 0)));
+        grd.addColorStop(1, Color.Style(new Color(0, 0, 0, 1)));
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     // Returns the world position corresponding to screen position.
     screenToWorldPoint(point) {
         var c = new Vector(this.width / 2, this.height / 2);
