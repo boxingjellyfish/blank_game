@@ -21,7 +21,7 @@ class ExpirationSystem extends System {
             var expiration = Entity.getComponent(entity, "Expiration");
             expiration.elapsed += delta;
             if (expiration.elapsed >= expiration.duration)
-            this.scene.entities.splice(index, 1);
+                this.scene.entities.splice(index, 1);
         });
     }
 }
@@ -143,41 +143,43 @@ class ShapeRendererSystem extends System {
     draw(interp, ctx) {
         Entity.iterate(this.scene.entities, ["Transform", "Shape"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
-            var shape = Entity.getComponent(entity, "Shape");
-            if (shape.color) {
-                ctx.fillStyle = Color.Style(shape.color);
-            }
-            if (shape.outlineColor && shape.outlineWidth) {
-                ctx.strokeStyle = Color.Style(shape.outlineColor);
-                ctx.lineWidth = shape.outlineWidth;
-            }
-            if (shape.type == ShapeComponent.Ellipse) {
-                ctx.beginPath();
-                ctx.ellipse(Math.round(transform.position.x), Math.round(transform.position.y), Math.round(transform.scale.x / 2), Math.round(transform.scale.y / 2), 0, 0, 2 * Math.PI);
+            if (this.scene.camera.isInsideViewport(transform.position, transform.scale)) {
+                var shape = Entity.getComponent(entity, "Shape");
+                if (shape.color) {
+                    ctx.fillStyle = Color.Style(shape.color);
+                }
+                if (shape.outlineColor && shape.outlineWidth) {
+                    ctx.strokeStyle = Color.Style(shape.outlineColor);
+                    ctx.lineWidth = shape.outlineWidth;
+                }
+                if (shape.type == ShapeComponent.Ellipse) {
+                    ctx.beginPath();
+                    ctx.ellipse(Math.round(transform.position.x), Math.round(transform.position.y), Math.round(transform.scale.x / 2), Math.round(transform.scale.y / 2), 0, 0, 2 * Math.PI);
 
-                if (shape.outlineColor && shape.outlineWidth)
-                    ctx.stroke();
-                if (shape.color)
-                    ctx.fill();
-            }
-            else if (shape.type == ShapeComponent.Triangle) {
-                ctx.beginPath();
-                ctx.moveTo(Math.round(transform.position.x - transform.scale.x / 2), Math.round(transform.position.y - transform.scale.y / 2));
-                ctx.lineTo(Math.round(transform.position.x), Math.round(transform.position.y + transform.scale.y / 2));
-                ctx.lineTo(Math.round(transform.position.x + transform.scale.x / 2), Math.round(transform.position.y - transform.scale.y / 2));
-                ctx.closePath();
-                if (shape.outlineColor && shape.outlineWidth)
-                    ctx.stroke();
-                if (shape.color)
-                    ctx.fill();
+                    if (shape.outlineColor && shape.outlineWidth)
+                        ctx.stroke();
+                    if (shape.color)
+                        ctx.fill();
+                }
+                else if (shape.type == ShapeComponent.Triangle) {
+                    ctx.beginPath();
+                    ctx.moveTo(Math.round(transform.position.x - transform.scale.x / 2), Math.round(transform.position.y - transform.scale.y / 2));
+                    ctx.lineTo(Math.round(transform.position.x), Math.round(transform.position.y + transform.scale.y / 2));
+                    ctx.lineTo(Math.round(transform.position.x + transform.scale.x / 2), Math.round(transform.position.y - transform.scale.y / 2));
+                    ctx.closePath();
+                    if (shape.outlineColor && shape.outlineWidth)
+                        ctx.stroke();
+                    if (shape.color)
+                        ctx.fill();
 
-            }
-            else {
-                if (shape.outlineColor && shape.outlineWidth)
-                    ctx.strokeRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
-                if (shape.color)
-                    ctx.fillRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
+                }
+                else {
+                    if (shape.outlineColor && shape.outlineWidth)
+                        ctx.strokeRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
+                    if (shape.color)
+                        ctx.fillRect(Math.round(transform.position.x) - transform.scale.x / 2, Math.round(transform.position.y) - transform.scale.y / 2, transform.scale.x, transform.scale.y);
 
+                }
             }
         });
     }
@@ -264,13 +266,15 @@ class SelectionSystem extends System {
     draw(interp, ctx) {
         Entity.iterate(this.scene.entities, ["Transform", "Selectable"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
-            var selectable = Entity.getComponent(entity, "Selectable");
-            if (selectable.highlight) {
-                ctx.beginPath();
-                ctx.strokeStyle = Color.Style(selectable.highlightColor);
-                ctx.lineWidth = 1;
-                ctx.rect(Math.round(transform.position.x) - transform.scale.x / 2 - 4, Math.round(transform.position.y) - transform.scale.y / 2 - 4, transform.scale.x + 8, transform.scale.y + 8);
-                ctx.stroke();
+            if (this.scene.camera.isInsideViewport(transform.position, transform.scale)) {
+                var selectable = Entity.getComponent(entity, "Selectable");
+                if (selectable.highlight) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = Color.Style(selectable.highlightColor);
+                    ctx.lineWidth = 1;
+                    ctx.rect(Math.round(transform.position.x) - transform.scale.x / 2 - 4, Math.round(transform.position.y) - transform.scale.y / 2 - 4, transform.scale.x + 8, transform.scale.y + 8);
+                    ctx.stroke();
+                }
             }
         });
     }
@@ -354,7 +358,6 @@ class ParticleEmissionSystem extends System {
                     Entity.addComponent(particle, new TransformComponent(position, new Vector(size, size)));
                     Entity.addComponent(particle, new MotionComponent(velocity, Number.MAX_SAFE_INTEGER, Vector.Zero));
                     Entity.addComponent(particle, new ShapeComponent(Color.Copy(emitter.color)));
-                    //Entity.addComponent(particle, new TraceComponent(1, Color.copy(emitter.color)));
                     Entity.addComponent(particle, new ExpirationComponent(life));
 
                     var animation = new AnimationComponent();

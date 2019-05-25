@@ -13,7 +13,7 @@ class Camera {
         this.lastWheelDelta = 0;
         this.maxZoom = 1000;
         this.minZoom = 0.01;
-        this.fogEnabled = true;
+        this.fogEnabled = false;
         this.fogCenter = null;
         this.fogInnerRadius = 300;
         this.fogOuterRadius = 500;
@@ -109,6 +109,16 @@ class Camera {
         var a = Vector.Substract(Vector.Copy(point), this.position);
         var j = Vector.Multiply(Vector.Copy(a), new Vector(this.zoom, this.zoom));
         return Vector.Add(j, new Vector(this.scene.viewportSize.x / 2, this.scene.viewportSize.y / 2));
+    }
+
+    // Returns true if world point is currently inside viewport 
+    isInsideViewport(point, scale) {
+        var screen = this.worldToScreen(point);
+        var margin = Vector.Multiply(Vector.Copy(scale), new Vector(this.zoom, this.zoom));
+        return screen.x + margin.x >= 0
+            && screen.y + margin.y >= 0
+            && screen.x - margin.x <= this.scene.viewportSize.x
+            && screen.y - margin.y <= this.scene.viewportSize.y;
     }
 
     // Returns camera data string representation for debug purposes.

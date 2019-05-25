@@ -256,7 +256,7 @@ class Scene {
     demo1() {
         this.worldSize = new Vector(5000, 2400);
         // Random entities
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 500; i++) {
             var entity = new Entity();
             var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
             var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
@@ -267,7 +267,7 @@ class Scene {
             Entity.addComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
             var color = new Color(Random.Int(0, 360), 75, 60, 1);
             Entity.addComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
-            Entity.addComponent(entity, new TraceComponent(2, color));
+            //Entity.addComponent(entity, new TraceComponent(2, color));
             Entity.addComponent(entity, new SelectableComponent());
 
             var animation = new AnimationComponent();
@@ -341,7 +341,7 @@ class Scene {
 
     // Demo 3 data
     demo3() {
-        this.worldSize = new Vector(1000, 1000);
+        this.worldSize = new Vector(5000, 5000);
         this.entities = [
             {
                 "id": Random.UUID(),
