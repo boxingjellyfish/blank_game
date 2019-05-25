@@ -87,8 +87,8 @@ class Camera {
     draw(interp, ctx) {
         // Draw Fog
         if (this.fogEnabled) {
-            var m = this.fogCenter != null ? this.fogCenter : Input.Instance.mousePosition;
-            var grd = ctx.createRadialGradient(m.x, m.y, this.fogInnerRadius, m.x, m.y, this.fogOuterRadius);
+            var m = this.fogCenter != null ? this.worldToScreen(this.fogCenter) : Input.Instance.mousePosition;
+            var grd = ctx.createRadialGradient(m.x, m.y, this.fogInnerRadius * this.zoom, m.x, m.y, this.fogOuterRadius * this.zoom);
             grd.addColorStop(0, Color.Style(new Color(0, 0, 0, 0)));
             grd.addColorStop(1, Color.Style(new Color(0, 0, 0, 1)));
             ctx.fillStyle = grd;
@@ -97,16 +97,23 @@ class Camera {
     }
 
     // Returns the world position corresponding to screen position.
-    screenToWorldPoint(point) {
+    screenToWorld(point) {
         var c = new Vector(this.scene.viewportSize.x / 2, this.scene.viewportSize.y / 2);
         var x = Vector.Substract(Vector.Copy(point), c);
         var j = Vector.Divide(Vector.Copy(x), new Vector(this.zoom, this.zoom));
         return Vector.Add(Vector.Copy(this.position), j);
     }
 
+    // Returns the screen position corresponding to world position.
+    worldToScreen(point) {
+        var a = Vector.Substract(Vector.Copy(point), this.position);
+        var j = Vector.Multiply(Vector.Copy(a), new Vector(this.zoom, this.zoom));
+        return Vector.Add(j, new Vector(this.scene.viewportSize.x / 2, this.scene.viewportSize.y / 2));
+    }
+
     // Returns camera data string representation for debug purposes.
     toString() {
-        var worldPoint = this.screenToWorldPoint(Input.Instance.mousePosition);
+        var worldPoint = this.screenToWorld(Input.Instance.mousePosition);
         return "Camera Viewport:  " + this.scene.viewportSize.x + "x" + this.scene.viewportSize.y + "\n"
             + "Camera Position:  " + Vector.Print(this.position) + "\n"
             + "Camera Zoom:      " + this.zoom.toFixed(2) + "\n"

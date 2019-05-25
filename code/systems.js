@@ -238,7 +238,7 @@ class SelectionSystem extends System {
     // Loop update function.
     update(delta) {
         if (this.clickHandler.clickStarted(0)) {
-            this.position = this.scene.camera.screenToWorldPoint(Input.Instance.mousePosition);
+            this.position = this.scene.camera.screenToWorld(Input.Instance.mousePosition);
         }
         if (this.clickHandler.clickEnded(0)) {
             var target = Vector.Copy(this.position);
@@ -256,6 +256,7 @@ class SelectionSystem extends System {
                 }
             });
             this.scene.camera.targetPosition = target;
+            this.scene.camera.fogCenter = target;
         }
     }
 
