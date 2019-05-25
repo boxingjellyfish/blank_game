@@ -3,7 +3,7 @@
  * https://github.com/IceCreamYou/MainLoop.js/blob/gh-pages/src/mainloop.js
  */
 class Loop {
-    constructor() {
+    constructor(scene) {
         this.simulationTimestep = 1000 / 60;
         this.frameDelta = 0;
         this.lastFrameTimeMs = 0;
@@ -17,12 +17,9 @@ class Loop {
         this.running = false;
         this.started = false;
         this.panic = false;
-        this.begin = function () { };
-        this.update = function () { };
-        this.draw = function () { };
-        this.end = function () { };
         this.fpsHistogram = [];
         this.frameHandle = null;
+        this.scene = scene;
     }
 
     // Returns Frames per Second.
@@ -34,7 +31,7 @@ class Loop {
     getFPSHistogram() {
         return this.fpsHistogram;
     }
-
+/*
     // Sets the function that runs at the beginning of the main loop.
     setBegin(fun) {
         this.begin = fun || this.begin;
@@ -58,13 +55,14 @@ class Loop {
         this.end = fun || this.end;
         return this;
     }
+*/
 
     // Starts the main loop.
     start() {
         if (!this.started) {
             this.started = true;
             this.frameHandle = requestAnimationFrame((timestamp) => {
-                this.draw(1);
+                this.scene.draw(1);
                 this.running = true;
                 this.lastFrameTimeMs = timestamp;
                 this.lastFpsUpdate = timestamp;
@@ -94,7 +92,7 @@ class Loop {
         if (timestamp < this.lastFrameTimeMs + this.minFrameDelay) { return; }
         this.frameDelta += timestamp - this.lastFrameTimeMs;
         this.lastFrameTimeMs = timestamp;
-        this.begin(timestamp, this.frameDelta);
+        this.scene.begin(timestamp, this.frameDelta);
         if (timestamp > this.lastFpsUpdate + this.fpsUpdateInterval) {
             this.fps = this.fpsAlpha * this.framesSinceLastFpsUpdate * 1000 / (timestamp - this.lastFpsUpdate) + (1 - this.fpsAlpha) * this.fps;
             this.lastFpsUpdate = timestamp;
@@ -103,15 +101,15 @@ class Loop {
         this.framesSinceLastFpsUpdate++;
         this.numUpdateSteps = 0;
         while (this.frameDelta >= this.simulationTimestep) {
-            this.update(this.simulationTimestep);
+            this.scene.update(this.simulationTimestep);
             this.frameDelta -= this.simulationTimestep;
             if (++this.numUpdateSteps >= 240) {
                 this.panic = true;
                 break;
             }
         }
-        this.draw(this.frameDelta / this.simulationTimestep);
-        this.end(this.fps, this.panic);
+        this.scene.draw(this.frameDelta / this.simulationTimestep);
+        this.scene.end(this.fps, this.panic);
         this.panic = false;
         this.fpsHistogram.push(Math.round(this.fps));
         if (this.fpsHistogram.length >= 100) {

@@ -1,17 +1,27 @@
-
+/*
+* Base class for all systems.
+*/
+class System {
+    constructor(scene) {
+        this.scene = scene;
+    }
+}
 
 /*
 * Destroys the entity after Duration milliseconds.
 */
-class ExpirationSystem {
+class ExpirationSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop update function.
-    update(delta, entities) {
-        Entity.iterateBackwards(entities, ["Expiration"], (entity, index) => {
+    update(delta) {
+        Entity.iterateBackwards(this.scene.entities, ["Expiration"], (entity, index) => {
             var expiration = Entity.getComponent(entity, "Expiration");
             expiration.elapsed += delta;
             if (expiration.elapsed >= expiration.duration)
-                entities.splice(index, 1);
+            this.scene.entities.splice(index, 1);
         });
     }
 }
@@ -19,19 +29,14 @@ class ExpirationSystem {
 /*
 * Moves entities according to velocity and acceleration.
 */
-class MovementSystem {
-
-    // Stores world limits.
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.halfWidth = width / 2;
-        this.halfHeight = height / 2;
+class MovementSystem extends System {
+    constructor(scene) {
+        super(scene);
     }
 
     // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["Transform", "Motion"], (entity) => {
+    update(delta) {
+        Entity.iterate(this.scene.entities, ["Transform", "Motion"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
             var motion = Entity.getComponent(entity, "Motion");
             transform.position.x += motion.velocity.x * delta;
@@ -53,14 +58,14 @@ class MovementSystem {
             motion.angularVelocity += motion.angularAcceleration * delta;
 
             if (motion.wraparound) {
-                if (transform.position.x > this.halfWidth)
-                    transform.position.x = -1 * this.halfWidth;
-                else if (transform.position.x < -1 * this.halfWidth)
-                    transform.position.x = this.halfWidth;
-                if (transform.position.y > this.halfHeight)
-                    transform.position.y = -1 * this.halfHeight;
-                else if (transform.position.y < -1 * this.halfHeight)
-                    transform.position.y = this.halfHeight;
+                if (transform.position.x > this.scene.worldSize.x / 2)
+                    transform.position.x = -1 * this.scene.worldSize.x / 2;
+                else if (transform.position.x < -1 * this.scene.worldSize.x / 2)
+                    transform.position.x = this.scene.worldSize.x / 2;
+                if (transform.position.y > this.scene.worldSize.y / 2)
+                    transform.position.y = -1 * this.scene.worldSize.y / 2;
+                else if (transform.position.y < -1 * this.scene.worldSize.y / 2)
+                    transform.position.y = this.scene.worldSize.y / 2;
             }
         });
     }
@@ -69,13 +74,16 @@ class MovementSystem {
 /*
 * Checks all collidable entities adding collisions handlers on the fly.
 */
-class CollisionDetectionSystem {
+class CollisionDetectionSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["Transform", "Motion", "CollisionDetection"], (collider) => {
+    update(delta) {
+        Entity.iterate(this.scene.entities, ["Transform", "Motion", "CollisionDetection"], (collider) => {
             var collisionHandling = null;
-            Entity.iterate(entities, ["Transform", "CollisionDetection"], (collided) => {
+            Entity.iterate(this.scene.entities, ["Transform", "CollisionDetection"], (collided) => {
                 if (collider.id != collided.id) {
                     if (this.areBoundingBoxesIntersecting(collider, collided)) {
                         collisionHandling = new CollisionHandlingComponent();
@@ -107,11 +115,14 @@ class CollisionDetectionSystem {
 /*
 * For testing purposes, reverses direction after collision.
 */
-class CollisionHandlingSystem {
+class CollisionHandlingSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["Motion", "CollisionHandling"], (collider) => {
+    update(delta) {
+        Entity.iterate(this.scene.entities, ["Motion", "CollisionHandling"], (collider) => {
             Entity.removeComponent(collider, "CollisionHandling");
             var motion = Entity.getComponent(collider, "Motion");
             Vector.Multiply(motion.velocity, new Vector(-1, -1));
@@ -123,11 +134,14 @@ class CollisionHandlingSystem {
 /*
 * Simple square renderer.
 */
-class ShapeRendererSystem {
+class ShapeRendererSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop render function.
-    draw(interp, ctx, entities) {
-        Entity.iterate(entities, ["Transform", "Shape"], (entity) => {
+    draw(interp, ctx) {
+        Entity.iterate(this.scene.entities, ["Transform", "Shape"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
             var shape = Entity.getComponent(entity, "Shape");
             if (shape.color) {
@@ -172,11 +186,14 @@ class ShapeRendererSystem {
 /*
 * Renders the last N positions of an entity.
 */
-class TraceRendererSystem {
+class TraceRendererSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["Transform", "Trace"], (entity) => {
+    update(delta) {
+        Entity.iterate(this.scene.entities, ["Transform", "Trace"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
             var trace = Entity.getComponent(entity, "Trace");
             trace.points.push(Vector.Copy(transform.position));
@@ -186,8 +203,8 @@ class TraceRendererSystem {
     }
 
     // Loop render function.
-    draw(interp, ctx, entities) {
-        Entity.iterate(entities, ["Trace"], (entity) => {
+    draw(interp, ctx) {
+        Entity.iterate(this.scene.entities, ["Trace"], (entity) => {
             var trace = Entity.getComponent(entity, "Trace");
             if (trace.points.length > 0) {
                 var pos = trace.points[0];
@@ -211,23 +228,22 @@ class TraceRendererSystem {
 /*
 * Enables an entity to be selected with mouse cursor and be highlighted.
 */
-class SelectionSystem {
-
-    // Handles mouse button click.
-    constructor() {
+class SelectionSystem extends System {
+    constructor(scene) {
+        super(scene);
         this.position = null;
         this.clickHandler = new ClickHandler();
     }
 
     // Loop update function.
-    update(delta, entities, camera) {
+    update(delta) {
         if (this.clickHandler.clickStarted(0)) {
-            this.position = camera.screenToWorldPoint(Input.Instance.mousePosition);
+            this.position = this.scene.camera.screenToWorldPoint(Input.Instance.mousePosition);
         }
         if (this.clickHandler.clickEnded(0)) {
             var target = Vector.Copy(this.position);
             var found = false;
-            Entity.iterate(entities, ["Transform", "Selectable"], (entity) => {
+            Entity.iterate(this.scene.entities, ["Transform", "Selectable"], (entity) => {
                 var transform = Entity.getComponent(entity, "Transform");
                 var selectable = Entity.getComponent(entity, "Selectable");
                 selectable.highlight = false;
@@ -239,13 +255,13 @@ class SelectionSystem {
                     found = true;
                 }
             });
-            camera.targetPosition = target;
+            this.scene.camera.targetPosition = target;
         }
     }
 
     // Loop render function.
-    draw(interp, ctx, entities) {
-        Entity.iterate(entities, ["Transform", "Selectable"], (entity) => {
+    draw(interp, ctx) {
+        Entity.iterate(this.scene.entities, ["Transform", "Selectable"], (entity) => {
             var transform = Entity.getComponent(entity, "Transform");
             var selectable = Entity.getComponent(entity, "Selectable");
             if (selectable.highlight) {
@@ -263,17 +279,20 @@ class SelectionSystem {
 /*
 * Applies force fields to to subjects.
 */
-class ForceFieldSystem {
+class ForceFieldSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
+    update(delta) {
+        Entity.iterate(this.scene.entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
             var subject = Entity.getComponent(entity, "ForceFieldSubject");
             var subjectTransform = Entity.getComponent(entity, "Transform");
             var subjectMotion = Entity.getComponent(entity, "Motion");
             // TODO: why is this zero? Why not entity accel?
             var totalAcceleration = Vector.Zero;
-            Entity.iterate(entities, ["ForceField", "Transform"], (fieldEntity) => {
+            Entity.iterate(this.scene.entities, ["ForceField", "Transform"], (fieldEntity) => {
                 var field = Entity.getComponent(fieldEntity, "ForceField");
                 if (subject.fieldIds.includes(fieldEntity.id) && field.enabled) {
                     var fieldTransform = Entity.getComponent(fieldEntity, "Transform");
@@ -299,13 +318,16 @@ class ForceFieldSystem {
 /*
 * Creates particles from emitters.
 */
-class ParticleEmissionSystem {
+class ParticleEmissionSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop update function.
-    update(delta, entities) {
+    update(delta) {
         var foregroundParticles = [];
         var backgroundParticles = [];
-        Entity.iterate(entities, ["ParticleEmitter", "Transform"], (entity) => {
+        Entity.iterate(this.scene.entities, ["ParticleEmitter", "Transform"], (entity) => {
             var emitter = Entity.getComponent(entity, "ParticleEmitter");
             var emitterTransform = Entity.getComponent(entity, "Transform");
             if (emitter.enabled) {
@@ -356,10 +378,10 @@ class ParticleEmissionSystem {
             }
         });
         for (var i = 0; i < foregroundParticles.length; i++) {
-            entities.push(foregroundParticles[i]);
+            this.scene.entities.push(foregroundParticles[i]);
         }
         for (var i = 0; i < backgroundParticles.length; i++) {
-            entities.unshift(backgroundParticles[i]);
+            this.scene.entities.unshift(backgroundParticles[i]);
         }
     }
 
@@ -368,11 +390,14 @@ class ParticleEmissionSystem {
 /*
 * Interpolates between values defined in each AnimationSequence.
 */
-class AnimationSystem {
+class AnimationSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
 
     // Loop update function.
-    update(delta, entities) {
-        Entity.iterate(entities, ["Animation"], (entity) => {
+    update(delta) {
+        Entity.iterate(this.scene.entities, ["Animation"], (entity) => {
             var animation = Entity.getComponent(entity, "Animation");
             for (var sequence of animation.sequences) {
                 if (sequence.playing) {
@@ -383,7 +408,7 @@ class AnimationSystem {
                         var comp = Entity.getComponent(entity, sequence.component);
                         var e = Easing[sequence.easing](perc);
                         var obj = sequence.path != null ? this.getNestedObject(comp, sequence.path.split(".")) : comp;
-                        
+
                         if (sequence.type == "Vector")
                             obj[sequence.property] = Easing.VectorLerp(sequence.values[sequence.keyframe], sequence.values[nextKeyframe], e);
                         else if (sequence.type == "Color")

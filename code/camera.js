@@ -3,10 +3,9 @@
 */
 class Camera {
 
-    // Camera with viewport Width, Height.
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
+    // Constructor.
+    constructor(scene) {
+        this.scene = scene;
         this.position = Vector.Zero;
         this.targetPosition = Vector.Zero;
         this.zoom = 1;
@@ -14,6 +13,11 @@ class Camera {
         this.lastWheelDelta = 0;
         this.maxZoom = 1000;
         this.minZoom = 0.01;
+        this.fogEnabled = true;
+        this.fogCenter = null;
+        this.fogInnerRadius = 300;
+        this.fogOuterRadius = 500;
+        this.keyHandler = new KeyHandler();
     }
 
     // Loop update function.
@@ -71,22 +75,30 @@ class Camera {
         if (this.targetZoom) {
             this.zoom = Easing.Lerp(this.zoom, this.targetZoom, 0.1);
         }
+
+        // Toggle Fog        
+        this.keyHandler.keyStarted("KeyF");
+        if (this.keyHandler.keyEnded("KeyF")) {
+            this.fogEnabled = !this.fogEnabled;
+        }
     }
 
     // Loop render function.
-    draw(interp, ctx, entities) {
+    draw(interp, ctx) {
         // Draw Fog
-        var m = Input.Instance.mousePosition;
-        var grd = ctx.createRadialGradient(m.x, m.y, 300, m.x, m.y, 500);
-        grd.addColorStop(0, Color.Style(new Color(0, 0, 0, 0)));
-        grd.addColorStop(1, Color.Style(new Color(0, 0, 0, 1)));
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (this.fogEnabled) {
+            var m = this.fogCenter != null ? this.fogCenter : Input.Instance.mousePosition;
+            var grd = ctx.createRadialGradient(m.x, m.y, this.fogInnerRadius, m.x, m.y, this.fogOuterRadius);
+            grd.addColorStop(0, Color.Style(new Color(0, 0, 0, 0)));
+            grd.addColorStop(1, Color.Style(new Color(0, 0, 0, 1)));
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, this.scene.viewportSize.x, this.scene.viewportSize.y);
+        }
     }
 
     // Returns the world position corresponding to screen position.
     screenToWorldPoint(point) {
-        var c = new Vector(this.width / 2, this.height / 2);
+        var c = new Vector(this.scene.viewportSize.x / 2, this.scene.viewportSize.y / 2);
         var x = Vector.Substract(Vector.Copy(point), c);
         var j = Vector.Divide(Vector.Copy(x), new Vector(this.zoom, this.zoom));
         return Vector.Add(Vector.Copy(this.position), j);
@@ -95,7 +107,7 @@ class Camera {
     // Returns camera data string representation for debug purposes.
     toString() {
         var worldPoint = this.screenToWorldPoint(Input.Instance.mousePosition);
-        return "Camera Viewport:  " + this.width + "x" + this.height + "\n"
+        return "Camera Viewport:  " + this.scene.viewportSize.x + "x" + this.scene.viewportSize.y + "\n"
             + "Camera Position:  " + Vector.Print(this.position) + "\n"
             + "Camera Zoom:      " + this.zoom.toFixed(2) + "\n"
             + "Screen Cursor:    " + Vector.Print(Input.Instance.mousePosition) + "\n"

@@ -1,48 +1,69 @@
-var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext("2d");
-
-window.addEventListener("resize", resizeCanvas, false);
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    scene.camera.width = canvas.width;
-    scene.camera.height = canvas.height;
-}
-
-window.addEventListener("visibilitychange", function () {
-    if (loop.isRunning()) {
-        loop.stop();
-        scene.soundManager.sequencer.stop();
-    }
-    else {
-        loop.start();
-        scene.soundManager.sequencer.start();
-    }
-});
-
 /*
 * Holds all data for a scene. Implements game loop functions.
 */
 class Scene {
     constructor() {
-        this.width = 5000;
-        this.height = 2400;
+        // Scene data
         this.entities = [];
-        this.movementSystem = new MovementSystem(this.width, this.height);
-        this.camera = new Camera(canvas.width, canvas.height);
-        this.shapeRendererSystem = new ShapeRendererSystem();
-        this.traceRendererSystem = new TraceRendererSystem();
-        this.selectionSystem = new SelectionSystem();
-        this.expirationSystem = new ExpirationSystem();
-        this.particleEmissionSystem = new ParticleEmissionSystem();
-        this.forceFieldSystem = new ForceFieldSystem();
-        this.animationSystem = new AnimationSystem();
-        this.soundManager = new SoundManager();
-        this.input = new Input();
-        this.keyHandler = new KeyHandler();
         this.runUpdate = true;
         this.showDebug = false;
+        this.worldSize = new Vector(5000, 2400);
+        this.viewportSize = Vector.Zero;
+
+        // Main loop
+        this.loop = new Loop(this);
+
+        // Canvas
+        this.canvas = document.getElementById("canvas");
+        this.ctx = canvas.getContext("2d");
+
+        // Camera        
+        this.camera = new Camera(this);
+
+        // Input
+        this.input = new Input();
+        this.keyHandler = new KeyHandler();
+
+        // Sound
+        this.soundManager = new SoundManager();
+
+        // Systems
+        this.movementSystem = new MovementSystem(this);
+        this.shapeRendererSystem = new ShapeRendererSystem(this);
+        this.traceRendererSystem = new TraceRendererSystem(this);
+        this.selectionSystem = new SelectionSystem(this);
+        this.expirationSystem = new ExpirationSystem(this);
+        this.particleEmissionSystem = new ParticleEmissionSystem(this);
+        this.forceFieldSystem = new ForceFieldSystem(this);
+        this.animationSystem = new AnimationSystem(this);
+
+        // Pause when focus lost
+        window.addEventListener("visibilitychange", () => {
+            this.toggleLoop();
+        });
+
+        // Resize
+        window.addEventListener("resize", () => {
+            this.resize();
+        }, false);
+        this.resize();
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.viewportSize = new Vector(window.innerWidth, window.innerHeight);
+    }
+
+    toggleLoop() {
+        if (this.loop.isRunning()) {
+            this.loop.stop();
+            //this.soundManager.sequencer.stop();
+        }
+        else {
+            this.loop.start();
+            //this.soundManager.sequencer.start();
+        }
     }
 
     // Loop update function.
@@ -109,19 +130,19 @@ class Scene {
         }
 
         // Allow selection even on paused game
-        this.selectionSystem.update(delta, this.entities, this.camera);
+        this.selectionSystem.update(delta);
 
         // Allow camera movement even on paused game
         this.camera.update(delta);
 
         // Systems to update when game is running
         if (this.runUpdate) {
-            this.expirationSystem.update(delta, this.entities);
-            this.movementSystem.update(delta, this.entities);
-            this.forceFieldSystem.update(delta, this.entities);
-            this.traceRendererSystem.update(delta, this.entities);
-            this.particleEmissionSystem.update(delta, this.entities);
-            this.animationSystem.update(delta, this.entities);
+            this.expirationSystem.update(delta);
+            this.movementSystem.update(delta);
+            this.forceFieldSystem.update(delta);
+            this.traceRendererSystem.update(delta);
+            this.particleEmissionSystem.update(delta);
+            this.animationSystem.update(delta);
         }
 
     }
@@ -130,96 +151,110 @@ class Scene {
     draw(interp) {
 
         // Clear canvas and save 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
+        this.ctx.clearRect(0, 0, this.viewportSize.x, this.viewportSize.y);
+        this.ctx.save();
 
         // Zoom camera according to scale
-        ctx.scale(this.camera.zoom, this.camera.zoom);
+        this.ctx.scale(this.camera.zoom, this.camera.zoom);
 
         // Center world in canvas
-        ctx.translate(canvas.width / (2 * this.camera.zoom), canvas.height / (2 * this.camera.zoom));
+        this.ctx.translate(this.viewportSize.x / (2 * this.camera.zoom), this.viewportSize.y / (2 * this.camera.zoom));
 
         // Scroll camera center
-        ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
-        
+        this.ctx.translate(-1 * this.camera.position.x, -1 * this.camera.position.y);
+
         // Debug
         this.drawDebugBackground();
 
         // Systems with render logic
-        this.traceRendererSystem.draw(interp, ctx, this.entities);
-        this.shapeRendererSystem.draw(interp, ctx, this.entities);
-        this.selectionSystem.draw(interp, ctx, this.entities);
+        this.traceRendererSystem.draw(interp, this.ctx);
+        this.shapeRendererSystem.draw(interp, this.ctx);
+        this.selectionSystem.draw(interp, this.ctx);
 
         // Restore to draw relative to window edges
-        ctx.restore();
+        this.ctx.restore();
 
         // Draw Fog        
-        this.camera.draw(interp, ctx, this.entities);
+        this.camera.draw(interp, this.ctx);
 
         // Debug
         this.drawDebugForeground();
 
         // Draw cursor
-        Input.Instance.draw(interp, ctx, this.entities);
+        Input.Instance.draw(interp, this.ctx, this.entities);
 
     }
 
+    // Loop begin function.
+    begin(timestamp, delta) {
+
+    }
+
+    // Loop end function.
+    end(fps, panic) {
+
+    }
+
+    // Draws debug grid in backgorund
     drawDebugBackground() {
         if (this.showDebug) {
             // Reference grid
             var axisStyle = Color.Style(new Color(0, 100, 50, 0.5));
             var guideStyle = Color.Style(new Color(0, 0, 100, 0.2));
-            for (var i = this.width / -2; i < this.width / 2; i += 100) {
-                ctx.beginPath();
-                ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
-                ctx.lineWidth = 1;
-                ctx.moveTo(i, this.height / -2);
-                ctx.lineTo(i, this.height / 2);
-                ctx.stroke();
+            for (var i = this.worldSize.x / -2; i < this.worldSize.x / 2; i += 100) {
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
+                this.ctx.lineWidth = 1;
+                this.ctx.moveTo(i, this.worldSize.y / -2);
+                this.ctx.lineTo(i, this.worldSize.y / 2);
+                this.ctx.stroke();
             }
-            for (var i = this.height / -2; i < this.height / 2; i += 100) {
-                ctx.beginPath();
-                ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
-                ctx.lineWidth = 1;
-                ctx.moveTo(this.width / -2, i);
-                ctx.lineTo(this.width / 2, i);
-                ctx.stroke();
+            for (var i = this.worldSize.y / -2; i < this.worldSize.y / 2; i += 100) {
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = i == 0 ? axisStyle : guideStyle;
+                this.ctx.lineWidth = 1;
+                this.ctx.moveTo(this.worldSize.x / -2, i);
+                this.ctx.lineTo(this.worldSize.x / 2, i);
+                this.ctx.stroke();
             }
 
             // World edges
-            ctx.beginPath();
-            ctx.strokeStyle = Color.Style(Color.White);
-            ctx.lineWidth = 4;
-            ctx.rect(0 - Math.round(this.width / 2), 0 - Math.round(this.height / 2), this.width, this.height);
-            ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.strokeStyle = Color.Style(Color.White);
+            this.ctx.lineWidth = 4;
+            this.ctx.rect(0 - Math.round(this.worldSize.x / 2), 0 - Math.round(this.worldSize.y / 2), this.worldSize.x, this.worldSize.y);
+            this.ctx.stroke();
         }
     }
 
+    // Draws debug data in foreground
     drawDebugForeground() {
         if (this.showDebug) {
             var x = 15;
             var y = 15;
-            ctx.fillStyle = Color.Style(Color.White50);
-            ctx.font = "12px monospace";
-            ctx.textBaseline = "top";
-            ctx.textAlign = "right";
-            ctx.fillText(Math.round(loop.getFPS()) + " FPS", canvas.width - 15, 15);
+            this.ctx.fillStyle = Color.Style(Color.White50);
+            this.ctx.font = "12px monospace";
+            this.ctx.textBaseline = "top";
+            this.ctx.textAlign = "right";
+            this.ctx.fillText(Math.round(this.loop.getFPS()) + " FPS", this.viewportSize.x - 15, 15);
 
             var text = this.camera.toString();
             text += "\n" + "Entities count:   " + this.entities.length;
-            ctx.fillStyle = Color.Style(Color.White50);
-            ctx.font = "12px monospace";
-            ctx.textBaseline = "top";
-            ctx.textAlign = "left";
+            this.ctx.fillStyle = Color.Style(Color.White50);
+            this.ctx.font = "12px monospace";
+            this.ctx.textBaseline = "top";
+            this.ctx.textAlign = "left";
             var lines = text.split("\n");
             for (var i = 0; i < lines.length; i++) {
-                ctx.fillText(lines[i], x, y);
+                this.ctx.fillText(lines[i], x, y);
                 y += 15;
             }
         }
     }
 
+    // Demo 1 data
     demo1() {
+        this.worldSize = new Vector(5000, 2400);
         // Random entities
         for (var i = 0; i < 20; i++) {
             var entity = new Entity();
@@ -238,7 +273,7 @@ class Scene {
             var animation = new AnimationComponent();
             var colorAnimation = new AnimationSequence();
             colorAnimation.keyframes = [0, Random.Int(1000, 2000), Random.Int(3000, 4000)];
-            colorAnimation.values = [Color.Copy(color), Color.Saturation(Color.Copy(color), 0), Color.Copy(color)];
+            colorAnimation.values = [Color.Copy(color), Color.Hue(Color.Copy(color), 0), Color.Copy(color)];
             colorAnimation.component = "Shape";
             colorAnimation.property = "color";
             colorAnimation.type = "Color";
@@ -297,46 +332,39 @@ class Scene {
         emitterComponent.fieldIds.push(fieldEntity.id);
     }
 
+    // Demo 2 data
     demo2() {
+        this.worldSize = new Vector(600, 600);
         this.entities = Data.Intro;
-    }    
+        //this.camera.fogCenter = new Vector(200,200);
+    }
 
+    // Demo 3 data
     demo3() {
+        this.worldSize = new Vector(1000, 1000);
         this.entities = [
             {
-              "id": Random.UUID(),
-              "components": {
-                "Transform": {
-                  "name": "Transform",
-                  "position": { "x": 0, "y": 0 },
-                  "scale": { "x": 800, "y": 800 },
-                  "angle": 0
-                },
-                "Shape": {
-                  "name": "Shape",
-                  "color": { "h": 195, "s": 70, "l": 22, "a": 1 },
-                  "outlineColor": { "h": 195, "s": 70, "l": 0, "a": 1 },
-                  "outlineWidth": 5,
-                  "type": "Rectangle"
+                "id": Random.UUID(),
+                "components": {
+                    "Transform": {
+                        "name": "Transform",
+                        "position": { "x": 0, "y": 0 },
+                        "scale": { "x": 800, "y": 800 },
+                        "angle": 0
+                    },
+                    "Shape": {
+                        "name": "Shape",
+                        "color": { "h": 195, "s": 70, "l": 22, "a": 1 },
+                        "outlineColor": { "h": 195, "s": 70, "l": 0, "a": 1 },
+                        "outlineWidth": 5,
+                        "type": "Rectangle"
+                    }
                 }
-              }
             }
         ];
     }
 }
 
-function update(delta) {
-    scene.update(delta);
-}
-
-function draw(interp) {
-    scene.draw(interp);
-}
-
 var scene = new Scene();
-resizeCanvas();
-var loop = new Loop().setUpdate(update).setDraw(draw).start();
-
-//scene.soundManager.sequencer.start();
-
 scene.demo2();
+scene.toggleLoop();
