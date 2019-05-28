@@ -17,8 +17,8 @@ class ExpirationSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.iterateBackwards(this.scene.entities, ["Expiration"], (entity, index) => {
-            var expiration = Entity.getComponent(entity, "Expiration");
+        Entity.IterateBackwards(this.scene.entities, ["Expiration"], (entity, index) => {
+            var expiration = Entity.GetComponent(entity, "Expiration");
             expiration.elapsed += delta;
             if (expiration.elapsed >= expiration.duration)
                 this.scene.entities.splice(index, 1);
@@ -36,9 +36,9 @@ class MovementSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.iterate(this.scene.entities, ["Transform", "Motion"], (entity) => {
-            var transform = Entity.getComponent(entity, "Transform");
-            var motion = Entity.getComponent(entity, "Motion");
+        Entity.Iterate(this.scene.entities, ["Transform", "Motion"], (entity) => {
+            var transform = Entity.GetComponent(entity, "Transform");
+            var motion = Entity.GetComponent(entity, "Motion");
             transform.position.x += motion.velocity.x * delta;
             transform.position.y += motion.velocity.y * delta;
             transform.angle += motion.angularVelocity * delta;
@@ -49,9 +49,11 @@ class MovementSystem extends System {
 
             if (Vector.Magnitude(velocity) <= motion.maxVelocity) {
                 motion.velocity = velocity;
+                //console.log("accel");
             }
             else {
                 // Damping
+                //console.log(Vector.Magnitude(velocity));
                 Vector.Multiply(motion.velocity, new Vector(0.95, 0.95));
             }
 
@@ -81,9 +83,9 @@ class CollisionDetectionSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.iterate(this.scene.entities, ["Transform", "Motion", "CollisionDetection"], (collider) => {
+        Entity.Iterate(this.scene.entities, ["Transform", "Motion", "CollisionDetection"], (collider) => {
             var collisionHandling = null;
-            Entity.iterate(this.scene.entities, ["Transform", "CollisionDetection"], (collided) => {
+            Entity.Iterate(this.scene.entities, ["Transform", "CollisionDetection"], (collided) => {
                 if (collider.id != collided.id) {
                     if (this.areBoundingBoxesIntersecting(collider, collided)) {
                         collisionHandling = new CollisionHandlingComponent();
@@ -97,10 +99,10 @@ class CollisionDetectionSystem extends System {
 
     // Returns true if entities bounding boxes are overlapping.
     areBoundingBoxesIntersecting(collider, collided) {
-        var colliderPosition = Entity.getComponent(collider, "Transform").position;
-        var collidedPosition = Entity.getComponent(collided, "Transform").position;
-        var colliderBoundingBox = Entity.getComponent(collider, "CollisionDetection").boundingBox;
-        var collidedBoundingBox = Entity.getComponent(collided, "CollisionDetection").boundingBox;
+        var colliderPosition = Entity.GetComponent(collider, "Transform").position;
+        var collidedPosition = Entity.GetComponent(collided, "Transform").position;
+        var colliderBoundingBox = Entity.GetComponent(collider, "CollisionDetection").boundingBox;
+        var collidedBoundingBox = Entity.GetComponent(collided, "CollisionDetection").boundingBox;
         var colliderBoundingBoxStart = Vector.Substract(Vector.Copy(colliderPosition), colliderBoundingBox);
         var colliderBoundingBoxEnd = Vector.Add(Vector.Copy(colliderPosition), colliderBoundingBox);
         var collidedBoundingBoxStart = Vector.Substract(Vector.Copy(collidedPosition), collidedBoundingBox);
@@ -122,9 +124,9 @@ class CollisionHandlingSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.iterate(this.scene.entities, ["Motion", "CollisionHandling"], (collider) => {
-            Entity.removeComponent(collider, "CollisionHandling");
-            var motion = Entity.getComponent(collider, "Motion");
+        Entity.Iterate(this.scene.entities, ["Motion", "CollisionHandling"], (collider) => {
+            Entity.RemoveComponent(collider, "CollisionHandling");
+            var motion = Entity.GetComponent(collider, "Motion");
             Vector.Multiply(motion.velocity, new Vector(-1, -1));
             Vector.Multiply(motion.acceleration, new Vector(-1, -1));
         });
@@ -141,10 +143,10 @@ class ShapeRendererSystem extends System {
 
     // Loop render function.
     draw(interp, ctx) {
-        Entity.iterate(this.scene.entities, ["Transform", "Shape"], (entity) => {
-            var transform = Entity.getComponent(entity, "Transform");
+        Entity.Iterate(this.scene.entities, ["Transform", "Shape"], (entity) => {
+            var transform = Entity.GetComponent(entity, "Transform");
             if (this.scene.camera.isInsideViewport(transform.position, transform.scale)) {
-                var shape = Entity.getComponent(entity, "Shape");
+                var shape = Entity.GetComponent(entity, "Shape");
                 if (shape.color) {
                     ctx.fillStyle = Color.Style(shape.color);
                 }
@@ -195,9 +197,9 @@ class TraceRendererSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.iterate(this.scene.entities, ["Transform", "Trace"], (entity) => {
-            var transform = Entity.getComponent(entity, "Transform");
-            var trace = Entity.getComponent(entity, "Trace");
+        Entity.Iterate(this.scene.entities, ["Transform", "Trace"], (entity) => {
+            var transform = Entity.GetComponent(entity, "Transform");
+            var trace = Entity.GetComponent(entity, "Trace");
             trace.points.push(Vector.Copy(transform.position));
             if (trace.points.length > trace.maxPoints)
                 trace.points.shift();
@@ -206,8 +208,8 @@ class TraceRendererSystem extends System {
 
     // Loop render function.
     draw(interp, ctx) {
-        Entity.iterate(this.scene.entities, ["Trace"], (entity) => {
-            var trace = Entity.getComponent(entity, "Trace");
+        Entity.Iterate(this.scene.entities, ["Trace"], (entity) => {
+            var trace = Entity.GetComponent(entity, "Trace");
             if (trace.points.length > 0) {
                 var pos = trace.points[0];
                 ctx.beginPath();
@@ -228,58 +230,85 @@ class TraceRendererSystem extends System {
 }
 
 /*
-* Enables an entity to be selected with mouse cursor and be highlighted.
+* Enables an entity to be selected with mouse cursor.
 */
 class SelectionSystem extends System {
     constructor(scene) {
         super(scene);
-        this.position = null;
+        this.lastClickPosition = null;
         this.clickHandler = new ClickHandler();
     }
 
     // Loop update function.
     update(delta) {
         if (this.clickHandler.clickStarted(0)) {
-            this.position = this.scene.camera.screenToWorld(Input.Instance.mousePosition);
+            this.lastClickPosition = this.scene.camera.screenToWorld(Input.Instance.mousePosition);
         }
         if (this.clickHandler.clickEnded(0)) {
-            var target = Vector.Copy(this.position);
-            var found = false;
-            Entity.iterate(this.scene.entities, ["Transform", "Selectable"], (entity) => {
-                var transform = Entity.getComponent(entity, "Transform");
-                var selectable = Entity.getComponent(entity, "Selectable");
-                selectable.highlight = false;
-                // TODO: use transform.scale instead of threshold
-                if (!found && Math.abs(transform.position.x - this.position.x) <= selectable.threshold
-                    && Math.abs(transform.position.y - this.position.y) <= selectable.threshold) {
-                    selectable.highlight = true;
-                    target = transform.position;
-                    found = true;
+            var position = Vector.Copy(this.lastClickPosition);
+            Entity.Iterate(this.scene.entities, ["Transform", "Selectable"], (entity) => {
+                //Entity.RemoveComponent(entity, "Selected");
+                var transform = Entity.GetComponent(entity, "Transform");
+                if (Math.abs(transform.position.x - this.lastClickPosition.x) <= transform.scale.x / 2
+                    && Math.abs(transform.position.y - this.lastClickPosition.y) <= transform.scale.y / 2) {
+                    Entity.AddComponent(entity, new SelectedComponent());
                 }
             });
-            this.scene.camera.targetPosition = target;
-            this.scene.camera.fogCenter = target;
+            // this.scene.camera.targetPosition = target;
+            // this.scene.camera.fogCenter = target;
         }
+    }
+}
+
+/*
+* Enables an entity to be directed by navigation.
+*/
+class NavigationRecipientSystem extends System {
+    constructor(scene) {
+        super(scene);
+        this.lastClickPosition = null;
+        this.clickHandler = new ClickHandler();
+    }
+
+    // Loop update function.
+    update(delta) {
+        if (this.clickHandler.clickStarted(0)) {
+            this.lastClickPosition = this.scene.camera.screenToWorld(Input.Instance.mousePosition);
+        }
+        if (this.clickHandler.clickEnded(0)) {
+            Entity.Iterate(this.scene.entities, ["NavigationRecipient", "Selected"], (entity) => {
+                Entity.RemoveComponent(entity, "Navigation");
+                Entity.RemoveComponent(entity, "Motion");
+                Entity.AddComponent(entity, new MotionComponent(Vector.Zero, 1, Vector.Zero));
+                Entity.AddComponent(entity, new NavigationComponent(Vector.Copy(this.lastClickPosition)));
+            });
+        }
+    }
+}
+
+/*
+* Enables an entity to be selected with mouse cursor and be highlighted.
+*/
+class SelectedHighlightSystem extends System {
+    constructor(scene) {
+        super(scene);
     }
 
     // Loop render function.
     draw(interp, ctx) {
-        Entity.iterate(this.scene.entities, ["Transform", "Selectable"], (entity) => {
-            var transform = Entity.getComponent(entity, "Transform");
+        Entity.Iterate(this.scene.entities, ["Transform", "Selected"], (entity) => {
+            var transform = Entity.GetComponent(entity, "Transform");
             if (this.scene.camera.isInsideViewport(transform.position, transform.scale)) {
-                var selectable = Entity.getComponent(entity, "Selectable");
-                if (selectable.highlight) {
-                    ctx.beginPath();
-                    ctx.strokeStyle = Color.Style(selectable.highlightColor);
-                    ctx.lineWidth = 1;
-                    ctx.rect(Math.round(transform.position.x) - transform.scale.x / 2 - 4, Math.round(transform.position.y) - transform.scale.y / 2 - 4, transform.scale.x + 8, transform.scale.y + 8);
-                    ctx.stroke();
-                }
+                var selected = Entity.GetComponent(entity, "Selected");
+                ctx.beginPath();
+                ctx.strokeStyle = Color.Style(selected.highlightColor);
+                ctx.lineWidth = 1;
+                ctx.rect(Math.round(transform.position.x) - transform.scale.x / 2 - 4, Math.round(transform.position.y) - transform.scale.y / 2 - 4, transform.scale.x + 8, transform.scale.y + 8);
+                ctx.stroke();
             }
         });
     }
 }
-
 
 /*
 * Applies force fields to to subjects.
@@ -291,26 +320,26 @@ class ForceFieldSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.iterate(this.scene.entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
-            var subject = Entity.getComponent(entity, "ForceFieldSubject");
-            var subjectTransform = Entity.getComponent(entity, "Transform");
-            var subjectMotion = Entity.getComponent(entity, "Motion");
+        Entity.Iterate(this.scene.entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
+            var subject = Entity.GetComponent(entity, "ForceFieldSubject");
+            var subjectTransform = Entity.GetComponent(entity, "Transform");
+            var subjectMotion = Entity.GetComponent(entity, "Motion");
             // TODO: why is this zero? Why not entity accel?
             var totalAcceleration = Vector.Zero;
-            Entity.iterate(this.scene.entities, ["ForceField", "Transform"], (fieldEntity) => {
-                var field = Entity.getComponent(fieldEntity, "ForceField");
+            Entity.Iterate(this.scene.entities, ["ForceField", "Transform"], (fieldEntity) => {
+                var field = Entity.GetComponent(fieldEntity, "ForceField");
                 if (subject.fieldIds.includes(fieldEntity.id) && field.enabled) {
-                    var fieldTransform = Entity.getComponent(fieldEntity, "Transform");
+                    var fieldTransform = Entity.GetComponent(fieldEntity, "Transform");
                     var vector = Vector.Substract(Vector.Copy(fieldTransform.position), subjectTransform.position);
                     // TODO: 1.5 Magic number?
                     var force = field.mass / Math.pow(vector.x * vector.x + vector.y * vector.y, 1.5);
                     Vector.Add(totalAcceleration, Vector.Multiply(vector, new Vector(force, force)));
                     if (field.destructive) {
                         if (Math.pow(subjectTransform.position.x - fieldTransform.position.x, 2) + Math.pow(subjectTransform.position.y - fieldTransform.position.y, 2) < Math.pow(field.radius, 2)) {
-                            if (Entity.hasComponents(entity, ["Expiration"]))
-                                Entity.getComponent(entity, "Expiration").duration = 0;
+                            if (Entity.HasComponents(entity, ["Expiration"]))
+                                Entity.GetComponent(entity, "Expiration").duration = 0;
                             else
-                                Entity.addComponent(entity, new ExpirationComponent(0));
+                                Entity.AddComponent(entity, new ExpirationComponent(0));
                         }
                     }
                 }
@@ -332,9 +361,9 @@ class ParticleEmissionSystem extends System {
     update(delta) {
         var foregroundParticles = [];
         var backgroundParticles = [];
-        Entity.iterate(this.scene.entities, ["ParticleEmitter", "Transform"], (entity) => {
-            var emitter = Entity.getComponent(entity, "ParticleEmitter");
-            var emitterTransform = Entity.getComponent(entity, "Transform");
+        Entity.Iterate(this.scene.entities, ["ParticleEmitter", "Transform"], (entity) => {
+            var emitter = Entity.GetComponent(entity, "ParticleEmitter");
+            var emitterTransform = Entity.GetComponent(entity, "Transform");
             if (emitter.enabled) {
                 var particlesToEmit = 0;
                 emitter.emissionTimer += delta;
@@ -355,10 +384,10 @@ class ParticleEmissionSystem extends System {
                     var size = Random.Int(emitter.particleSize, emitter.particleSize * emitter.particleSizeRandomness);
 
                     var particle = new Entity();
-                    Entity.addComponent(particle, new TransformComponent(position, new Vector(size, size)));
-                    Entity.addComponent(particle, new MotionComponent(velocity, Number.MAX_SAFE_INTEGER, Vector.Zero));
-                    Entity.addComponent(particle, new ShapeComponent(Color.Copy(emitter.color)));
-                    Entity.addComponent(particle, new ExpirationComponent(life));
+                    Entity.AddComponent(particle, new TransformComponent(position, new Vector(size, size)));
+                    Entity.AddComponent(particle, new MotionComponent(velocity, Number.MAX_SAFE_INTEGER, Vector.Zero));
+                    Entity.AddComponent(particle, new ShapeComponent(Color.Copy(emitter.color)));
+                    Entity.AddComponent(particle, new ExpirationComponent(life));
 
                     var animation = new AnimationComponent();
                     var colorAnimation = new AnimationSequence();
@@ -369,10 +398,10 @@ class ParticleEmissionSystem extends System {
                     colorAnimation.type = "Color";
                     colorAnimation.easing = "EaseInOutQuad";
                     animation.sequences.push(colorAnimation);
-                    Entity.addComponent(particle, animation);
+                    Entity.AddComponent(particle, animation);
 
                     if (emitter.fieldIds.length > 0)
-                        Entity.addComponent(particle, new ForceFieldSubjectComponent(emitter.fieldIds));
+                        Entity.AddComponent(particle, new ForceFieldSubjectComponent(emitter.fieldIds));
 
                     if (emitter.foreground)
                         foregroundParticles.push(particle);
@@ -401,15 +430,15 @@ class AnimationSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.iterate(this.scene.entities, ["Animation"], (entity) => {
-            var animation = Entity.getComponent(entity, "Animation");
+        Entity.Iterate(this.scene.entities, ["Animation"], (entity) => {
+            var animation = Entity.GetComponent(entity, "Animation");
             for (var sequence of animation.sequences) {
                 if (sequence.playing) {
                     sequence.elapsed += delta;
                     var nextKeyframe = sequence.keyframe >= sequence.keyframes.length - 1 ? 0 : sequence.keyframe + 1;
                     if (sequence.elapsed < sequence.keyframes[nextKeyframe]) {
                         var perc = (sequence.elapsed - sequence.keyframes[sequence.keyframe]) / (sequence.keyframes[nextKeyframe] - sequence.keyframes[sequence.keyframe]);
-                        var comp = Entity.getComponent(entity, sequence.component);
+                        var comp = Entity.GetComponent(entity, sequence.component);
                         var e = Easing[sequence.easing](perc);
                         var obj = sequence.path != null ? this.getNestedObject(comp, sequence.path.split(".")) : comp;
 
@@ -437,5 +466,32 @@ class AnimationSystem extends System {
 
     getNestedObject(nestedObj, pathArr) {
         return pathArr.reduce((obj, key) => (obj && obj[key] !== 'undefined') ? obj[key] : undefined, nestedObj);
+    }
+}
+
+/*
+* Navigates until destination is reached.
+*/
+class NavigationSystem extends System {
+    constructor(scene) {
+        super(scene);
+    }
+
+    // Loop update function.
+    update(delta) {
+        Entity.Iterate(this.scene.entities, ["Navigation", "Transform", "Motion"], (entity) => {
+            var transform = Entity.GetComponent(entity, "Transform");
+            var motion = Entity.GetComponent(entity, "Motion");
+            var navigation = Entity.GetComponent(entity, "Navigation");
+            var distance = Vector.Substract(Vector.Copy(navigation.location), transform.position);
+            if (Vector.Magnitude(distance) > navigation.threshold) {
+                var factor = new Vector(navigation.slowFactor, navigation.slowFactor);
+                motion.acceleration = Vector.Multiply(Vector.Normalize(distance), factor);
+            } else {
+                motion.velocity = Vector.Zero;
+                motion.acceleration = Vector.Zero;
+                Entity.RemoveComponent(entity, "Navigation");
+            }
+        });
     }
 }

@@ -11,12 +11,12 @@ class Entity {
     }
 
     // Returns a component of Entity by Name.
-    static getComponent(entity, name) {
+    static GetComponent(entity, name) {
         return entity.components[name];
     }
 
     // Retruns true if Entity has all components in Names.
-    static hasComponents(entity, names) {
+    static HasComponents(entity, names) {
         var hasAll = true;
         for (var i = 0; i < names.length; i++) {
             hasAll &= entity.components[names[i]] != null;
@@ -25,30 +25,30 @@ class Entity {
     }
 
     // Adds Component to Entity.
-    static addComponent(entity, component) {
+    static AddComponent(entity, component) {
         entity.components[component.name] = component;
     }
 
     // Removes component from Entity by Name.
-    static removeComponent(entity, name) {
+    static RemoveComponent(entity, name) {
         entity.components[name] = null;
     }
 
     // Iterates an array of Entities with given Components, invoking Action.
-    static iterate(entities, components, action) {
+    static Iterate(entities, components, action) {
         for (var i = 0; i < entities.length; i++) {
             var entity = entities[i];
-            if (Entity.hasComponents(entity, components)) {
+            if (Entity.HasComponents(entity, components)) {
                 action(entity, i);
             }
         }
     }
 
     // Iterates an array of Entities with given Components backwards, invoking Action.
-    static iterateBackwards(entities, components, action) {
+    static IterateBackwards(entities, components, action) {
         for (var i = entities.length - 1; i >= 0; i--) {
             var entity = entities[i];
-            if (Entity.hasComponents(entity, components)) {
+            if (Entity.HasComponents(entity, components)) {
                 action(entity, i);
             }
         }
@@ -79,6 +79,18 @@ class MotionComponent {
         this.angularVelocity = angularVelocity;
         this.angularAcceleration = angularAcceleration;
         this.wraparound = true;
+    }
+}
+
+/*
+* Navigate to selected world coordinates
+*/
+class NavigationComponent {
+    constructor(location) {
+        this.name = "Navigation";
+        this.location = location;
+        this.slowFactor = 0.01;
+        this.threshold = 10;
     }
 }
 
@@ -141,14 +153,30 @@ class TraceComponent {
 }
 
 /*
-* Select and highlight an Entity with mouse cursor.
+* Allows an entity to be selected.
 */
 class SelectableComponent {
     constructor() {
         this.name = "Selectable";
-        this.threshold = 20;
-        this.highlight = false;
+    }
+}
+
+/*
+* Marks an entity as currently selected.
+*/
+class SelectedComponent {
+    constructor() {
+        this.name = "Selected";
         this.highlightColor = new Color(0, 100, 100, 1);
+    }
+}
+
+/*
+* Allows an entity to be directable by navigation.
+*/
+class NavigationRecipientComponent {
+    constructor() {
+        this.name = "NavigationRecipient";
     }
 }
 

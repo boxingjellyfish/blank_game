@@ -32,10 +32,13 @@ class Scene {
         this.shapeRendererSystem = new ShapeRendererSystem(this);
         this.traceRendererSystem = new TraceRendererSystem(this);
         this.selectionSystem = new SelectionSystem(this);
+        this.selectedHighlightSystem = new SelectedHighlightSystem(this);
         this.expirationSystem = new ExpirationSystem(this);
         this.particleEmissionSystem = new ParticleEmissionSystem(this);
         this.forceFieldSystem = new ForceFieldSystem(this);
         this.animationSystem = new AnimationSystem(this);
+        this.navigationSystem = new NavigationSystem(this);
+        this.navigationRecipientSystem = new NavigationRecipientSystem(this);
 
         // Pause when focus lost
         window.addEventListener("visibilitychange", () => {
@@ -87,8 +90,8 @@ class Scene {
         // Randomly change entities acceleration angle
         this.keyHandler.keyStarted("NumpadDivide");
         if (this.keyHandler.keyEnded("NumpadDivide")) {
-            Entity.iterate(this.entities, ["Motion"], (entity) => {
-                Vector.Rotate(Entity.getComponent(entity, "Motion").acceleration, Random.Float(0, Math.PI * 2));
+            Entity.Iterate(this.entities, ["Motion"], (entity) => {
+                Vector.Rotate(Entity.GetComponent(entity, "Motion").acceleration, Random.Float(0, Math.PI * 2));
             });
         }
 
@@ -130,6 +133,7 @@ class Scene {
         }
 
         // Allow selection even on paused game
+        this.navigationRecipientSystem.update(delta);
         this.selectionSystem.update(delta);
 
         // Allow camera movement even on paused game
@@ -138,6 +142,7 @@ class Scene {
         // Systems to update when game is running
         if (this.runUpdate) {
             this.expirationSystem.update(delta);
+            this.navigationSystem.update(delta);
             this.movementSystem.update(delta);
             this.forceFieldSystem.update(delta);
             this.traceRendererSystem.update(delta);
@@ -169,7 +174,7 @@ class Scene {
         // Systems with render logic
         this.traceRendererSystem.draw(interp, this.ctx);
         this.shapeRendererSystem.draw(interp, this.ctx);
-        this.selectionSystem.draw(interp, this.ctx);
+        this.selectedHighlightSystem.draw(interp, this.ctx);
 
         // Restore to draw relative to window edges
         this.ctx.restore();
@@ -260,15 +265,15 @@ class Scene {
             var entity = new Entity();
             var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
             var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
-            Entity.addComponent(entity, new TransformComponent(position, scale));
+            Entity.AddComponent(entity, new TransformComponent(position, scale));
             var velocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
             var maxVelocity = Random.Float(0.05, 1.5);
             var acceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
-            Entity.addComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
+            Entity.AddComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
             var color = new Color(Random.Int(0, 360), 75, 60, 1);
-            Entity.addComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
+            Entity.AddComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
             //Entity.addComponent(entity, new TraceComponent(2, color));
-            Entity.addComponent(entity, new SelectableComponent());
+            Entity.AddComponent(entity, new SelectableComponent());
 
             var animation = new AnimationComponent();
             var colorAnimation = new AnimationSequence();
@@ -287,7 +292,7 @@ class Scene {
             scaleAnimation.type = "Vector";
             scaleAnimation.easing = "EaseInOutQuad";
             animation.sequences.push(scaleAnimation);
-            Entity.addComponent(entity, animation);
+            Entity.AddComponent(entity, animation);
 
             scene.entities.push(entity);
         }
@@ -295,7 +300,7 @@ class Scene {
         // Emitter 
         var emitterEntity = new Entity();
         var emitterPosition = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
-        Entity.addComponent(emitterEntity, new TransformComponent(emitterPosition));
+        Entity.AddComponent(emitterEntity, new TransformComponent(emitterPosition));
         var emitterComponent = new ParticleEmitterComponent();
         emitterComponent.particleVelocity = new Vector(0.05, 0.05);
         emitterComponent.velocityRandomness = 1.5;
@@ -309,24 +314,24 @@ class Scene {
         emitterComponent.particleLifespan = 3000;
         emitterComponent.particleLifespanRandomness = 1.5;
         emitterComponent.foreground = false;
-        Entity.addComponent(emitterEntity, emitterComponent);
+        Entity.AddComponent(emitterEntity, emitterComponent);
         var emitterVelocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
         var emitterMaxVelocity = Random.Float(0.05, 0.5);
         var emitterAcceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
-        Entity.addComponent(emitterEntity, new MotionComponent(emitterVelocity, emitterMaxVelocity, emitterAcceleration));
-        Entity.addComponent(emitterEntity, new SelectableComponent());
+        Entity.AddComponent(emitterEntity, new MotionComponent(emitterVelocity, emitterMaxVelocity, emitterAcceleration));
+        Entity.AddComponent(emitterEntity, new SelectableComponent());
         scene.entities.push(emitterEntity);
 
         var fieldEntity = new Entity();
-        Entity.addComponent(fieldEntity, new TransformComponent(new Vector(emitterPosition.x, emitterPosition.y - 100)));
+        Entity.AddComponent(fieldEntity, new TransformComponent(new Vector(emitterPosition.x, emitterPosition.y - 100)));
         var fieldComponent = new ForceFieldComponent();
         fieldComponent.mass = 3;
         fieldComponent.destructive = true;
         fieldComponent.radius = 50;
         fieldComponent.enabled = true;
-        Entity.addComponent(fieldEntity, fieldComponent);
-        Entity.addComponent(fieldEntity, new MotionComponent(Vector.Copy(emitterVelocity), emitterMaxVelocity, Vector.Copy(emitterAcceleration)));
-        Entity.addComponent(fieldEntity, new SelectableComponent());
+        Entity.AddComponent(fieldEntity, fieldComponent);
+        Entity.AddComponent(fieldEntity, new MotionComponent(Vector.Copy(emitterVelocity), emitterMaxVelocity, Vector.Copy(emitterAcceleration)));
+        Entity.AddComponent(fieldEntity, new SelectableComponent());
         scene.entities.push(fieldEntity);
 
         emitterComponent.fieldIds.push(fieldEntity.id);
@@ -348,14 +353,104 @@ class Scene {
                 "components": {
                     "Transform": {
                         "name": "Transform",
-                        "position": { "x": 0, "y": 0 },
-                        "scale": { "x": 800, "y": 800 },
+                        "position": { "x": -200, "y": -200 },
+                        "scale": { "x": 50, "y": 50 },
                         "angle": 0
                     },
                     "Shape": {
                         "name": "Shape",
-                        "color": { "h": 195, "s": 70, "l": 22, "a": 1 },
-                        "outlineColor": { "h": 195, "s": 70, "l": 0, "a": 1 },
+                        "color": { "h": 0, "s": 100, "l": 50, "a": 1 },
+                        "outlineColor": { "h": 0, "s": 0, "l": 0, "a": 1 },
+                        "outlineWidth": 5,
+                        "type": "Rectangle"
+                    },
+                    "Motion": {
+                        "name": "Motion",
+                        "velocity": { "x": 0, "y": 0 },
+                        "maxVelocity": 1,
+                        "acceleration": { "x": 0, "y": 0 },
+                        "angularVelocity": 0,
+                        "angularAcceleration": 0,
+                        "wraparound": true
+                    },
+                    "Navigation": {
+                        "name": "Navigation",
+                        "location": { "x": 500, "y": 100 },
+                        "slowFactor": 0.01,
+                        "threshold": 5
+                    },
+                    "Selectable": {
+                        "name": "Selectable",
+                        "highlight": false,
+                        "highlightColor": { "h": 0, "s": 100, "l": 100, "a": 1 }
+                    },
+                    "NavigationRecipient": {
+                        "name": "NavigationRecipient"
+                    }
+                }
+            },
+            {
+                "id": Random.UUID(),
+                "components": {
+                    "Transform": {
+                        "name": "Transform",
+                        "position": { "x": -200, "y": 200 },
+                        "scale": { "x": 50, "y": 50 },
+                        "angle": 0
+                    },
+                    "Shape": {
+                        "name": "Shape",
+                        "color": { "h": 50, "s": 100, "l": 50, "a": 1 },
+                        "outlineColor": { "h": 0, "s": 0, "l": 0, "a": 1 },
+                        "outlineWidth": 5,
+                        "type": "Rectangle"
+                    },
+                    "Selectable": {
+                        "name": "Selectable",
+                        "highlight": false,
+                        "highlightColor": { "h": 0, "s": 100, "l": 100, "a": 1 }
+                    },
+                    "NavigationRecipient": {
+                        "name": "NavigationRecipient"
+                    }
+                }
+            },
+            {
+                "id": Random.UUID(),
+                "components": {
+                    "Transform": {
+                        "name": "Transform",
+                        "position": { "x": 200, "y": -200 },
+                        "scale": { "x": 50, "y": 50 },
+                        "angle": 0
+                    },
+                    "Shape": {
+                        "name": "Shape",
+                        "color": { "h": 160, "s": 100, "l": 50, "a": 1 },
+                        "outlineColor": { "h": 0, "s": 0, "l": 0, "a": 1 },
+                        "outlineWidth": 5,
+                        "type": "Rectangle"
+                    },
+                    "Selectable": {
+                        "name": "Selectable",
+                        "highlight": false,
+                        "highlightColor": { "h": 0, "s": 100, "l": 100, "a": 1 }
+                    }
+                }
+            },
+            {
+                "id": Random.UUID(),
+                "components": {
+                    "Transform": {
+                        "name": "Transform",
+                        "position": { "x": 200, "y": 200 },
+                        "scale": { "x": 50, "y": 50 },
+                        "angle": 0
+                    },
+                    "Shape": {
+                        "name": "Shape",
+                        "color": { "h": 270, "s": 100, "l": 50, "a": 1 },
+                        "outlineColor": { "h": 0, "s": 0, "l": 0, "a": 1 },
                         "outlineWidth": 5,
                         "type": "Rectangle"
                     }
@@ -366,5 +461,5 @@ class Scene {
 }
 
 var scene = new Scene();
-scene.demo2();
+scene.demo3();
 scene.toggleLoop();
