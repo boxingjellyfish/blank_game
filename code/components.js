@@ -118,11 +118,11 @@ class CollisionHandlingComponent {
 * Apperance of a shape to be rendered on screen.
 */
 class ShapeComponent {
-    constructor(color, type = ShapeComponent.Rectangle) {
+    constructor(color, type = ShapeComponent.Rectangle, outlineColor = null, outlineWidth = null) {
         this.name = "Shape";
         this.color = color;
-        this.outlineColor = null;
-        this.outlineWidth = null;
+        this.outlineColor = outlineColor;
+        this.outlineWidth = outlineWidth;
         this.type = type;
     }
 

@@ -132,6 +132,20 @@ class Scene {
             this.demo3();
         }
 
+        // Reload Demo 4
+        this.keyHandler.keyStarted("Digit4");
+        if (this.keyHandler.keyEnded("Digit4")) {
+            this.entities.length = 0;
+            this.demo4();
+        }
+
+        // Reload Demo 5
+        this.keyHandler.keyStarted("Digit5");
+        if (this.keyHandler.keyEnded("Digit5")) {
+            this.entities.length = 0;
+            this.demo5();
+        }
+
         // Allow selection even on paused game
         this.navigationRecipientSystem.update(delta);
         this.selectionSystem.update(delta);
@@ -294,7 +308,7 @@ class Scene {
             animation.sequences.push(scaleAnimation);
             Entity.AddComponent(entity, animation);
 
-            scene.entities.push(entity);
+            this.entities.push(entity);
         }
 
         // Emitter 
@@ -320,7 +334,7 @@ class Scene {
         var emitterAcceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
         Entity.AddComponent(emitterEntity, new MotionComponent(emitterVelocity, emitterMaxVelocity, emitterAcceleration));
         Entity.AddComponent(emitterEntity, new SelectableComponent());
-        scene.entities.push(emitterEntity);
+        this.entities.push(emitterEntity);
 
         var fieldEntity = new Entity();
         Entity.AddComponent(fieldEntity, new TransformComponent(new Vector(emitterPosition.x, emitterPosition.y - 100)));
@@ -332,7 +346,7 @@ class Scene {
         Entity.AddComponent(fieldEntity, fieldComponent);
         Entity.AddComponent(fieldEntity, new MotionComponent(Vector.Copy(emitterVelocity), emitterMaxVelocity, Vector.Copy(emitterAcceleration)));
         Entity.AddComponent(fieldEntity, new SelectableComponent());
-        scene.entities.push(fieldEntity);
+        this.entities.push(fieldEntity);
 
         emitterComponent.fieldIds.push(fieldEntity.id);
     }
@@ -458,8 +472,60 @@ class Scene {
             }
         ];
     }
+
+    // Demo 4 data
+    demo4() {
+        this.worldSize = new Vector(1600, 1600);
+        this.showDebug = true;
+
+        var color = Color.Gray;
+        var factor = 40;
+        var centerBounds = 140 / factor;
+        var minSize = 200 / factor;
+        var maxSize = 800 / factor;
+        var rectanglesCount = Random.Int(3, 8);
+
+        for (var i = 0; i < rectanglesCount; i++) {
+
+            var rectangle = new Entity();
+            var position = new Vector(Random.Int(-1 * centerBounds, centerBounds), Random.Int(-1 * centerBounds, centerBounds));
+            Vector.Multiply(position, new Vector(factor, factor));
+            var scale = i % 2 == 0 ? new Vector(Random.Int(minSize, maxSize / 2), Random.Int(maxSize / 2, maxSize)) : new Vector(Random.Int(maxSize / 2, maxSize), Random.Int(minSize, maxSize / 2));
+            Vector.Multiply(scale, new Vector(factor, factor));
+            Entity.AddComponent(rectangle, new TransformComponent(position, scale));
+            Entity.AddComponent(rectangle, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
+            this.entities.push(rectangle);
+        }
+
+        /*
+        - random point (center?)
+        - generate N rectangles_
+            - A: containing point
+            - B: edge on point
+            - C: corner on point
+        - 
+        */
+    }
+
+    // Demo 5 data
+    demo5() {
+        this.worldSize = new Vector(1200, 800);
+        this.showDebug = true;
+
+        var color = Color.Gray;
+
+        var r1 = new Entity();
+        Entity.AddComponent(r1, new TransformComponent(new Vector(100, 100), new Vector(200, 780)));
+        Entity.AddComponent(r1, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
+        this.entities.push(r1);
+        
+        var r2 = new Entity();
+        Entity.AddComponent(r2, new TransformComponent(new Vector(-100, 20), new Vector(200, 460)));
+        Entity.AddComponent(r2, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
+        this.entities.push(r2);
+    }
 }
 
 var scene = new Scene();
-scene.demo3();
+scene.demo4();
 scene.toggleLoop();
