@@ -77,7 +77,7 @@ class Input {
     }
 
     // Loop render function.
-    draw(interp, ctx, entities) {
+    draw(interp, ctx) {
         var m = this.mousePosition;
 
         // Draw Cursor Fill

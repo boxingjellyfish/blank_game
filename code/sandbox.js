@@ -4,7 +4,6 @@
 class Scene {
     constructor() {
         // Scene data
-        this.entities = [];
         this.runUpdate = true;
         this.showDebug = false;
         this.worldSize = new Vector(5000, 2400);
@@ -16,6 +15,9 @@ class Scene {
         // Canvas
         this.canvas = document.getElementById("canvas");
         this.ctx = canvas.getContext("2d");
+
+        // Entity manager
+        this.entityManager = new EntityManager();
 
         // Camera        
         this.camera = new Camera(this);
@@ -80,22 +82,19 @@ class Scene {
         // Save Entities in local storage
         this.keyHandler.keyStarted("KeyC");
         if (this.keyHandler.keyEnded("KeyC")) {
-            var json = JSON.stringify(this.entities);
-            window.localStorage.setItem("entities", json);
+            this.entityManager.save();
         }
 
         // Load entities from local storage
         this.keyHandler.keyStarted("KeyV");
         if (this.keyHandler.keyEnded("KeyV")) {
-            var json = window.localStorage.getItem("entities");
-            if (json)
-                this.entities = JSON.parse(json);
+            this.entityManager.load();
         }
 
         // Randomly change entities acceleration angle
         this.keyHandler.keyStarted("NumpadDivide");
         if (this.keyHandler.keyEnded("NumpadDivide")) {
-            Entity.Iterate(this.entities, ["Motion"], (entity) => {
+            this.entityManager.iterate(["Motion"], (entity) => {
                 Vector.Rotate(Entity.GetComponent(entity, "Motion").acceleration, Random.Float(0, Math.PI * 2));
             });
         }
@@ -125,35 +124,35 @@ class Scene {
         // Reload Demo 1
         this.keyHandler.keyStarted("Digit1");
         if (this.keyHandler.keyEnded("Digit1")) {
-            this.entities.length = 0;
+            this.entityManager.clear();
             this.demo1();
         }
 
         // Reload Demo 2
         this.keyHandler.keyStarted("Digit2");
         if (this.keyHandler.keyEnded("Digit2")) {
-            this.entities.length = 0;
+            this.entityManager.clear();
             this.demo2();
         }
 
         // Reload Demo 3
         this.keyHandler.keyStarted("Digit3");
         if (this.keyHandler.keyEnded("Digit3")) {
-            this.entities.length = 0;
+            this.entityManager.clear();
             this.demo3();
         }
 
         // Reload Demo 4
         this.keyHandler.keyStarted("Digit4");
         if (this.keyHandler.keyEnded("Digit4")) {
-            this.entities.length = 0;
+            this.entityManager.clear();
             this.demo4();
         }
 
         // Reload Demo 5
         this.keyHandler.keyStarted("Digit5");
         if (this.keyHandler.keyEnded("Digit5")) {
-            this.entities.length = 0;
+            this.entityManager.clear();
             this.demo5();
         }
 
@@ -212,7 +211,7 @@ class Scene {
         this.drawDebugForeground();
 
         // Draw cursor
-        Input.Instance.draw(interp, this.ctx, this.entities);
+        Input.Instance.draw(interp, this.ctx);
 
     }
 
@@ -270,7 +269,7 @@ class Scene {
             this.ctx.fillText(Math.round(this.loop.getFPS()) + " FPS", this.viewportSize.x - 15, 15);
 
             var text = this.camera.toString();
-            text += "\n" + "Entities count:   " + this.entities.length;
+            text += "\n" + "Entities count:   " + this.entityManager.count();
             this.ctx.fillStyle = Color.Style(Color.White50);
             this.ctx.font = "12px monospace";
             this.ctx.textBaseline = "top";
@@ -287,7 +286,7 @@ class Scene {
     demo1() {
         this.worldSize = new Vector(5000, 2400);
         // Random entities
-        for (var i = 0; i < 500; i++) {
+        for (var i = 0; i < 50; i++) {
             var entity = new Entity();
             var scale = new Vector(Random.Int(5, 50), Random.Int(5, 50));
             var position = new Vector(Random.Float(-100, 100), Random.Float(-100, 100));
@@ -320,7 +319,7 @@ class Scene {
             animation.sequences.push(scaleAnimation);
             Entity.AddComponent(entity, animation);
 
-            this.entities.push(entity);
+            this.entityManager.add(entity);
         }
 
         // Emitter 
@@ -339,14 +338,14 @@ class Scene {
         emitterComponent.emissionRate = 0.05;
         emitterComponent.particleLifespan = 3000;
         emitterComponent.particleLifespanRandomness = 1.5;
-        emitterComponent.foreground = false;
+        emitterComponent.foreground = true;
         Entity.AddComponent(emitterEntity, emitterComponent);
         var emitterVelocity = new Vector(Random.Float(-0.1, 0.1), Random.Float(-0.1, 0.1));
         var emitterMaxVelocity = Random.Float(0.05, 0.5);
         var emitterAcceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
         Entity.AddComponent(emitterEntity, new MotionComponent(emitterVelocity, emitterMaxVelocity, emitterAcceleration));
         Entity.AddComponent(emitterEntity, new SelectableComponent());
-        this.entities.push(emitterEntity);
+        this.entityManager.add(emitterEntity);
 
         var fieldEntity = new Entity();
         Entity.AddComponent(fieldEntity, new TransformComponent(new Vector(emitterPosition.x, emitterPosition.y - 100)));
@@ -358,7 +357,7 @@ class Scene {
         Entity.AddComponent(fieldEntity, fieldComponent);
         Entity.AddComponent(fieldEntity, new MotionComponent(Vector.Copy(emitterVelocity), emitterMaxVelocity, Vector.Copy(emitterAcceleration)));
         Entity.AddComponent(fieldEntity, new SelectableComponent());
-        this.entities.push(fieldEntity);
+        this.entityManager.add(fieldEntity);
 
         emitterComponent.fieldIds.push(fieldEntity.id);
     }
@@ -366,14 +365,15 @@ class Scene {
     // Demo 2 data
     demo2() {
         this.worldSize = new Vector(600, 600);
-        this.entities = Data.Intro;
+        //this.entityManager.clear();
+        this.entityManager.addAll(Data.Intro);
         //this.camera.fogCenter = new Vector(200,200);
     }
 
     // Demo 3 data
     demo3() {
         this.worldSize = new Vector(5000, 5000);
-        this.entities = [
+        this.entityManager.addAll([
             {
                 "id": Random.UUID(),
                 "components": {
@@ -482,7 +482,7 @@ class Scene {
                     }
                 }
             }
-        ];
+        ]);
     }
 
     // Demo 4 data
@@ -503,12 +503,12 @@ class Scene {
         var r1 = new Entity();
         Entity.AddComponent(r1, new TransformComponent(new Vector(100, 100), new Vector(200, 780)));
         Entity.AddComponent(r1, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
-        this.entities.push(r1);
+        this.entityManager.add(r1);
         
         var r2 = new Entity();
         Entity.AddComponent(r2, new TransformComponent(new Vector(-100, 20), new Vector(200, 460)));
         Entity.AddComponent(r2, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
-        this.entities.push(r2);
+        this.entityManager.add(r2);
     }
 }
 

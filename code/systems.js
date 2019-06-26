@@ -23,11 +23,11 @@ class ExpirationSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.IterateBackwards(this.scene.entities, ["Expiration"], (entity, index) => {
+        this.scene.entityManager.iterateBackwards(["Expiration"], (entity, layer, index) => {
             var expiration = Entity.GetComponent(entity, "Expiration");
             expiration.elapsed += delta;
             if (expiration.elapsed >= expiration.duration)
-                this.scene.entities.splice(index, 1);
+                this.scene.entityManager.remove(layer, index);
         });
     }
 }
@@ -42,7 +42,7 @@ class MovementSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.Iterate(this.scene.entities, ["Transform", "Motion"], (entity) => {
+        this.scene.entityManager.iterate(["Transform", "Motion"], (entity) => {
             var transform = Entity.GetComponent(entity, "Transform");
             var motion = Entity.GetComponent(entity, "Motion");
             transform.position.x += motion.velocity.x * delta;
@@ -89,9 +89,9 @@ class CollisionDetectionSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.Iterate(this.scene.entities, ["Transform", "Motion", "CollisionDetection"], (collider) => {
+        this.scene.entityManager.iterate(["Transform", "Motion", "CollisionDetection"], (collider) => {
             var collisionHandling = null;
-            Entity.Iterate(this.scene.entities, ["Transform", "CollisionDetection"], (collided) => {
+            this.scene.entityManager.iterate(["Transform", "CollisionDetection"], (collided) => {
                 if (collider.id != collided.id) {
                     if (this.areBoundingBoxesIntersecting(collider, collided)) {
                         collisionHandling = new CollisionHandlingComponent();
@@ -130,7 +130,7 @@ class CollisionHandlingSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.Iterate(this.scene.entities, ["Motion", "CollisionHandling"], (collider) => {
+        this.scene.entityManager.iterate(["Motion", "CollisionHandling"], (collider) => {
             Entity.RemoveComponent(collider, "CollisionHandling");
             var motion = Entity.GetComponent(collider, "Motion");
             Vector.Multiply(motion.velocity, new Vector(-1, -1));
@@ -149,7 +149,7 @@ class ShapeRendererSystem extends System {
 
     // Loop render function.
     draw(interp, ctx) {
-        Entity.Iterate(this.scene.entities, ["Transform", "Shape"], (entity) => {
+        this.scene.entityManager.iterate(["Transform", "Shape"], (entity) => {
             var transform = Entity.GetComponent(entity, "Transform");
             if (this.scene.camera.isInsideViewport(transform.position, transform.scale)) {
                 var shape = Entity.GetComponent(entity, "Shape");
@@ -179,7 +179,6 @@ class ShapeRendererSystem extends System {
                         ctx.stroke();
                     if (shape.color)
                         ctx.fill();
-
                 }
                 else {
                     if (shape.outlineColor && shape.outlineWidth)
@@ -203,7 +202,7 @@ class TraceRendererSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.Iterate(this.scene.entities, ["Transform", "Trace"], (entity) => {
+        this.scene.entityManager.iterate(["Transform", "Trace"], (entity) => {
             var transform = Entity.GetComponent(entity, "Transform");
             var trace = Entity.GetComponent(entity, "Trace");
             trace.points.push(Vector.Copy(transform.position));
@@ -214,7 +213,7 @@ class TraceRendererSystem extends System {
 
     // Loop render function.
     draw(interp, ctx) {
-        Entity.Iterate(this.scene.entities, ["Trace"], (entity) => {
+        this.scene.entityManager.iterate(["Trace"], (entity) => {
             var trace = Entity.GetComponent(entity, "Trace");
             if (trace.points.length > 0) {
                 var pos = trace.points[0];
@@ -252,7 +251,7 @@ class SelectionSystem extends System {
         }
         if (this.clickHandler.clickEnded(0)) {
             var position = Vector.Copy(this.lastClickPosition);
-            Entity.Iterate(this.scene.entities, ["Transform", "Selectable"], (entity) => {
+            this.scene.entityManager.iterate(["Transform", "Selectable"], (entity) => {
                 //Entity.RemoveComponent(entity, "Selected");
                 var transform = Entity.GetComponent(entity, "Transform");
                 if (Math.abs(transform.position.x - this.lastClickPosition.x) <= transform.scale.x / 2
@@ -282,7 +281,7 @@ class NavigationRecipientSystem extends System {
             this.lastClickPosition = this.scene.camera.screenToWorld(Input.Instance.mousePosition);
         }
         if (this.clickHandler.clickEnded(0)) {
-            Entity.Iterate(this.scene.entities, ["NavigationRecipient", "Selected"], (entity) => {
+            this.scene.entityManager.iterate(["NavigationRecipient", "Selected"], (entity) => {
                 Entity.RemoveComponent(entity, "Navigation");
                 Entity.RemoveComponent(entity, "Motion");
                 Entity.AddComponent(entity, new MotionComponent(Vector.Zero, 0.5, Vector.Zero));
@@ -302,7 +301,7 @@ class SelectedHighlightSystem extends System {
 
     // Loop render function.
     draw(interp, ctx) {
-        Entity.Iterate(this.scene.entities, ["Transform", "Selected"], (entity) => {
+        this.scene.entityManager.iterate(["Transform", "Selected"], (entity) => {
             var transform = Entity.GetComponent(entity, "Transform");
             if (this.scene.camera.isInsideViewport(transform.position, transform.scale)) {
                 var selected = Entity.GetComponent(entity, "Selected");
@@ -326,13 +325,13 @@ class ForceFieldSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.Iterate(this.scene.entities, ["ForceFieldSubject", "Transform", "Motion"], (entity) => {
+        this.scene.entityManager.iterate(["ForceFieldSubject", "Transform", "Motion"], (entity) => {
             var subject = Entity.GetComponent(entity, "ForceFieldSubject");
             var subjectTransform = Entity.GetComponent(entity, "Transform");
             var subjectMotion = Entity.GetComponent(entity, "Motion");
             // TODO: why is this zero? Why not entity accel?
             var totalAcceleration = Vector.Zero;
-            Entity.Iterate(this.scene.entities, ["ForceField", "Transform"], (fieldEntity) => {
+            this.scene.entityManager.iterate(["ForceField", "Transform"], (fieldEntity) => {
                 var field = Entity.GetComponent(fieldEntity, "ForceField");
                 if (subject.fieldIds.includes(fieldEntity.id) && field.enabled) {
                     var fieldTransform = Entity.GetComponent(fieldEntity, "Transform");
@@ -367,7 +366,7 @@ class ParticleEmissionSystem extends System {
     update(delta) {
         var foregroundParticles = [];
         var backgroundParticles = [];
-        Entity.Iterate(this.scene.entities, ["ParticleEmitter", "Transform"], (entity) => {
+        this.scene.entityManager.iterate(["ParticleEmitter", "Transform"], (entity) => {
             var emitter = Entity.GetComponent(entity, "ParticleEmitter");
             var emitterTransform = Entity.GetComponent(entity, "Transform");
             if (emitter.enabled) {
@@ -409,19 +408,10 @@ class ParticleEmissionSystem extends System {
                     if (emitter.fieldIds.length > 0)
                         Entity.AddComponent(particle, new ForceFieldSubjectComponent(emitter.fieldIds));
 
-                    if (emitter.foreground)
-                        foregroundParticles.push(particle);
-                    else
-                        backgroundParticles.push(particle);
+                    this.scene.entityManager.add(particle, emitter.foreground ? Layers.FOREGROUND_PARTICLES : Layers.BACKGROUND_PARTICLES);
                 }
             }
         });
-        for (var i = 0; i < foregroundParticles.length; i++) {
-            this.scene.entities.push(foregroundParticles[i]);
-        }
-        for (var i = 0; i < backgroundParticles.length; i++) {
-            this.scene.entities.unshift(backgroundParticles[i]);
-        }
     }
 
 }
@@ -436,7 +426,7 @@ class AnimationSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.Iterate(this.scene.entities, ["Animation"], (entity) => {
+        this.scene.entityManager.iterate(["Animation"], (entity) => {
             var animation = Entity.GetComponent(entity, "Animation");
             for (var sequence of animation.sequences) {
                 if (sequence.playing) {
@@ -485,7 +475,7 @@ class NavigationSystem extends System {
 
     // Loop update function.
     update(delta) {
-        Entity.Iterate(this.scene.entities, ["Navigation", "Transform", "Motion"], (entity) => {
+        this.scene.entityManager.iterate(["Navigation", "Transform", "Motion"], (entity) => {
             var transform = Entity.GetComponent(entity, "Transform");
             var motion = Entity.GetComponent(entity, "Motion");
             var navigation = Entity.GetComponent(entity, "Navigation");
@@ -518,7 +508,7 @@ class RoomGeneratorSystem extends System {
     handle(event) {
         if (event.name == "GenerateRoom") {
             // Destroy previous room components
-            Entity.Iterate(this.scene.entities, ["RoomRectangle"], (entity) => {
+            this.scene.entityManager.iterate(["RoomRectangle"], (entity) => {
                 Entity.AddComponent(entity, new ExpirationComponent(0));
             });
 
@@ -532,7 +522,7 @@ class RoomGeneratorSystem extends System {
                 Vector.Multiply(scale, new Vector(this.factor, this.factor));
                 Entity.AddComponent(rectangle, new TransformComponent(position, scale));
                 Entity.AddComponent(rectangle, new ShapeComponent(this.color, ShapeComponent.Rectangle, this.color, 2));
-                this.scene.entities.push(rectangle);
+                this.scene.entityManager.add(rectangle, Layers.BACKGROUND);
             }
         }
     }
