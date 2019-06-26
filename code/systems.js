@@ -250,18 +250,73 @@ class SelectionSystem extends System {
             this.lastClickPosition = this.scene.camera.screenToWorld(Input.Instance.mousePosition);
         }
         if (this.clickHandler.clickEnded(0)) {
+            var found = false;
             var position = Vector.Copy(this.lastClickPosition);
-            this.scene.entityManager.iterate(["Transform", "Selectable"], (entity) => {
-                //Entity.RemoveComponent(entity, "Selected");
+            var entitiesToSelect = [];
+            var entitiesToUnselect = [];
+            this.scene.entityManager.iterateBackwards(["Transform", "Selectable"], (entity) => {
+
+                entitiesToUnselect.push(entity);
+
                 var transform = Entity.GetComponent(entity, "Transform");
-                if (Math.abs(transform.position.x - this.lastClickPosition.x) <= transform.scale.x / 2
-                    && Math.abs(transform.position.y - this.lastClickPosition.y) <= transform.scale.y / 2) {
-                    Entity.AddComponent(entity, new SelectedComponent());
+                if (Math.abs(transform.position.x - position.x) <= transform.scale.x / 2
+                    && Math.abs(transform.position.y - position.y) <= transform.scale.y / 2
+                    && !found) {
+
+                    found = true;
+                    entitiesToSelect.push(entity);
+                    entitiesToUnselect.pop();
                 }
             });
+
+            if (found) {
+                for (var i = 0; i < entitiesToUnselect.length; i++) {
+                    var entity = entitiesToUnselect[i];
+                    Entity.RemoveComponent(entity, "Selected");
+                    this.removeAnimationSequence(entity, "SelectionHighlightAnimation");
+                }
+                for (var i = 0; i < entitiesToSelect.length; i++) {
+                    var entity = entitiesToSelect[i];
+
+                    var color = new Color(0, 0, 100, 1);
+                    Entity.AddComponent(entity, new SelectedComponent(color));
+
+                    var colorSequence = new AnimationSequence("SelectionHighlightAnimation");
+                    colorSequence.keyframes = [0, 500, 1000];
+                    colorSequence.values = [Color.Copy(color), Color.Luminosity(Color.Copy(color), 50), Color.Copy(color)];
+                    colorSequence.component = "Selected";
+                    colorSequence.property = "highlightColor";
+                    colorSequence.type = "Color";
+                    colorSequence.easing = "EaseInOutQuad";
+                    this.addAnimationSequence(entity, colorSequence);
+                }
+            }
             // this.scene.camera.targetPosition = target;
             // this.scene.camera.fogCenter = target;
         }
+    }
+
+    // TODO: Move me!!!
+    removeAnimationSequence(entity, name) {
+        if (Entity.HasComponents(entity, ["Animation"])) {
+            var animation = Entity.GetComponent(entity, "Animation");
+            for (var i = animation.sequences.length - 1; i >= 0; i--) {
+                if (animation.sequences[i].name == name)
+                    animation.sequences.splice(i, 1);
+            }
+        }
+    }
+
+    // TODO: Move me!!!
+    addAnimationSequence(entity, sequence) {
+        var animation = new AnimationComponent();
+        if (Entity.HasComponents(entity, ["Animation"])) {
+            animation = Entity.GetComponent(entity, "Animation");
+        }
+        else {
+            Entity.AddComponent(entity, animation);
+        }
+        animation.sequences.push(sequence);
     }
 }
 
@@ -516,6 +571,7 @@ class RoomGeneratorSystem extends System {
             for (var i = 0; i < rectanglesCount; i++) {
                 var rectangle = new Entity();
                 Entity.AddComponent(rectangle, new RoomRectangleComponent());
+                Entity.AddComponent(rectangle, new SelectableComponent());
                 var position = new Vector(Random.Int(-1 * this.centerBounds, this.centerBounds), Random.Int(-1 * this.centerBounds, this.centerBounds));
                 Vector.Multiply(position, new Vector(this.factor, this.factor));
                 var scale = i % 2 == 0 ? new Vector(Random.Int(this.minSize, this.maxSize / 2), Random.Int(this.maxSize / 2, this.maxSize)) : new Vector(Random.Int(this.maxSize / 2, this.maxSize), Random.Int(this.minSize, this.maxSize / 2));

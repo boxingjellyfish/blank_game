@@ -108,9 +108,9 @@ class SelectableComponent {
 * Marks an entity as currently selected.
 */
 class SelectedComponent {
-    constructor() {
+    constructor(color = new Color(0, 0, 100, 1)) {
         this.name = "Selected";
-        this.highlightColor = new Color(0, 100, 100, 1);
+        this.highlightColor = color;
     }
 }
 
@@ -197,7 +197,8 @@ class AnimationComponent {
 * A sequence of values to interpolate each keyframe.
 */
 class AnimationSequence {
-    constructor() {
+    constructor(name = "") {
+        this.name = name;
         this.keyframes = [];
         this.values = [];
         this.component = "";
@@ -219,5 +220,6 @@ class RoomRectangleComponent {
     constructor() {
         this.name = "RoomRectangle";
         // Emtpy for now, just marks that this entity is part of a room.
+        // Maybe knows about doors/connections?
     }
 }

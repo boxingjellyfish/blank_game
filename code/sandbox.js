@@ -285,6 +285,8 @@ class Scene {
     // Demo 1 data
     demo1() {
         this.worldSize = new Vector(5000, 2400);
+        this.entityManager.clear();
+
         // Random entities
         for (var i = 0; i < 50; i++) {
             var entity = new Entity();
@@ -365,7 +367,7 @@ class Scene {
     // Demo 2 data
     demo2() {
         this.worldSize = new Vector(600, 600);
-        //this.entityManager.clear();
+        this.entityManager.clear();
         this.entityManager.addAll(Data.Intro);
         //this.camera.fogCenter = new Vector(200,200);
     }
@@ -373,6 +375,7 @@ class Scene {
     // Demo 3 data
     demo3() {
         this.worldSize = new Vector(5000, 5000);
+        this.entityManager.clear();
         this.entityManager.addAll([
             {
                 "id": Random.UUID(),
@@ -488,27 +491,14 @@ class Scene {
     // Demo 4 data
     demo4() {
         this.worldSize = new Vector(1600, 1600);
-        this.showDebug = false;
-
+        this.entityManager.clear();
         this.eventManager.register(new Event("GenerateRoom"));
     }
 
     // Demo 5 data
     demo5() {
         this.worldSize = new Vector(1200, 800);
-        this.showDebug = true;
-
-        var color = Color.Gray;
-
-        var r1 = new Entity();
-        Entity.AddComponent(r1, new TransformComponent(new Vector(100, 100), new Vector(200, 780)));
-        Entity.AddComponent(r1, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
-        this.entityManager.add(r1);
-        
-        var r2 = new Entity();
-        Entity.AddComponent(r2, new TransformComponent(new Vector(-100, 20), new Vector(200, 460)));
-        Entity.AddComponent(r2, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
-        this.entityManager.add(r2);
+        this.entityManager.clear();
     }
 }
 
