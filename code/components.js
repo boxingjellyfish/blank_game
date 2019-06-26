@@ -268,3 +268,13 @@ class AnimationSequence {
         this.playing = true;
     }
 }
+
+/*
+* Rectangle that compones a room
+*/
+class RoomRectangleComponent {
+    constructor() {
+        this.name = "RoomRectangle";
+        // Emtpy for now, just marks that this entity is part of a room.
+    }
+}

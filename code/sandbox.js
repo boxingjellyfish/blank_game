@@ -39,6 +39,11 @@ class Scene {
         this.animationSystem = new AnimationSystem(this);
         this.navigationSystem = new NavigationSystem(this);
         this.navigationRecipientSystem = new NavigationRecipientSystem(this);
+        this.roomGeneratorSystem = new RoomGeneratorSystem(this);
+
+        // Events
+        this.eventManager = new EventManager();
+        this.eventManager.listeners.push(this.roomGeneratorSystem);
 
         // Pause when focus lost
         window.addEventListener("visibilitychange", () => {
@@ -105,10 +110,16 @@ class Scene {
             //     this.soundManager.sequencer.stop();
         }
 
-        // Reload Demo 1
+        // Show Debug
         this.keyHandler.keyStarted("KeyQ");
         if (this.keyHandler.keyEnded("KeyQ")) {
             this.showDebug = !this.showDebug;
+        }
+
+        // Generate random room
+        this.keyHandler.keyStarted("KeyR");
+        if (this.keyHandler.keyEnded("KeyR")) {
+            this.eventManager.register(new Event("GenerateRoom"));
         }
 
         // Reload Demo 1
@@ -155,6 +166,7 @@ class Scene {
 
         // Systems to update when game is running
         if (this.runUpdate) {
+            this.eventManager.dispatch(); // should run outside?
             this.expirationSystem.update(delta);
             this.navigationSystem.update(delta);
             this.movementSystem.update(delta);
@@ -381,7 +393,7 @@ class Scene {
                     "Motion": {
                         "name": "Motion",
                         "velocity": { "x": 0, "y": 0 },
-                        "maxVelocity": 1,
+                        "maxVelocity": 0.5,
                         "acceleration": { "x": 0, "y": 0 },
                         "angularVelocity": 0,
                         "angularAcceleration": 0,
@@ -476,35 +488,9 @@ class Scene {
     // Demo 4 data
     demo4() {
         this.worldSize = new Vector(1600, 1600);
-        this.showDebug = true;
+        this.showDebug = false;
 
-        var color = Color.Gray;
-        var factor = 40;
-        var centerBounds = 140 / factor;
-        var minSize = 200 / factor;
-        var maxSize = 800 / factor;
-        var rectanglesCount = Random.Int(3, 8);
-
-        for (var i = 0; i < rectanglesCount; i++) {
-
-            var rectangle = new Entity();
-            var position = new Vector(Random.Int(-1 * centerBounds, centerBounds), Random.Int(-1 * centerBounds, centerBounds));
-            Vector.Multiply(position, new Vector(factor, factor));
-            var scale = i % 2 == 0 ? new Vector(Random.Int(minSize, maxSize / 2), Random.Int(maxSize / 2, maxSize)) : new Vector(Random.Int(maxSize / 2, maxSize), Random.Int(minSize, maxSize / 2));
-            Vector.Multiply(scale, new Vector(factor, factor));
-            Entity.AddComponent(rectangle, new TransformComponent(position, scale));
-            Entity.AddComponent(rectangle, new ShapeComponent(color, ShapeComponent.Rectangle, color, 1));
-            this.entities.push(rectangle);
-        }
-
-        /*
-        - random point (center?)
-        - generate N rectangles_
-            - A: containing point
-            - B: edge on point
-            - C: corner on point
-        - 
-        */
+        this.eventManager.register(new Event("GenerateRoom"));
     }
 
     // Demo 5 data

@@ -5,6 +5,12 @@ class System {
     constructor(scene) {
         this.scene = scene;
     }
+
+    update(delta) { }
+
+    draw(interp, ctx) { }
+
+    handle(event) { }
 }
 
 /*
@@ -279,7 +285,7 @@ class NavigationRecipientSystem extends System {
             Entity.Iterate(this.scene.entities, ["NavigationRecipient", "Selected"], (entity) => {
                 Entity.RemoveComponent(entity, "Navigation");
                 Entity.RemoveComponent(entity, "Motion");
-                Entity.AddComponent(entity, new MotionComponent(Vector.Zero, 1, Vector.Zero));
+                Entity.AddComponent(entity, new MotionComponent(Vector.Zero, 0.5, Vector.Zero));
                 Entity.AddComponent(entity, new NavigationComponent(Vector.Copy(this.lastClickPosition)));
             });
         }
@@ -493,5 +499,41 @@ class NavigationSystem extends System {
                 Entity.RemoveComponent(entity, "Navigation");
             }
         });
+    }
+}
+
+/*
+* Generates random rooms when needed
+*/
+class RoomGeneratorSystem extends System {
+    constructor(scene) {
+        super(scene);
+        this.color = new Color(0, 0, 20, 1);
+        this.factor = 40;
+        this.centerBounds = 400 / this.factor;
+        this.minSize = 200 / this.factor;
+        this.maxSize = 1200 / this.factor;
+    }
+
+    handle(event) {
+        if (event.name == "GenerateRoom") {
+            // Destroy previous room components
+            Entity.Iterate(this.scene.entities, ["RoomRectangle"], (entity) => {
+                Entity.AddComponent(entity, new ExpirationComponent(0));
+            });
+
+            var rectanglesCount = Random.Int(8, 16);
+            for (var i = 0; i < rectanglesCount; i++) {
+                var rectangle = new Entity();
+                Entity.AddComponent(rectangle, new RoomRectangleComponent());
+                var position = new Vector(Random.Int(-1 * this.centerBounds, this.centerBounds), Random.Int(-1 * this.centerBounds, this.centerBounds));
+                Vector.Multiply(position, new Vector(this.factor, this.factor));
+                var scale = i % 2 == 0 ? new Vector(Random.Int(this.minSize, this.maxSize / 2), Random.Int(this.maxSize / 2, this.maxSize)) : new Vector(Random.Int(this.maxSize / 2, this.maxSize), Random.Int(this.minSize, this.maxSize / 2));
+                Vector.Multiply(scale, new Vector(this.factor, this.factor));
+                Entity.AddComponent(rectangle, new TransformComponent(position, scale));
+                Entity.AddComponent(rectangle, new ShapeComponent(this.color, ShapeComponent.Rectangle, this.color, 2));
+                this.scene.entities.push(rectangle);
+            }
+        }
     }
 }
