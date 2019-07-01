@@ -23,12 +23,29 @@ class EventManager {
 }
 
 /*
-* Basic Event
+* Base Event
 */
 class Event {
-    constructor(name, data = {}) {
+    constructor(name) {
         this.id = Random.UUID();
         this.name = name;
-        this.data = data;
+    }
+}
+
+/*
+* Generate Room Event
+*/
+class GenerateRoomEvent extends Event {
+    constructor() {
+        super(Events.GENERATE_ROOM);        
+        this.color = new Color(0, 0, 20, 1);
+        this.centerPosition = Vector.Zero;
+        this.centerBounds = 200;
+        this.minSize = 50;
+        this.maxSize = 600;
+        this.minRectangles = 6;
+        this.maxRectangles = 16;
+        this.minRatio = 0.3;
+        this.maxRatio = 0.8;
     }
 }

@@ -80,28 +80,28 @@ class Scene {
     update(delta) {
 
         // Save Entities in local storage
-        this.keyHandler.keyStarted("KeyC");
-        if (this.keyHandler.keyEnded("KeyC")) {
+        this.keyHandler.keyStarted(KeyCodes.KEY_C);
+        if (this.keyHandler.keyEnded(KeyCodes.KEY_C)) {
             this.entityManager.save();
         }
 
         // Load entities from local storage
-        this.keyHandler.keyStarted("KeyV");
-        if (this.keyHandler.keyEnded("KeyV")) {
+        this.keyHandler.keyStarted(KeyCodes.KEY_V);
+        if (this.keyHandler.keyEnded(KeyCodes.KEY_V)) {
             this.entityManager.load();
         }
 
         // Randomly change entities acceleration angle
-        this.keyHandler.keyStarted("NumpadDivide");
-        if (this.keyHandler.keyEnded("NumpadDivide")) {
-            this.entityManager.iterate(["Motion"], (entity) => {
-                Vector.Rotate(Entity.GetComponent(entity, "Motion").acceleration, Random.Float(0, Math.PI * 2));
+        this.keyHandler.keyStarted(KeyCodes.NUMPAD_DIVIDE);
+        if (this.keyHandler.keyEnded(KeyCodes.NUMPAD_DIVIDE)) {
+            this.entityManager.iterate([Components.MOTION], (entity) => {
+                Vector.Rotate(Entity.GetComponent(entity, Components.MOTION).acceleration, Random.Float(0, Math.PI * 2));
             });
         }
 
         // Play/Pause Gameplay
-        this.keyHandler.keyStarted("Space")
-        if (this.keyHandler.keyEnded("Space")) {
+        this.keyHandler.keyStarted(KeyCodes.SPACE)
+        if (this.keyHandler.keyEnded(KeyCodes.SPACE)) {
             this.runUpdate = !this.runUpdate;
             // if (this.runUpdate)
             //     this.soundManager.sequencer.start();
@@ -110,48 +110,48 @@ class Scene {
         }
 
         // Show Debug
-        this.keyHandler.keyStarted("KeyQ");
-        if (this.keyHandler.keyEnded("KeyQ")) {
+        this.keyHandler.keyStarted(KeyCodes.KEY_Q);
+        if (this.keyHandler.keyEnded(KeyCodes.KEY_Q)) {
             this.showDebug = !this.showDebug;
         }
 
         // Generate random room
-        this.keyHandler.keyStarted("KeyR");
-        if (this.keyHandler.keyEnded("KeyR")) {
-            this.eventManager.register(new Event("GenerateRoom"));
+        this.keyHandler.keyStarted(KeyCodes.KEY_R);
+        if (this.keyHandler.keyEnded(KeyCodes.KEY_R)) {
+            this.eventManager.register(new GenerateRoomEvent());
         }
 
         // Reload Demo 1
-        this.keyHandler.keyStarted("Digit1");
-        if (this.keyHandler.keyEnded("Digit1")) {
+        this.keyHandler.keyStarted(KeyCodes.DIGIT_1);
+        if (this.keyHandler.keyEnded(KeyCodes.DIGIT_1)) {
             this.entityManager.clear();
             this.demo1();
         }
 
         // Reload Demo 2
-        this.keyHandler.keyStarted("Digit2");
-        if (this.keyHandler.keyEnded("Digit2")) {
+        this.keyHandler.keyStarted(KeyCodes.DIGIT_2);
+        if (this.keyHandler.keyEnded(KeyCodes.DIGIT_2)) {
             this.entityManager.clear();
             this.demo2();
         }
 
         // Reload Demo 3
-        this.keyHandler.keyStarted("Digit3");
-        if (this.keyHandler.keyEnded("Digit3")) {
+        this.keyHandler.keyStarted(KeyCodes.DIGIT_3);
+        if (this.keyHandler.keyEnded(KeyCodes.DIGIT_3)) {
             this.entityManager.clear();
             this.demo3();
         }
 
         // Reload Demo 4
-        this.keyHandler.keyStarted("Digit4");
-        if (this.keyHandler.keyEnded("Digit4")) {
+        this.keyHandler.keyStarted(KeyCodes.DIGIT_4);
+        if (this.keyHandler.keyEnded(KeyCodes.DIGIT_4)) {
             this.entityManager.clear();
             this.demo4();
         }
 
         // Reload Demo 5
-        this.keyHandler.keyStarted("Digit5");
-        if (this.keyHandler.keyEnded("Digit5")) {
+        this.keyHandler.keyStarted(KeyCodes.DIGIT_5);
+        if (this.keyHandler.keyEnded(KeyCodes.DIGIT_5)) {
             this.entityManager.clear();
             this.demo5();
         }
@@ -298,7 +298,7 @@ class Scene {
             var acceleration = new Vector(Random.Float(-0.0001, 0.0001), Random.Float(-0.0001, 0.0001));
             Entity.AddComponent(entity, new MotionComponent(velocity, maxVelocity, acceleration));
             var color = new Color(Random.Int(0, 360), 75, 60, 1);
-            Entity.AddComponent(entity, new ShapeComponent(color, Random.Value([ShapeComponent.Rectangle, ShapeComponent.Ellipse, ShapeComponent.Triangle])));
+            Entity.AddComponent(entity, new ShapeComponent(color, Random.Value([ShapeTypes.RECTANGLE, ShapeTypes.ELLIPSE, ShapeTypes.TRIANGLE])));
             //Entity.addComponent(entity, new TraceComponent(2, color));
             Entity.AddComponent(entity, new SelectableComponent());
 
@@ -306,17 +306,17 @@ class Scene {
             var colorAnimation = new AnimationSequence();
             colorAnimation.keyframes = [0, Random.Int(1000, 2000), Random.Int(3000, 4000)];
             colorAnimation.values = [Color.Copy(color), Color.Hue(Color.Copy(color), 0), Color.Copy(color)];
-            colorAnimation.component = "Shape";
+            colorAnimation.component = Components.SHAPE;
             colorAnimation.property = "color";
-            colorAnimation.type = "Color";
+            colorAnimation.type = AnimationSequenceTypes.COLOR;
             colorAnimation.easing = "EaseInOutQuad";
             animation.sequences.push(colorAnimation);
             var scaleAnimation = new AnimationSequence();
             scaleAnimation.keyframes = [0, Random.Int(200, 500), Random.Int(800, 1000), Random.Int(1200, 1500)];
             scaleAnimation.values = [Vector.Copy(scale), Vector.Multiply(Vector.Copy(scale), new Vector(2, 2)), Vector.Zero, Vector.Copy(scale)];
-            scaleAnimation.component = "Transform";
+            scaleAnimation.component = Components.TRANSFORM;
             scaleAnimation.property = "scale";
-            scaleAnimation.type = "Vector";
+            scaleAnimation.type = AnimationSequenceTypes.VECTOR
             scaleAnimation.easing = "EaseInOutQuad";
             animation.sequences.push(scaleAnimation);
             Entity.AddComponent(entity, animation);
@@ -492,7 +492,9 @@ class Scene {
     demo4() {
         this.worldSize = new Vector(1600, 1600);
         this.entityManager.clear();
-        this.eventManager.register(new Event("GenerateRoom"));
+        this.camera.targetZoom = 0.5;
+        var event = new GenerateRoomEvent();
+        this.eventManager.register(event);
     }
 
     // Demo 5 data

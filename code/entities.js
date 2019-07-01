@@ -43,8 +43,8 @@ class EntityManager {
         // Layers in back-to-front order
         this.layers = [Layers.BACKGROUND, Layers.BACKGROUND_PARTICLES, Layers.DEFAULT, Layers.FOREGROUND_PARTICLES, Layers.UI];
         
-        // Array of entities
-        this.entities = [];
+        // Associative array of entities by layer
+        this.entities = {};
         for (var i = 0; i < this.layers.length; i++) {
             var layer = this.layers[i];
             this.entities[layer] = [];

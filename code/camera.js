@@ -25,27 +25,27 @@ class Camera {
 
         // Handle Pan
         var panSpeed = 10 / this.zoom
-        if (Input.Instance.isKeyDown("ArrowLeft") || Input.Instance.isKeyDown("KeyA")) {
+        if (Input.Instance.isKeyDown(KeyCodes.ARROW_LEFT) || Input.Instance.isKeyDown(KeyCodes.KEY_A)) {
             this.targetPosition = Vector.Copy(this.targetPosition);
             this.targetPosition.x -= panSpeed;
         }
-        if (Input.Instance.isKeyDown("ArrowRight") || Input.Instance.isKeyDown("KeyD")) {
+        if (Input.Instance.isKeyDown(KeyCodes.ARROW_RIGHT) || Input.Instance.isKeyDown(KeyCodes.KEY_D)) {
             this.targetPosition = Vector.Copy(this.targetPosition);
             this.targetPosition.x += panSpeed;
         }
-        if (Input.Instance.isKeyDown("ArrowUp") || Input.Instance.isKeyDown("KeyW")) {
+        if (Input.Instance.isKeyDown(KeyCodes.ARROW_UP) || Input.Instance.isKeyDown(KeyCodes.KEY_W)) {
             this.targetPosition = Vector.Copy(this.targetPosition);
             this.targetPosition.y -= panSpeed;
         }
-        if (Input.Instance.isKeyDown("ArrowDown") || Input.Instance.isKeyDown("KeyS")) {
+        if (Input.Instance.isKeyDown(KeyCodes.ARROW_DOWN) || Input.Instance.isKeyDown(KeyCodes.KEY_S)) {
             this.targetPosition = Vector.Copy(this.targetPosition);
             this.targetPosition.y += panSpeed;
         }
 
         // Handle Zoom
-        if (Input.Instance.isKeyDown("NumpadAdd"))
+        if (Input.Instance.isKeyDown(KeyCodes.NUMPAD_ADD))
             this.targetZoom *= 1.05;
-        else if (Input.Instance.isKeyDown("NumpadSubtract"))
+        else if (Input.Instance.isKeyDown(KeyCodes.NUMPAD_SUBTRACT))
             this.targetZoom /= 1.05;
         if (this.lastWheelDelta > Input.Instance.wheelDelta)
             this.targetZoom *= 1.1;
@@ -60,7 +60,7 @@ class Camera {
         this.lastWheelDelta = Input.Instance.wheelDelta;
 
         // Reset Camera
-        if (Input.Instance.isKeyDown("NumpadMultiply") || Input.Instance.isButtonDown(1)) {
+        if (Input.Instance.isKeyDown(KeyCodes.NUMPAD_MULTIPLY) || Input.Instance.isButtonDown(1)) {
             this.targetPosition = Vector.Zero;
             this.targetZoom = 1;
         }
@@ -77,8 +77,8 @@ class Camera {
         }
 
         // Toggle Fog        
-        this.keyHandler.keyStarted("KeyF");
-        if (this.keyHandler.keyEnded("KeyF")) {
+        this.keyHandler.keyStarted(KeyCodes.KEY_F);
+        if (this.keyHandler.keyEnded(KeyCodes.KEY_F)) {
             this.fogEnabled = !this.fogEnabled;
         }
     }

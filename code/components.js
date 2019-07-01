@@ -1,9 +1,18 @@
 /*
+* Base component
+*/
+class Component {
+    constructor(name) {
+        this.name = name;
+    }
+}
+
+/*
 * Position, Scale and Angle in 2D.
 */
-class TransformComponent {
+class TransformComponent extends Component {
     constructor(position = Vector.Zero, scale = Vector.One, angle = 0) {
-        this.name = "Transform";
+        super(Components.TRANSFORM);
         this.position = position;
         this.scale = scale;
         this.angle = angle;
@@ -13,9 +22,9 @@ class TransformComponent {
 /*
 * Stores Velocity and Acceleration in 2D.
 */
-class MotionComponent {
+class MotionComponent extends Component {
     constructor(velocity, maxVelocity, acceleration, angularVelocity = 0, angularAcceleration = 0) {
-        this.name = "Motion";
+        super(Components.MOTION);
         this.velocity = velocity;
         this.maxVelocity = maxVelocity;
         this.acceleration = acceleration;
@@ -28,9 +37,9 @@ class MotionComponent {
 /*
 * Navigate to selected world coordinates
 */
-class NavigationComponent {
+class NavigationComponent extends Component {
     constructor(location) {
-        this.name = "Navigation";
+        super(Components.NAVIGATION);
         this.location = location;
         this.slowFactor = 0.01;
         this.threshold = 10;
@@ -40,9 +49,9 @@ class NavigationComponent {
 /*
 * Stores the collision bounding box.
 */
-class CollisionDetectionComponent {
+class CollisionDetectionComponent extends Component {
     constructor(boundingBox) {
-        this.name = "CollisionDetection";
+        super(Components.COLLISION_DETECTION);
         this.boundingBox = boundingBox;
     }
 }
@@ -50,9 +59,9 @@ class CollisionDetectionComponent {
 /*
 * Stores collided object after a detection.
 */
-class CollisionHandlingComponent {
+class CollisionHandlingComponent extends Component {
     constructor(collided) {
-        this.name = "CollisionHandling";
+        super(Components.COLLISION_HANDLING);
         this.collided = collided;
     }
 }
@@ -60,34 +69,22 @@ class CollisionHandlingComponent {
 /*
 * Apperance of a shape to be rendered on screen.
 */
-class ShapeComponent {
-    constructor(color, type = ShapeComponent.Rectangle, outlineColor = null, outlineWidth = null) {
-        this.name = "Shape";
+class ShapeComponent extends Component {
+    constructor(color, type = ShapeTypes.RECTANGLE, outlineColor = null, outlineWidth = null) {
+        super(Components.SHAPE);
         this.color = color;
         this.outlineColor = outlineColor;
         this.outlineWidth = outlineWidth;
         this.type = type;
-    }
-
-    static get Rectangle() {
-        return "Rectangle";
-    }
-
-    static get Ellipse() {
-        return "Ellipse";
-    }
-
-    static get Triangle() {
-        return "Triangle";
     }
 }
 
 /*
 * Stores the last N positions of an entity to render a trace.
 */
-class TraceComponent {
+class TraceComponent extends Component {
     constructor(width, color) {
-        this.name = "Trace";
+        super(Components.TRACE);
         this.width = width;
         this.color = color;
         this.points = [];
@@ -98,18 +95,18 @@ class TraceComponent {
 /*
 * Allows an entity to be selected.
 */
-class SelectableComponent {
+class SelectableComponent extends Component {
     constructor() {
-        this.name = "Selectable";
+        super(Components.SELECTABLE);
     }
 }
 
 /*
 * Marks an entity as currently selected.
 */
-class SelectedComponent {
+class SelectedComponent extends Component {
     constructor(color = new Color(0, 0, 100, 1)) {
-        this.name = "Selected";
+        super(Components.SELECTED);
         this.highlightColor = color;
     }
 }
@@ -117,18 +114,18 @@ class SelectedComponent {
 /*
 * Allows an entity to be directable by navigation.
 */
-class NavigationRecipientComponent {
+class NavigationRecipientComponent extends Component {
     constructor() {
-        this.name = "NavigationRecipient";
+        super(Components.NAVIGATION_RECIPIENT);
     }
 }
 
 /*
 * Destroys the entity after Duration milliseconds.
 */
-class ExpirationComponent {
+class ExpirationComponent extends Component {
     constructor(duration) {
-        this.name = "Expiration";
+        super(Components.EXPIRATION);
         this.duration = duration;
         this.elapsed = 0;
     }
@@ -137,9 +134,9 @@ class ExpirationComponent {
 /*
 * Source of particle entities.
 */
-class ParticleEmitterComponent {
+class ParticleEmitterComponent extends Component {
     constructor() {
-        this.name = "ParticleEmitter";
+        super(Components.PARTICLE_EMITTER);
         this.spread = Math.PI * 2;
         this.particleVelocity = Vector.Zero;
         this.velocityRandomness = 1;
@@ -163,9 +160,9 @@ class ParticleEmitterComponent {
 /*
 * Force field to be applyed to subjects.
 */
-class ForceFieldComponent {
+class ForceFieldComponent extends Component {
     constructor() {
-        this.name = "ForceField";
+        super(Components.FORCE_FIELD);
         this.mass = 1;
         this.radius = 1;
         this.destructive = true;
@@ -176,9 +173,9 @@ class ForceFieldComponent {
 /*
 * Is affected by fields.
 */
-class ForceFieldSubjectComponent {
+class ForceFieldSubjectComponent extends Component {
     constructor(fieldIds) {
-        this.name = "ForceFieldSubject";
+        super(Components.FORCE_FIELD_SUBJECT);
         this.fieldIds = fieldIds;
     }
 }
@@ -186,9 +183,9 @@ class ForceFieldSubjectComponent {
 /*
 * Stores a sequence of independent animations to be applied.
 */
-class AnimationComponent {
+class AnimationComponent extends Component {
     constructor() {
-        this.name = "Animation";
+        super(Components.ANIMATION);
         this.sequences = []; // Array of AnimationSequence
     }
 }
@@ -207,7 +204,7 @@ class AnimationSequence {
         this.keyframe = 0;
         this.elapsed = 0;
         this.easing = "EaseInOutQuad";
-        this.type = "Number"; // Number, Vector, Color
+        this.type = AnimationSequenceTypes.NUMBER;
         this.loop = true;
         this.playing = true;
     }
@@ -216,9 +213,9 @@ class AnimationSequence {
 /*
 * Rectangle that compones a room
 */
-class RoomRectangleComponent {
+class RoomRectangleComponent extends Component {
     constructor() {
-        this.name = "RoomRectangle";
+        super(Components.ROOM_RECTANGLE);
         // Emtpy for now, just marks that this entity is part of a room.
         // Maybe knows about doors/connections?
     }
